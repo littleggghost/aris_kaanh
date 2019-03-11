@@ -1432,7 +1432,10 @@ namespace forcecontrol
 			f_dynamic[i] = target.model->motionPool()[i].mfDyn();
 
 			//电机输入电流=力*力到电流的系数
-			f_input[i] = (f_friction[i] + f_dynamic[i] + param.ft_pid[i])*f2c_index[i];
+            f_input[i] = (0*f_friction[i] + f_dynamic[i] + param.ft_pid[i])*f2c_index[i];
+
+            f_input[i] = std::max(-500.0, f_input[i]);
+            f_input[i] = std::min(500.0, f_input[i]);
 
 			controller->motionAtAbs(i).setTargetCur(f_input[i]);
 		}
@@ -1753,10 +1756,14 @@ namespace forcecontrol
 			lout << controller->motionAtAbs(i).actualCur() << " ";
 		}
         //log--记录当前PQ值//
-		for (Size i = 0; i < param.pqb.size(); i++)
+        for (Size i = 0; i < param.pqt.size(); i++)
 		{
-			lout << param.pqb[i] << " ";
+            lout << param.pqt[i] << " ";
 		}
+        for (Size i = 0; i < param.pqb.size(); i++)
+        {
+            lout << param.pqb[i] << " ";
+        }
 		lout << std::endl;
 
         auto &cout = controller->mout();
@@ -1774,7 +1781,7 @@ namespace forcecontrol
 			"<movePQB>"
 			"	<group type=\"GroupParam\" default_child_type=\"Param\">"
             "		<pqt default=\"{0.42,0.0,0.55,0,0,0,1}\" abbreviation=\"p\"/>"
-            "		<kp_p default=\"{4,6,4,3,3,2}\"/>"
+            "		<kp_p default=\"{4500,4500,10,60,60,60}\"/>"
             "		<kp_v default=\"{170,270,90,60,35,16}\"/>"
             "		<ki_v default=\"{2,15,10,0.2,0.2,0.18}\"/>"
 			"		<which_fca default=\"2\"/>"
