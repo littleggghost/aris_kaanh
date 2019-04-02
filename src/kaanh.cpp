@@ -62,6 +62,42 @@ namespace kaanh
 
         controller->slavePool().add<aris::control::EthercatSlave>().loadXmlStr(xml_str);
 
+        xml_str =
+            "<EthercatSlave phy_id=\"7\" product_code=\"0x00013D6F\""
+            " vendor_id=\"0x00000009\" revision_num=\"0x01\" dc_assign_activate=\"0x300\">"
+            "	<SyncManagerPoolObject>"
+            "		<SyncManager is_tx=\"false\"/>"
+            "		<SyncManager is_tx=\"true\"/>"
+            "		<SyncManager is_tx=\"false\"/>"
+            "			<Pdo index=\"0x1600\" is_tx=\"false\">"
+            "				<PdoEntry name=\"Bool_Ch1\" index=\"0xf200\" subindex=\"0x01\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch2\" index=\"0xf200\" subindex=\"0x02\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch3\" index=\"0xf200\" subindex=\"0x03\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch4\" index=\"0xf200\" subindex=\"0x04\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch5\" index=\"0x0000\" subindex=\"0x01\" size=\"12\"/>"
+            "				<PdoEntry name=\"Bool_Ch6\" index=\"0xf200\" subindex=\"0x05\" size=\"16\"/>"
+            "			</Pdo>"
+            "		<SyncManager is_tx=\"true\">"
+            "			<Pdo index=\"0x1a00\" is_tx=\"true\">"
+            "				<PdoEntry name=\"Bool_Ch1\" index=\"0xf100\" subindex=\"0x01\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch2\" index=\"0xf100\" subindex=\"0x02\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch3\" index=\"0xf100\" subindex=\"0x03\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch4\" index=\"0xf100\" subindex=\"0x04\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch5\" index=\"0x0000\" subindex=\"0x01\" size=\"11\"/>"
+            "				<PdoEntry name=\"Bool_Ch6\" index=\"0x10f3\" subindex=\"0x04\" size=\"1\"/>"
+            "				<PdoEntry name=\"Bool_Ch7\" index=\"0xf100\" subindex=\"0x05\" size=\"16\"/>"
+            "			</Pdo>"
+            "			<Pdo index=\"0x1A01\" is_tx=\"true\">"
+            "				<PdoEntry name=\"Uint_Input_Ch1\" index=\"0x6000\" subindex=\"0x01\" size=\"16\"/>"
+            "				<PdoEntry name=\"Uint_Input_Ch2\" index=\"0x6000\" subindex=\"0x02\" size=\"16\"/>"
+            "			</Pdo>"
+            "		</SyncManager>"
+            "	</SyncManagerPoolObject>"
+            "</EthercatSlave>";
+
+        controller->slavePool().add<aris::control::EthercatSlave>().loadXmlStr(xml_str);
+
+
 		return controller;
 	};
 	auto createModelRokaeXB4(const double *robot_pm)->std::unique_ptr<aris::dynamic::Model>
@@ -2614,7 +2650,7 @@ namespace kaanh
 		bool real_data;
         int time;
         uint16_t datanum;
-        float Fx,Fy,Fz,Mx,My,Mz;
+        std::uint16_t Fx,Fy,Fz,Mx,My,Mz;
 	};
 	auto FSSignal::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 		{
@@ -2660,7 +2696,8 @@ namespace kaanh
 			auto &param = std::any_cast<FSParam&>(target.param);
 			// 访问主站 //
 			auto controller = dynamic_cast<aris::control::EthercatController*>(target.controller);
-			if (param.real_data)
+            /*
+            if (param.real_data)
 			{
                 controller->ecSlavePool().at(6).readPdo(0x6030, 0x00, &param.datanum ,16);
                 controller->ecSlavePool().at(6).readPdo(0x6030, 0x01, &param.Fx ,32);
@@ -2680,7 +2717,7 @@ namespace kaanh
                 controller->ecSlavePool().at(6).readPdo(0x6020, 0x05, &param.My, 32);
                 controller->ecSlavePool().at(6).readPdo(0x6020, 0x06, &param.Mz, 32);
 			}
-			
+
 			//print//
 			auto &cout = controller->mout();
 			if (target.count % 100 == 0)
@@ -2707,7 +2744,58 @@ namespace kaanh
 				lout << param.Mz << " ";
 				lout << std::endl;
 			}
-			param.time--;
+            */
+
+            controller->ecSlavePool().at(7).readPdo(0x6000, 0x01, &param.Fx ,16);
+            controller->ecSlavePool().at(7).readPdo(0x6000, 0x02, &param.Fy, 16);
+
+
+            std::int16_t a,b,c;
+            controller->ecSlavePool().at(7).readPdo(0x6000, 0x01, &a ,16);
+            controller->ecSlavePool().at(7).readPdo(0x6000, 0x02, &b, 16);
+            //controller->ecSlavePool().at(7).readPdo(0x6000, 0x03, &c, 16);
+
+            bool a1=0,a2=0,a3=0,a4=0;
+            std::int16_t a5;
+            controller->ecSlavePool().at(7).readPdo(0xf100, 0x01, &a1, 1);
+            controller->ecSlavePool().at(7).readPdo(0xf100, 0x02, &a2, 1);
+            controller->ecSlavePool().at(7).readPdo(0xf100, 0x03, &a3, 1);
+            controller->ecSlavePool().at(7).readPdo(0xf100, 0x04, &a4, 1);
+            controller->ecSlavePool().at(7).readPdo(0xf100, 0x05, &a5, 16);
+
+            //print//
+            auto &cout = controller->mout();
+            if (target.count % 500 == 0)
+            {
+                cout << std::setw(6) << param.Fx << "  ";
+                cout << std::setw(6) << param.Fy << "  ";
+                cout << std::endl;
+                cout << "----------------------------------------------------" << std::endl;
+            }
+            /*
+            if (target.count % 100 == 0)
+            {
+                cout << std::setw(6) << a1 << "  ";
+                cout << std::setw(6) << a2 << "  ";
+                cout << std::setw(6) << a3 << "  ";
+                cout << std::setw(6) << a4 << "  ";
+                cout << std::setw(6) << a5 << "  ";
+                cout << std::setw(6) << a << "  ";
+                cout << std::setw(6) << b << "  ";
+                //cout << std::setw(6) << c << "  ";
+                cout << std::endl;
+                cout << "----------------------------------------------------" << std::endl;
+            }
+            */
+            //log//
+            auto &lout = controller->lout();
+            {
+                lout << param.Fx << " ";
+                lout << param.Fy << " ";
+                lout << std::endl;
+            }
+
+            param.time--;
 			return param.time;
 		}
 	auto FSSignal::collectNrt(PlanTarget &target)->void {}

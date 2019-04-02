@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 	auto port = argc < 2 ? 5866 : std::stoi(argv[1]);
 
 	//生成rokae.xml文档
-	/*
+    /*
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
 	cs.resetModel(aris::dynamic::createModelRokaeXB4().release());
 	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
@@ -45,12 +45,21 @@ int main(int argc, char *argv[])
 	cs.model().solverPool()[0].allocateMemory();
 
 	cs.saveXmlFile(xmlpath.string().c_str());
-	*/
+    */
 
-	kaanh::registerPlan();
-	cs.loadXmlFile(xmlpath.string().c_str());
+    kaanh::registerPlan();
+    cs.loadXmlFile(xmlpath.string().c_str());
 
-	cs.start();
+    //aris::control::EthercatMaster m;
+    //m.scan();
+    //std::cout<<m.xmlString()<<std::endl;
+
+
+    //std::cout << cs.controller().xmlString()<<std::endl;
+
+    cs.start();
+
+    //std::cout<<static_cast<aris::control::EthercatController&>(cs.controller()).ecSlavePool().at(7).name()<<std::endl;
 
 	// interaction //
 	std::list<std::tuple<aris::core::Msg, std::shared_ptr<aris::plan::PlanTarget>>> result_list;
