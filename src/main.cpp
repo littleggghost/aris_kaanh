@@ -47,9 +47,10 @@ int main(int argc, char *argv[])
 	cs.saveXmlFile(xmlpath.string().c_str());
     */
 
-    kaanh::registerPlan();
+    //kaanh::registerPlan();
     cs.loadXmlFile(xmlpath.string().c_str());
 	cs.start();
+
 
 	// interaction //
 	std::list<std::tuple<aris::core::Msg, std::shared_ptr<aris::plan::PlanTarget>>> result_list;

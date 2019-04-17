@@ -147,6 +147,8 @@ namespace kaanh
 
 		return model;
 	}
+	
+	
 	// 获取驱动器当前位置，并设置为起始位置 //
 	struct MoveInitParam
 	{
@@ -230,6 +232,7 @@ namespace kaanh
 			"</Command>");
 	}
 
+	
 	// 末端四元数xyz方向余弦轨迹；速度前馈//
 	struct MoveXParam
 	{
@@ -339,6 +342,7 @@ namespace kaanh
 			"</Command>");
 	}
 
+	
 	// 单关节正弦往复轨迹 //
 	struct MoveJSParam
 	{
@@ -2769,7 +2773,7 @@ namespace kaanh
 
 		return plan_root;
 	}
-	
+	/*
 	auto registerPlan()->void
 	{
 		aris::core::Object::registerTypeGlobal<aris::plan::MoveL>();
@@ -2812,4 +2816,5 @@ namespace kaanh
 		aris::core::Object::registerTypeGlobal<cplan::FMovePath>();
 		aris::core::Object::registerTypeGlobal<cplan::OpenFile>();
 	}
+	*/
 }
