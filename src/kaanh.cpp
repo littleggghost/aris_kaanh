@@ -84,12 +84,12 @@ namespace kaanh
 		auto &p6 = model->partPool().add<Part>("L6");
 
 		// add joint //
-		const double j1_pos[3]{ 0.0, 0.0, 0.176 };
-		const double j2_pos[3]{ 0.04, -0.0465, 0.3295, };
-		const double j3_pos[3]{ 0.04, 0.0508, 0.6045 };
-		const double j4_pos[3]{ -0.1233, 0.0, 0.6295, };
-		const double j5_pos[3]{ 0.32, -0.03235, 0.6295, };
-		const double j6_pos[3]{ 0.383, 0.0, 0.6295, };
+		const double j1_pos[3]{ 0.0, 0.0, 0.237 };
+		const double j2_pos[3]{ 0.088, 0.017, 0.327, };
+		const double j3_pos[3]{ 0.088, 0.0236, 0.787 };
+		const double j4_pos[3]{ 0.127, 0.0, 0.827, };
+		const double j5_pos[3]{ 0.523, 0.036, 0.827, };
+		const double j6_pos[3]{ 0.607, 0.0, 0.827, };
 
 		const double j1_axis[6]{ 0.0, 0.0, 1.0 };
 		const double j2_axis[6]{ 0.0, 1.0, 0.0 };
@@ -114,7 +114,7 @@ namespace kaanh
 		auto &m6 = model->addMotion(j6);
 
 		// add ee general motion //
-		double pq_ee_i[]{ 0.398, 0.0, 0.6295, 0.0, 0.0, 0.0, 1.0 };		//x方向加上0.1
+		double pq_ee_i[]{ 0.570, -0.114, 0.84, -0.0414, 0.0414, 0.706, 0.706 };		//x方向加上0.1
 		double pm_ee_i[16];
 		double pm_ee_j[16]{ 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
 
