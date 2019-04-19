@@ -18,6 +18,87 @@ namespace kaanh
 
 		std::unique_ptr<aris::control::Controller> controller(aris::robot::createControllerRokaeXB4());/*创建std::unique_ptr实例*/
 		
+		controller->slavePool().clear();	//清除slavePool中的元素，后面重新添加
+
+		for (aris::Size i = 0; i < 6; ++i)
+		{
+#ifdef WIN32
+			double pos_offset[6]
+			{
+				0,0,0,0,0,0
+			};
+#endif
+#ifdef UNIX
+			double pos_offset[6]
+			{
+				0.00293480352126769,   0.317555328381088,   -0.292382537944081,   0.0582675097338009,   1.53363576057128,   17.1269434336436
+			};
+#endif
+			double pos_factor[6]
+			{
+				131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 72.857 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 50 / 2 / PI
+			};
+			double max_pos[6]
+			{
+				170.0 / 360 * 2 * PI, 130.0 / 360 * 2 * PI,	50.0 / 360 * 2 * PI, 170.0 / 360 * 2 * PI, 117.0 / 360 * 2 * PI, 360.0 / 360 * 2 * PI,
+			};
+			double min_pos[6]
+			{
+				-170.0 / 360 * 2 * PI, -84.0 / 360 * 2 * PI, -188.0 / 360 * 2 * PI, -170.0 / 360 * 2 * PI, -117.0 / 360 * 2 * PI, -360.0 / 360 * 2 * PI
+			};
+			double max_vel[6]
+			{
+				310.0 / 360 * 2 * PI, 240.0 / 360 * 2 * PI, 310.0 / 360 * 2 * PI, 250.0 / 360 * 2 * PI, 295.0 / 360 * 2 * PI, 500.0 / 360 * 2 * PI,
+			};
+			double max_acc[6]
+			{
+				1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1750.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 2500.0 / 360 * 2 * PI,
+			};
+
+			std::string xml_str =
+				"<EthercatMotion phy_id=\"" + std::to_string(i) + "\" product_code=\"0x01\""
+				" vendor_id=\"0x00000748\" revision_num=\"0x0002\" dc_assign_activate=\"0x0300\""
+				" min_pos=\"" + std::to_string(min_pos[i]) + "\" max_pos=\"" + std::to_string(max_pos[i]) + "\" max_vel=\"" + std::to_string(max_vel[i]) + "\" min_vel=\"" + std::to_string(-max_vel[i]) + "\""
+				" max_acc=\"" + std::to_string(max_acc[i]) + "\" min_acc=\"" + std::to_string(-max_acc[i]) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
+				" home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor[i]) + "\" pos_offset=\"" + std::to_string(pos_offset[i]) + "\">"
+				"	<SyncManagerPoolObject>"
+				"		<SyncManager is_tx=\"false\"/>"
+				"		<SyncManager is_tx=\"true\"/>"
+				"		<SyncManager is_tx=\"false\">"
+				"			<Pdo index=\"0x1600\" is_tx=\"false\">"
+				"				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+				"				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+				"				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
+				"				<PdoEntry name=\"target_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+				"				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+				"				<PdoEntry name=\"dummy_byte\" index=\"0x5FFE\" subindex=\"0x00\" size=\"8\"/>"
+				"				<PdoEntry name=\"touch_probe_function\" index=\"0x60B8\" subindex=\"0x00\" size=\"16\"/>"
+				"				<PdoEntry name=\"pos_offset\" index=\"0x60B0\" subindex=\"0x00\" size=\"32\"/>"
+				"				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+				"				<PdoEntry name=\"tor_offset\" index=\"0x60B2\" subindex=\"0x00\" size=\"16\"/>"
+				"			</Pdo>"
+				"			<Pdo index=\"0x1601\" is_tx=\"false\"/>"
+				"			<Pdo index=\"0x1602\" is_tx=\"false\"/>"
+				"			<Pdo index=\"0x1603\" is_tx=\"false\"/>"
+				"		</SyncManager>"
+				"		<SyncManager is_tx=\"true\">"
+				"			<Pdo index=\"0x1A00\" is_tx=\"true\">"
+				"				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+				"				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+				"				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+				"				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
+				"				<PdoEntry name=\"cur_actual_value\" index=\"0x6077\" subindex=\"0x00\" size=\"16\"/>"
+				"			</Pdo>"
+				"			<Pdo index=\"0x1A01\" is_tx=\"false\"/>"
+				"			<Pdo index=\"0x1A02\" is_tx=\"false\"/>"
+				"			<Pdo index=\"0x1A03\" is_tx=\"false\"/>"
+				"		</SyncManager>"
+				"	</SyncManagerPoolObject>"
+				"</EthercatMotion>";
+
+			controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+		}
+
 
 		std::string xml_str =
 			"<EthercatSlave phy_id=\"6\" product_code=\"0x00013D6F\""

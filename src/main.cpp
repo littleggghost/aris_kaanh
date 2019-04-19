@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
 	//生成rokae.xml文档
     /*
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
-	//cs.resetModel(aris::dynamic::createModelRokaeXB4().release());
-	cs.resetModel(kaanh::createModelRokaeXB4().release());
+	cs.resetModel(aris::dynamic::createModelRokaeXB4().release());
+	//cs.resetModel(kaanh::createModelRokaeXB4().release());
 	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
 
@@ -50,7 +50,6 @@ int main(int argc, char *argv[])
 	cs.saveXmlFile(xmlpath.string().c_str());
     */
 
-    //kaanh::registerPlan();
     cs.loadXmlFile(xmlpath.string().c_str());
 
 	cs.start();
