@@ -35,19 +35,19 @@ namespace kaanh
 #endif
 			double pos_factor[6]
 			{
-				131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 72.857 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 50 / 2 / PI
+				131072.0 * 129.6 / 2 / PI, 131072.0 * 100 / 2 / PI, 131072.0 * 101 / 2 / PI, 131072.0 * 81.6 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 51 / 2 / PI
 			};
 			double max_pos[6]
 			{
-				170.0 / 360 * 2 * PI, 130.0 / 360 * 2 * PI,	50.0 / 360 * 2 * PI, 170.0 / 360 * 2 * PI, 117.0 / 360 * 2 * PI, 360.0 / 360 * 2 * PI,
+				170.0 / 360 * 2 * PI, 40 / 360 * 2 * PI,	150 / 360 * 2 * PI, 180 / 360 * 2 * PI, 125 / 360 * 2 * PI, 360.0 / 360 * 2 * PI,
 			};
 			double min_pos[6]
 			{
-				-170.0 / 360 * 2 * PI, -84.0 / 360 * 2 * PI, -188.0 / 360 * 2 * PI, -170.0 / 360 * 2 * PI, -117.0 / 360 * 2 * PI, -360.0 / 360 * 2 * PI
+				-170.0 / 360 * 2 * PI, -165 / 360 * 2 * PI, -125 / 360 * 2 * PI, -180 / 360 * 2 * PI, -125 / 360 * 2 * PI, -360.0 / 360 * 2 * PI
 			};
 			double max_vel[6]
 			{
-				310.0 / 360 * 2 * PI, 240.0 / 360 * 2 * PI, 310.0 / 360 * 2 * PI, 250.0 / 360 * 2 * PI, 295.0 / 360 * 2 * PI, 500.0 / 360 * 2 * PI,
+				230 / 360 * 2 * PI, 300 / 360 * 2 * PI, 300 / 360 * 2 * PI, 300 / 360 * 2 * PI, 375 / 360 * 2 * PI, 600 / 360 * 2 * PI,
 			};
 			double max_acc[6]
 			{
@@ -3169,51 +3169,4 @@ namespace kaanh
 
 		return plan_root;
 	}
-	/*
-	auto registerPlan()->void
-	{
-		aris::core::Object::registerTypeGlobal<aris::plan::MoveL>();
-		aris::core::Object::registerTypeGlobal<aris::plan::MoveJ>();
-		aris::core::Object::registerTypeGlobal<aris::plan::Show>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveInit>();
-		aris::core::Object::registerTypeGlobal<kaanh::Get_ee_pq>();
-		aris::core::Object::registerTypeGlobal<kaanh::Get_cur>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveX>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJS>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJSN>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJR>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJRT>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveTTT>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveJRC>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MovePQCrash>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MovePQB>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveJCrash>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveJF>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveJFB>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveJPID>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveStop>();
-		aris::core::Object::registerTypeGlobal<forcecontrol::MoveSPQ>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJM>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJI>();
-		aris::core::Object::registerTypeGlobal<kaanh::MovePoint>();
-		aris::core::Object::registerTypeGlobal<kaanh::Grasp>();
-		aris::core::Object::registerTypeGlobal<kaanh::ListenDI>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveEA>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveEAP>();
-		aris::core::Object::registerTypeGlobal<kaanh::FSSignal>();
-
-		aris::core::Object::registerTypeGlobal<MoveXYZ>();
-		aris::core::Object::registerTypeGlobal<MoveDistal>();
-		aris::core::Object::registerTypeGlobal<SetTool>();
-		aris::core::Object::registerTypeGlobal<MovePressure>();
-
-		aris::core::Object::registerTypeGlobal<cplan::MoveCircle>();
-		aris::core::Object::registerTypeGlobal<cplan::MoveTroute>();
-		aris::core::Object::registerTypeGlobal<cplan::MoveFile>();
-		aris::core::Object::registerTypeGlobal<cplan::RemoveFile>();
-		aris::core::Object::registerTypeGlobal<cplan::MoveinModel>();
-		aris::core::Object::registerTypeGlobal<cplan::FMovePath>();
-		aris::core::Object::registerTypeGlobal<cplan::OpenFile>();
-	}
-	*/
 }

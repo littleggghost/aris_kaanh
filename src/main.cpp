@@ -50,10 +50,7 @@ int main(int argc, char *argv[])
 	cs.saveXmlFile(xmlpath.string().c_str());
 
 
-
     //cs.loadXmlFile(xmlpath.string().c_str());
-
-
 	cs.start();
 
 
