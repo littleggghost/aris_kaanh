@@ -19,15 +19,18 @@ const std::string xmlfile = "rokae.xml";
 
 int main(int argc, char *argv[])
 {
-	xmlpath = xmlpath / xmlfile;
+    std::cout <<"new"<<std::endl;
+
+    xmlpath = xmlpath / xmlfile;
     std::cout<< xmlpath <<std::endl;
 	auto&cs = aris::server::ControlServer::instance();
 	auto port = argc < 2 ? 5866 : std::stoi(argv[1]);
 
 	//生成rokae.xml文档
-    /*
+
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
-	cs.resetModel(aris::dynamic::createModelRokaeXB4().release());
+	//cs.resetModel(aris::dynamic::createModelRokaeXB4().release());
+	cs.resetModel(kaanh::createModelRokaeXB4().release());
 	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
 
@@ -45,10 +48,12 @@ int main(int argc, char *argv[])
 	cs.model().solverPool()[0].allocateMemory();
 
 	cs.saveXmlFile(xmlpath.string().c_str());
-    */
 
-    //kaanh::registerPlan();
-    cs.loadXmlFile(xmlpath.string().c_str());
+
+
+    //cs.loadXmlFile(xmlpath.string().c_str());
+
+
 	cs.start();
 
 
@@ -63,7 +68,7 @@ int main(int argc, char *argv[])
 
 		static int cout_count = 0;
 		if (++cout_count % 10 == 0)
-			std::cout << "recv:" << msg_data << std::endl;
+			//std::cout << "recv:" << msg_data << std::endl;
 
 		LOG_INFO << "the request is cmd:"
 			<< msg.header().msg_size_ << "&"

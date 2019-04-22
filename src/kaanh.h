@@ -44,6 +44,28 @@ namespace kaanh
 
 		explicit MoveInit(const std::string &name = "MoveInit_plan");
 		ARIS_REGISTER_TYPE(MoveInit);
+
+	};
+
+	class Get_ee_pq : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
+
+		explicit Get_ee_pq(const std::string &name = "Get_ee_pq_plan");
+		ARIS_REGISTER_TYPE(Get_ee_pq);
+	};
+
+	class Get_cur : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
+
+		explicit Get_cur(const std::string &name = "Get_cur_plan");
+		ARIS_REGISTER_TYPE(Get_cur);
+
 	};
 
 	class MoveX : public aris::plan::Plan
@@ -88,6 +110,19 @@ namespace kaanh
 
 		explicit MoveJR(const std::string &name = "MoveJR_plan");
 		ARIS_REGISTER_TYPE(MoveJR);
+
+	};
+
+	class MoveJRT : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
+		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
+
+		explicit MoveJRT(const std::string &name = "MoveJRT_plan");
+		ARIS_REGISTER_TYPE(MoveJRT);
+
 	};
 
 	class MoveTTT : public aris::plan::Plan
