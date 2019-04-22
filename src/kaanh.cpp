@@ -30,7 +30,7 @@ namespace kaanh
 #ifdef UNIX
 			double pos_offset[6]
 			{
-				0.00293480352126769,   0.317555328381088,   -0.292382537944081,   0.0582675097338009,   1.53363576057128,   17.1269434336436
+                0.0345045068966465,   -0.203205701122403,   -0.181133422007823,   0.00569660673541914,   0.0119907348546894,   0.0908806917782888
 			};
 #endif
 			double pos_factor[6]
@@ -996,7 +996,7 @@ namespace kaanh
 
 			target.option |=
 				Plan::USE_TARGET_POS |
-				Plan::USE_VEL_OFFSET |
+//				Plan::USE_VEL_OFFSET |
 #ifdef WIN32
 				Plan::NOT_CHECK_POS_MIN |
 				Plan::NOT_CHECK_POS_MAX |
@@ -1038,7 +1038,7 @@ namespace kaanh
 					aris::Size t_count;
 					aris::plan::moveAbsolute(target.count, param.begin_joint_pos_vec[i], param.begin_joint_pos_vec[i]+param.joint_pos_vec[i], param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
 					target.model->motionPool().at(i).setMp(p);
-					target.model->motionPool().at(i).setMv(v*1000);
+                    //target.model->motionPool().at(i).setMv(v*1000);
 					total_count = std::max(total_count, t_count);
 				}
 			}
@@ -1195,10 +1195,10 @@ namespace kaanh
 		}
 
 		target.param = param;
-/*
+
 		target.option |=
             Plan::USE_TARGET_POS;
-*/
+
 
 		target.option |=
 			Plan::NOT_CHECK_POS_MIN |
@@ -3122,6 +3122,7 @@ namespace kaanh
 
 		plan_root->planPool().add<aris::plan::MoveL>();
 		plan_root->planPool().add<aris::plan::MoveJ>();
+        plan_root->planPool().add<aris::plan::MoveAbsJ>();
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveInit>();
 		plan_root->planPool().add<kaanh::Get_ee_pq>();
