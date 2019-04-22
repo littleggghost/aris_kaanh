@@ -226,6 +226,8 @@ namespace kaanh
 
 		return model;
 	}
+	
+	
 	// 获取驱动器当前位置，并设置为起始位置 //
 	struct MoveInitParam
 	{
