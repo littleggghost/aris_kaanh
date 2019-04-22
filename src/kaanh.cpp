@@ -17,7 +17,7 @@ namespace kaanh
 	{
 
 		std::unique_ptr<aris::control::Controller> controller(aris::robot::createControllerRokaeXB4());/*创建std::unique_ptr实例*/
-		/*
+		
 		controller->slavePool().clear();	//清除slavePool中的元素，后面重新添加
 		for (aris::Size i = 0; i < 6; ++i)
 		{
@@ -96,7 +96,7 @@ namespace kaanh
 
 			controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
 		}
-		*/
+		
 
 		std::string xml_str =
 			"<EthercatSlave phy_id=\"6\" product_code=\"0x00013D6F\""
