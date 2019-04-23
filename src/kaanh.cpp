@@ -168,7 +168,7 @@ namespace kaanh
 			{
 				if (param.joint_active_vec[i])
 				{
-					param.begin_pos = controller->motionAtAbs(i).actualPos();
+					param.begin_pos = target.model->motionPool().at(i).mp();
 				}
 			}
 		}
