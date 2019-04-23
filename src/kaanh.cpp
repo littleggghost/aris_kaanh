@@ -11,6 +11,7 @@ extern int data_num, data_num_send;
 extern std::atomic_int which_di;
 extern std::atomic_bool is_automatic;
 
+
 namespace kaanh
 {
 	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>	/*函数返回的是一个类指针，指针指向Controller,controller的类型是智能指针std::unique_ptr*/
@@ -35,23 +36,23 @@ namespace kaanh
 #endif
 			double pos_factor[6]
 			{
-				131072.0 * 129.6 / 2 / PI, 131072.0 * 100 / 2 / PI, 131072.0 * 101 / 2 / PI, 131072.0 * 81.6 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 51 / 2 / PI
+				131072.0 * 129.6 / 2 / PI, -131072.0 * 100 / 2 / PI, 131072.0 * 101 / 2 / PI, 131072.0 * 81.6 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 51 / 2 / PI
 			};
 			double max_pos[6]
 			{
-				170.0 / 360 * 2 * PI, 40 / 360 * 2 * PI,	150 / 360 * 2 * PI, 180 / 360 * 2 * PI, 125 / 360 * 2 * PI, 360.0 / 360 * 2 * PI,
+				170.0 / 360 * 2 * PI, 40.0 / 360 * 2 * PI,	150.0 / 360 * 2 * PI, 180.0 / 360 * 2 * PI, 125.0 / 360 * 2 * PI, 360.0 / 360 * 2 * PI
 			};
 			double min_pos[6]
 			{
-				-170.0 / 360 * 2 * PI, -165 / 360 * 2 * PI, -125 / 360 * 2 * PI, -180 / 360 * 2 * PI, -125 / 360 * 2 * PI, -360.0 / 360 * 2 * PI
+				-170.0 / 360 * 2 * PI, -165.0 / 360 * 2 * PI, -125.0 / 360 * 2 * PI, -180.0 / 360 * 2 * PI, -125.0 / 360 * 2 * PI, -360.0 / 360 * 2 * PI
 			};
 			double max_vel[6]
 			{
-				230 / 360 * 2 * PI, 300 / 360 * 2 * PI, 300 / 360 * 2 * PI, 300 / 360 * 2 * PI, 375 / 360 * 2 * PI, 600 / 360 * 2 * PI,
+				230.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 375.0 / 360 * 2 * PI, 600.0 / 360 * 2 * PI
 			};
 			double max_acc[6]
 			{
-				1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1750.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 2500.0 / 360 * 2 * PI,
+				1150.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1875.0 / 360 * 2 * PI, 3000.0 / 360 * 2 * PI
 			};
 
 			std::string xml_str =
@@ -997,7 +998,7 @@ namespace kaanh
 			target.param = param;
 
 			target.option |=
-				Plan::USE_TARGET_POS |
+//				Plan::USE_TARGET_POS |
 //				Plan::USE_VEL_OFFSET |
 #ifdef WIN32
 				Plan::NOT_CHECK_POS_MIN |
@@ -1026,7 +1027,7 @@ namespace kaanh
 				{
 					if (param.joint_active_vec[i])
 					{
-						param.begin_joint_pos_vec[i] = target.model->motionPool()[i].mp();
+						param.begin_joint_pos_vec[i] = target.model->motionPool().at(i).mp();
 					}
 				}
 			}
@@ -1039,12 +1040,14 @@ namespace kaanh
 					double p, v, a;
 					aris::Size t_count;
 					aris::plan::moveAbsolute(target.count, param.begin_joint_pos_vec[i], param.begin_joint_pos_vec[i]+param.joint_pos_vec[i], param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
+					controller->motionAtAbs(i).setTargetPos(p);
+					//controller->motionAtAbs(i).setTargetVel(v*1000);
+
 					target.model->motionPool().at(i).setMp(p);
-                    //target.model->motionPool().at(i).setMv(v*1000);
 					total_count = std::max(total_count, t_count);
 				}
 			}
-
+			//3D模型同步
 			if (!target.model->solverPool().at(1).kinPos())return -1;
 
 			// 打印电流 //
@@ -1056,7 +1059,6 @@ namespace kaanh
                     cout << "mp" << i + 1 << ":" << target.model->motionPool()[i].mp() << "  ";
                     cout << "pos" << i + 1 << ":" << controller->motionAtAbs(i).targetPos() << "  ";
 					cout << "vel" << i + 1 << ":" << controller->motionAtAbs(i).actualVel() << "  ";
-					cout << "cur" << i + 1 << ":" << controller->motionAtAbs(i).actualCur() << "  ";
 				}
 				cout << std::endl;
 			}
@@ -1068,7 +1070,6 @@ namespace kaanh
 				lout << controller->motionAtAbs(i).targetPos() << ",";
 				lout << controller->motionAtAbs(i).actualPos() << ",";
 				lout << controller->motionAtAbs(i).actualVel() << ",";
-				lout << controller->motionAtAbs(i).actualCur() << ",";
 			}
 			lout << std::endl;
 
@@ -1199,7 +1200,7 @@ namespace kaanh
 		target.param = param;
 
 		target.option |=
-            Plan::USE_TARGET_POS;
+//            Plan::USE_TARGET_POS;
 
 
 		target.option |=
@@ -1244,7 +1245,7 @@ namespace kaanh
 				aris::Size t_count;
 				aris::plan::moveAbsolute(target.count, param.begin_pos, param.begin_pos + param.target_pos, param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
                 controller->motionAtAbs(i).setTargetPos(p);
-                //target.model->motionPool().at(i).setMp(p);
+                target.model->motionPool().at(i).setMp(p);
 				total_count = std::max(total_count, t_count);
 			}
 		}
@@ -2230,6 +2231,7 @@ namespace kaanh
 		{
 			//获取驱动//
 			auto controller = target.controller;
+			
 			auto &param = std::any_cast<MovePointParam&>(target.param);
 			static aris::Size total_count = 1;
 
@@ -2287,7 +2289,6 @@ namespace kaanh
 			{
 				lout << controller->motionAtAbs(i).actualPos() << " ";
 				lout << controller->motionAtAbs(i).actualVel() << " ";
-				lout << controller->motionAtAbs(i).actualCur() << " ";
 			}
 			lout << std::endl;
 
