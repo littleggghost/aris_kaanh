@@ -19,7 +19,6 @@ namespace kaanh
 	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>;
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>;
 
-	auto registerPlan()->void;
 
 	class MoveJRT : public aris::plan::Plan
 	{

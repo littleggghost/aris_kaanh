@@ -1,5 +1,6 @@
 ﻿#include <algorithm>
 #include"kaanh.h"
+#include<array>
 
 
 using namespace aris::dynamic;
@@ -317,13 +318,5 @@ namespace kaanh
 		plan_root->planPool().add<kaanh::MoveJRT>();
 
 		return plan_root;
-	}
-	
-	auto registerPlan()->void
-	{
-		aris::core::Object::registerTypeGlobal<aris::plan::MoveL>();
-		aris::core::Object::registerTypeGlobal<aris::plan::MoveJ>();
-		aris::core::Object::registerTypeGlobal<aris::plan::Show>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJRT>();
 	}
 }
