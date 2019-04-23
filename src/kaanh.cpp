@@ -98,15 +98,15 @@ namespace kaanh
 	}
 
 
-	struct MoveJRTParam
+	struct MoveJRParam
 	{
 		double begin_pos, target_pos, vel, acc, dec;
 		std::vector<bool> joint_active_vec;
 	};
-	auto MoveJRT::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	auto MoveJR::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
 		auto c = target.controller;
-		MoveJRTParam param;
+		MoveJRParam param;
 
 		for (auto cmd_param : params)
 		{
@@ -156,9 +156,9 @@ namespace kaanh
 			Plan::NOT_CHECK_VEL_FOLLOWING_ERROR;
 */
 	}
-	auto MoveJRT::executeRT(PlanTarget &target)->int
+	auto MoveJR::executeRT(PlanTarget &target)->int
 	{
-		auto &param = std::any_cast<MoveJRTParam&>(target.param);
+		auto &param = std::any_cast<MoveJRParam&>(target.param);
 		auto controller = target.controller;
 		
 		//获取第一个count时，电机的当前角度位置//
@@ -225,11 +225,11 @@ namespace kaanh
 
 		return total_count - target.count;
 	}
-	auto MoveJRT::collectNrt(PlanTarget &target)->void {}
-	MoveJRT::MoveJRT(const std::string &name) :Plan(name)
+	auto MoveJR::collectNrt(PlanTarget &target)->void {}
+	MoveJR::MoveJR(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
-			"<Command name=\"moveJRT\">"
+			"<Command name=\"moveJR\">"
 			"	<GroupParam>"
 			"		<Param name=\"motion_id\" abbreviation=\"m\" default=\"0\"/>"
 			"		<Param name=\"pos\" default=\"0\"/>"
@@ -314,16 +314,9 @@ namespace kaanh
 		plan_root->planPool().add<aris::plan::MoveL>();
 		plan_root->planPool().add<aris::plan::MoveJ>();
 		plan_root->planPool().add<aris::plan::Show>();
-		plan_root->planPool().add<kaanh::MoveJRT>();
+		plan_root->planPool().add<kaanh::MoveJR>();
 
 		return plan_root;
 	}
 	
-	auto registerPlan()->void
-	{
-		aris::core::Object::registerTypeGlobal<aris::plan::MoveL>();
-		aris::core::Object::registerTypeGlobal<aris::plan::MoveJ>();
-		aris::core::Object::registerTypeGlobal<aris::plan::Show>();
-		aris::core::Object::registerTypeGlobal<kaanh::MoveJRT>();
-	}
 }

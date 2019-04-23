@@ -19,17 +19,16 @@ namespace kaanh
 	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>;
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>;
 
-	auto registerPlan()->void;
 
-	class MoveJRT : public aris::plan::Plan
+	class MoveJR : public aris::plan::Plan
 	{
 	public:
 		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
 		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
 		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
 
-		explicit MoveJRT(const std::string &name = "MoveJRT_plan");
-		ARIS_REGISTER_TYPE(MoveJRT);
+		explicit MoveJR(const std::string &name = "MoveJR_plan");
+		ARIS_REGISTER_TYPE(MoveJR);
 	};
 
 }
