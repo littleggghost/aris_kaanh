@@ -233,11 +233,13 @@ namespace kaanh
 	struct MoveInitParam
 	{
 		std::vector<double> axis_pos_vec;
+		std::vector<double> axis_pq_vec;
 	};
 	auto MoveInit::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
 		MoveInitParam param;
 		param.axis_pos_vec.resize(6, 0.0);
+		param.axis_pq_vec.resize(7, 0.0);
 		target.param = param;
 		target.option |=
 			Plan::USE_TARGET_POS |
@@ -276,32 +278,38 @@ namespace kaanh
 		{
 			target.model->motionPool().at(i).setMp(param.axis_pos_vec[i]);
 		}
+		if (!target.model->solverPool().at(1).kinPos())return -1;
 
-		// 打印电流 //
+		target.model->generalMotionPool().at(0).getMpq(param.axis_pq_vec.data());
+
+		// 打印 //
 		auto &cout = controller->mout();
 		if (target.count % 100 == 0)
 		{
-			for (Size i = 0; i < 6; i++)
+			for (Size i = 0; i < param.axis_pos_vec.size(); i++)
 			{
 				cout << "pos" << i + 1 << ":" << controller->motionAtAbs(i).actualPos() << "  ";
-				cout << "vel" << i + 1 << ":" << controller->motionAtAbs(i).actualVel() << "  ";
-				cout << "cur" << i + 1 << ":" << controller->motionAtAbs(i).actualCur() << "  ";
+			}
+			cout << std::endl;
+			for (Size i = 0; i < param.axis_pq_vec.size(); i++)
+			{
+				cout << param.axis_pq_vec[i] << "  ";
 			}
 			cout << std::endl;
 		}
 
-		// log 电流 //
+		// log //
 		auto &lout = controller->lout();
-		for (Size i = 0; i < 6; i++)
+		for (Size i = 0; i < param.axis_pos_vec.size(); i++)
 		{
 			lout << param.axis_pos_vec[i] << " ";
-			lout << controller->motionAtAbs(i).actualPos() << " ";
-			lout << controller->motionAtAbs(i).actualVel() << " ";
-			lout << controller->motionAtAbs(i).actualCur() << " ";
+		}
+		for (Size i = 0; i < param.axis_pq_vec.size(); i++)
+		{
+			lout << param.axis_pq_vec[i] << " ";
 		}
 		lout << std::endl;
 
-		if (!target.model->solverPool().at(1).kinPos())return -1;
 		return 1000-target.count;
 	}
 	auto MoveInit::collectNrt(PlanTarget &target)->void {}
