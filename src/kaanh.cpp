@@ -31,7 +31,7 @@ namespace kaanh
 #ifdef UNIX
 			double pos_offset[6]
 			{
-                0.0345045068966465,   -0.203205701122403,   -0.181133422007823,   0.00569660673541914,   0.0119907348546894,   0.0908806917782888
+                0.0345045068966465,   0.151295566371175,   -0.181133422007823,   0.00569660673541914,   0.0119907348546894,   0.0908806917782888
 			};
 #endif
 			double pos_factor[6]
@@ -194,7 +194,8 @@ namespace kaanh
 		auto &m6 = model->addMotion(j6);
 
 		// add ee general motion //
-		double pq_ee_i[]{ 0.570, -0.114, 0.84, -0.0414, 0.0414, 0.706, 0.706 };		//x方向加上0.1
+        //double pq_ee_i[]{ 0.570, -0.114, 0.84, -0.0414, 0.0414, 0.706, 0.706 };		//x方向加上0.1
+        double pq_ee_i[]{ 0.566, -0.134, 0.840, -0.0405, 0.0424, 0.694, 0.718 };
 		double pm_ee_i[16];
 		double pm_ee_j[16]{ 1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1 };
 
@@ -242,7 +243,7 @@ namespace kaanh
 		param.axis_pq_vec.resize(7, 0.0);
 		target.param = param;
 		target.option |=
-			Plan::USE_TARGET_POS |
+//			Plan::USE_TARGET_POS |
 #ifdef WIN32
 			Plan::NOT_CHECK_POS_MIN |
 			Plan::NOT_CHECK_POS_MAX |
