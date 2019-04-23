@@ -29,7 +29,7 @@ namespace kaanh
 		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
 
 		explicit MoveJRT(const std::string &name = "MoveJRT_plan");
-		ARIS_REGISTER_TYPE("MoveJRT");
+		ARIS_REGISTER_TYPE(MoveJRT);
 	};
 
 }

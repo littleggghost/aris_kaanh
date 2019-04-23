@@ -182,12 +182,12 @@ namespace kaanh
 				double p, v, a;
 				aris::Size t_count;
 				aris::plan::moveAbsolute(target.count, param.begin_pos, param.begin_pos + param.target_pos, param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
-				//controller->motionAtAbs(i).setTargetPos(p);
+				controller->motionAtAbs(i).setTargetPos(p);
 				target.model->motionPool().at(i).setMp(p);
 				total_count = std::max(total_count, t_count);
 			}
 		}
-
+		//3D模型同步
 		if (!target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
