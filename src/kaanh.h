@@ -7,8 +7,6 @@
 
 // \brief 机器人命名空间
 // \ingroup aris
-//
-
 
 namespace kaanh
 {
