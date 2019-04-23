@@ -1,6 +1,5 @@
 ﻿#include <algorithm>
 #include"kaanh.h"
-#include"forcecontrol.h"
 
 
 using namespace aris::dynamic;
@@ -495,7 +494,6 @@ namespace kaanh
 	}
 
 
-
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>
 	{
 		std::unique_ptr<aris::plan::PlanRoot> plan_root(aris::robot::createPlanRootRokaeXB4());
@@ -505,7 +503,6 @@ namespace kaanh
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveJR>();
 		plan_root->planPool().add<kaanh::MovePoint>();
-		plan_root->planPool().add<forcecontrol::MoveJRC>();
 
 
 		return plan_root;
