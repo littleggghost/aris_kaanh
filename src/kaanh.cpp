@@ -308,6 +308,194 @@ namespace kaanh
 	}
 
 
+	// 示教运动--输入末端大地坐标系的位姿pe，控制动作 //
+	struct MovePointParam
+	{
+		std::vector<double> term_begin_pe_vec;
+		std::vector<double> begin_pm;
+		std::vector<double> target_pm;
+		aris::Size cor;
+		aris::Size move_type;
+		double x, y, z, a, b, c, vel, acc, dec, term_offset_pe;
+	};
+	auto MovePoint::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
+		auto c = target.controller;
+		MovePointParam param;
+		param.term_begin_pe_vec.resize(6, 0.0);
+		param.begin_pm.resize(16, 0.0);
+		param.term_offset_pe = 0;
+		param.target_pm.resize(16, 0.0);
+
+		std::string ret = "ok";
+		target.ret = ret;
+
+		for (auto &p : params)
+		{
+			if (p.first == "cor")
+			{
+				param.cor = std::stoi(p.second);
+			}
+			else if (p.first == "x")
+			{
+				param.x = std::stod(p.second);
+				param.move_type = 0;
+				param.term_offset_pe = param.x;
+			}
+			else if (p.first == "y")
+			{
+				param.y = std::stod(p.second);
+				param.move_type = 1;
+				param.term_offset_pe = param.y;
+			}
+			else if (p.first == "z")
+			{
+				param.z = std::stod(p.second);
+				param.move_type = 2;
+				param.term_offset_pe = param.z;
+			}
+			else if (p.first == "a")
+			{
+				param.a = std::stod(p.second);
+				param.move_type = 3;
+				param.term_offset_pe = param.a;
+			}
+			else if (p.first == "b")
+			{
+				param.b = std::stod(p.second);
+				param.move_type = 4;
+				param.term_offset_pe = param.b;
+			}
+			else if (p.first == "c")
+			{
+				param.c = std::stod(p.second);
+				param.move_type = 5;
+				param.term_offset_pe = param.c;
+			}
+			else if (p.first == "vel")
+			{
+				param.vel = std::stod(p.second);
+			}
+			else if (p.first == "acc")
+			{
+				param.acc = std::stod(p.second);
+			}
+			else if (p.first == "dec")
+			{
+				param.dec = std::stod(p.second);
+			}
+		}
+		target.param = param;
+
+		target.option |=
+			Plan::USE_TARGET_POS |
+#ifdef WIN32
+			Plan::NOT_CHECK_POS_MIN |
+			Plan::NOT_CHECK_POS_MAX |
+			Plan::NOT_CHECK_POS_CONTINUOUS |
+			Plan::NOT_CHECK_POS_CONTINUOUS_AT_START |
+			Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER |
+			Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER_AT_START |
+			Plan::NOT_CHECK_POS_FOLLOWING_ERROR |
+#endif
+			Plan::NOT_CHECK_VEL_MIN |
+			Plan::NOT_CHECK_VEL_MAX |
+			Plan::NOT_CHECK_VEL_CONTINUOUS |
+			Plan::NOT_CHECK_VEL_CONTINUOUS_AT_START |
+			Plan::NOT_CHECK_VEL_FOLLOWING_ERROR;
+
+	}
+	auto MovePoint::executeRT(PlanTarget &target)->int
+	{
+		//获取驱动//
+		auto controller = target.controller;
+		auto &param = std::any_cast<MovePointParam&>(target.param);
+		static aris::Size total_count = 1;
+
+		char eu_type[4]{ '1', '2', '3', '\0' };
+
+		if (target.count == 1)
+		{
+			// 获取起始欧拉角位姿 //
+			target.model->generalMotionPool().at(0).getMpe(param.term_begin_pe_vec.data(), eu_type);
+		}
+		// 梯形轨迹规划 //
+		double p, v, a;
+		aris::Size t_count;
+		aris::plan::moveAbsolute(target.count, 0, param.term_offset_pe, param.vel / 1000
+			, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
+		total_count = std::max(total_count, t_count);
+
+		double pe[6]{ 0,0,0,0,0,0 }, pm[16];
+		pe[param.move_type] = p;
+		s_pe2pm(pe, pm, eu_type);
+
+		s_pe2pm(param.term_begin_pe_vec.data(), param.begin_pm.data(), eu_type);
+
+		//绝对坐标系
+		if (param.cor == 0)
+		{
+			s_pm_dot_pm(pm, param.begin_pm.data(), param.target_pm.data());
+		}
+		//工件坐标系
+		else if (param.cor == 1)
+		{
+			s_pm_dot_pm(param.begin_pm.data(), pm, param.target_pm.data());
+		}
+		target.model->generalMotionPool().at(0).setMpm(param.target_pm.data());
+
+
+		// 运动学反解 //
+		if (!target.model->solverPool().at(0).kinPos())return -1;
+
+		// 打印 //
+		auto &cout = controller->mout();
+
+		if (target.count % 200 == 0)
+		{
+			for (Size i = 0; i < 16; i++)
+			{
+				cout << param.target_pm[i] << "  ";
+			}
+			cout << std::endl;
+		}
+
+		// log //
+		auto &lout = controller->lout();
+		for (Size i = 0; i < 6; i++)
+		{
+			lout << controller->motionAtAbs(i).actualPos() << " ";
+			lout << controller->motionAtAbs(i).actualVel() << " ";
+			lout << controller->motionAtAbs(i).actualCur() << " ";
+		}
+		lout << std::endl;
+
+		return total_count - target.count;
+	}
+	auto MovePoint::collectNrt(PlanTarget &target)->void {}
+	MovePoint::MovePoint(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"movePoint\">"
+			"	<GroupParam>"
+			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"vel\" default=\"0.2\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.4\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.4\" abbreviation=\"d\"/>"
+			"		<UniqueParam default=\"x\">"
+			"			<Param name=\"x\" default=\"0.02\"/>"
+			"			<Param name=\"y\" default=\"0.02\"/>"
+			"			<Param name=\"z\" default=\"0.02\"/>"
+			"			<Param name=\"a\" default=\"0.17\"/>"
+			"			<Param name=\"b\" default=\"0.17\"/>"
+			"			<Param name=\"c\" default=\"0.17\"/>"
+			"		</UniqueParam>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
+
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>
 	{
 		std::unique_ptr<aris::plan::PlanRoot> plan_root(aris::robot::createPlanRootRokaeXB4());
@@ -316,7 +504,9 @@ namespace kaanh
 		plan_root->planPool().add<aris::plan::MoveJ>();
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveJR>();
+		plan_root->planPool().add<kaanh::MovePoint>();
 		plan_root->planPool().add<forcecontrol::MoveJRC>();
+
 
 		return plan_root;
 	}
