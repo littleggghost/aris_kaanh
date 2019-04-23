@@ -312,8 +312,6 @@ namespace kaanh
 	{
 		std::unique_ptr<aris::plan::PlanRoot> plan_root(aris::robot::createPlanRootRokaeXB4());
 
-		plan_root->planPool().add<aris::plan::MoveL>();
-		plan_root->planPool().add<aris::plan::MoveJ>();
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveJRT>();
 
