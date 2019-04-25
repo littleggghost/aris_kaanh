@@ -494,6 +494,223 @@ namespace kaanh
 	}
 
 
+	// 关节插值运动轨迹--输入末端pq姿态，各个关节的速度、加速度；各关节按照梯形速度轨迹执行；速度前馈 //
+	struct MoveJIParam
+	{
+		std::vector<double> pq;
+		std::vector<Size> total_count_vec;
+		std::vector<double> axis_begin_pos_vec;
+		std::vector<double> axis_pos_vec;
+		std::vector<double> axis_vel_vec;
+		std::vector<double> axis_acc_vec;
+		std::vector<double> axis_dec_vec;
+	};
+	auto MoveJI::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
+		auto c = target.controller;
+		MoveJIParam param;
+		param.pq.resize(7, 0.0);
+		param.total_count_vec.resize(6, 1);
+		param.axis_begin_pos_vec.resize(6, 0.0);
+		param.axis_pos_vec.resize(6, 0.0);
+
+		//params.at("pq")
+		for (auto &p : params)
+		{
+			if (p.first == "pq")
+			{
+				if (p.second == "current_pos")
+				{
+					target.option |= aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+				}
+				else
+				{
+					auto pqarray = target.model->calculator().calculateExpression(p.second);
+					param.pq.assign(pqarray.begin(), pqarray.end());
+				}
+			}
+			else if (p.first == "vel")
+			{
+				auto v = target.model->calculator().calculateExpression(p.second);
+				if (v.size() == 1)
+				{
+					param.axis_vel_vec.resize(param.axis_pos_vec.size(), v.toDouble());
+				}
+				else if (v.size() == param.axis_pos_vec.size())
+				{
+					param.axis_vel_vec.assign(v.begin(), v.end());
+				}
+				else
+				{
+					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+				}
+
+				for (Size i = 0; i < param.axis_pos_vec.size(); ++i)
+				{
+					//if (param.axis_vel_vec[i] > 1.0 || param.axis_vel_vec[i] < 0.01)
+					//	throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+					if (param.axis_vel_vec[i] > 1.0)
+					{
+						param.axis_vel_vec[i] = 1.0;
+					}
+					if (param.axis_vel_vec[i] < 0.0)
+					{
+						param.axis_vel_vec[i] = 0.0;
+					}
+					param.axis_vel_vec[i] = param.axis_vel_vec[i] * c->motionPool()[i].maxVel();
+				}
+			}
+			else if (p.first == "acc")
+			{
+				auto a = target.model->calculator().calculateExpression(p.second);
+				if (a.size() == 1)
+				{
+					param.axis_acc_vec.resize(param.axis_pos_vec.size(), a.toDouble());
+				}
+				else if (a.size() == param.axis_pos_vec.size())
+				{
+					param.axis_acc_vec.assign(a.begin(), a.end());
+				}
+				else
+				{
+					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+				}
+
+				for (Size i = 0; i < param.axis_pos_vec.size(); ++i)
+				{
+					if (param.axis_acc_vec[i] > 1.0)
+					{
+						param.axis_acc_vec[i] = 1.0;
+					}
+					if (param.axis_acc_vec[i] < 0.0)
+					{
+						param.axis_acc_vec[i] = 0.0;
+					}
+					param.axis_acc_vec[i] = param.axis_acc_vec[i] * c->motionPool()[i].maxAcc();
+				}
+			}
+			else if (p.first == "dec")
+			{
+				auto d = target.model->calculator().calculateExpression(p.second);
+				if (d.size() == 1)
+				{
+					param.axis_dec_vec.resize(param.axis_pos_vec.size(), d.toDouble());
+				}
+				else if (d.size() == param.axis_pos_vec.size())
+				{
+					param.axis_dec_vec.assign(d.begin(), d.end());
+				}
+				else
+				{
+					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+				}
+
+				for (Size i = 0; i < param.axis_pos_vec.size(); ++i)
+				{
+					if (param.axis_dec_vec[i] > 1.0)
+					{
+						param.axis_dec_vec[i] = 1.0;
+					}
+					if (param.axis_dec_vec[i] < 0.0)
+					{
+						param.axis_dec_vec[i] = 0.0;
+					}
+					param.axis_dec_vec[i] = param.axis_dec_vec[i] * c->motionPool()[i].minAcc();
+				}
+			}
+		}
+		target.param = param;
+
+		target.option |=
+			Plan::USE_VEL_OFFSET |
+#ifdef WIN32
+			Plan::NOT_CHECK_POS_MIN |
+			Plan::NOT_CHECK_POS_MAX |
+			Plan::NOT_CHECK_POS_CONTINUOUS |
+			Plan::NOT_CHECK_POS_CONTINUOUS_AT_START |
+			Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER |
+			Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER_AT_START |
+			Plan::NOT_CHECK_POS_FOLLOWING_ERROR |
+#endif
+			Plan::NOT_CHECK_VEL_MIN |
+			Plan::NOT_CHECK_VEL_MAX |
+			Plan::NOT_CHECK_VEL_CONTINUOUS |
+			Plan::NOT_CHECK_VEL_CONTINUOUS_AT_START |
+			Plan::NOT_CHECK_VEL_FOLLOWING_ERROR;
+
+	}
+	auto MoveJI::executeRT(PlanTarget &target)->int
+	{
+		//获取驱动//
+		auto controller = target.controller;
+		auto &param = std::any_cast<MoveJIParam&>(target.param);
+		static double begin_pos[6];
+		static double pos[6];
+		// 取得起始位置 //
+		if (target.count == 1)
+		{
+			target.model->generalMotionPool().at(0).setMpq(param.pq.data());	//generalMotionPool()指模型末端，at(0)表示第1个末端，对于6足就有6个末端，对于机器人只有1个末端
+			if (!target.model->solverPool().at(0).kinPos())return -1;
+			for (Size i = 0; i < param.axis_pos_vec.size(); ++i)
+			{
+				param.axis_begin_pos_vec[i] = controller->motionPool().at(i).targetPos();
+				param.axis_pos_vec[i] = target.model->motionPool().at(i).mp();		//motionPool()指模型驱动器，at(0)表示第1个驱动器
+			}
+		}
+		// 设置驱动器的位置 //
+		for (Size i = 0; i < param.axis_pos_vec.size(); ++i)
+		{
+			double p, v, a;
+			aris::plan::moveAbsolute(target.count, param.axis_begin_pos_vec[i], param.axis_pos_vec[i], param.axis_vel_vec[i] / 1000
+				, param.axis_acc_vec[i] / 1000 / 1000, param.axis_dec_vec[i] / 1000 / 1000, p, v, a, param.total_count_vec[i]);
+			controller->motionAtAbs(i).setTargetPos(p);
+			//速度前馈//
+			controller->motionAtAbs(i).setOffsetVel(v * 1000);
+			target.model->motionPool().at(i).setMp(p);
+		}
+		if (!target.model->solverPool().at(1).kinPos())return -1;
+
+		// 打印电流 //
+		auto &cout = controller->mout();
+		if (target.count % 100 == 0)
+		{
+			for (Size i = 0; i < 6; i++)
+			{
+				cout << "pos" << i + 1 << ":" << controller->motionAtAbs(i).actualPos() << "  ";
+				cout << "vel" << i + 1 << ":" << controller->motionAtAbs(i).actualVel() << "  ";
+				cout << "cur" << i + 1 << ":" << controller->motionAtAbs(i).actualCur() << "  ";
+			}
+			cout << std::endl;
+		}
+
+		// log 电流 //
+		auto &lout = controller->lout();
+		for (Size i = 0; i < 6; i++)
+		{
+			lout << controller->motionAtAbs(i).targetPos() << ",";
+			lout << controller->motionAtAbs(i).actualPos() << ",";
+			lout << controller->motionAtAbs(i).actualVel() << ",";
+			lout << controller->motionAtAbs(i).actualCur() << ",";
+		}
+		lout << std::endl;
+
+		return (static_cast<int>(*std::max_element(param.total_count_vec.begin(), param.total_count_vec.end())) > target.count) ? 1 : 0;
+	}
+	auto MoveJI::collectNrt(PlanTarget &target)->void {}
+	MoveJI::MoveJI(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"moveJI\">"
+			"	<GroupParam>"
+			"		<Param name=\"pq\" default=\"current_pos\"/>"
+			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.05,0.05,0.05}\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"{0.1,0.1,0.1,0.1,0.1,0.1}\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"{0.1,0.1,0.1,0.1,0.1,0.1}\" abbreviation=\"d\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>
 	{
 		std::unique_ptr<aris::plan::PlanRoot> plan_root(aris::robot::createPlanRootRokaeXB4());
@@ -503,7 +720,7 @@ namespace kaanh
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveJR>();
 		plan_root->planPool().add<kaanh::MovePoint>();
-
+		plan_root->planPool().add<kaanh::MoveJI>();
 
 		return plan_root;
 	}
