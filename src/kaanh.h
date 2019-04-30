@@ -3,7 +3,6 @@
 
 #include <memory>
 #include <aris.hpp>
-#include"forcecontrol.h"
 #include"iir.h"
 
 //statemachine//
@@ -33,38 +32,6 @@ namespace kaanh
 	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>;
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>;
 
-	//auto registerPlan()->void;
-
-	class MoveInit : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit MoveInit(const std::string &name = "MoveInit_plan");
-		ARIS_REGISTER_TYPE(MoveInit);
-	};
-
-	class Get_ee_pq : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit Get_ee_pq(const std::string &name = "Get_ee_pq_plan");
-		ARIS_REGISTER_TYPE(Get_ee_pq);
-	};
-
-	class Get_cur : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit Get_cur(const std::string &name = "Get_cur_plan");
-		ARIS_REGISTER_TYPE(Get_cur);
-	};
 
 	class MoveX : public aris::plan::Plan
 	{
@@ -141,88 +108,6 @@ namespace kaanh
 
 		explicit MoveJI(const std::string &name = "MoveJI_plan");
 		ARIS_REGISTER_TYPE(MoveJI);
-	};
-
-	class MovePoint : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		virtual ~MovePoint();
-		explicit MovePoint(const std::string &name = "MovePoint_plan");
-		ARIS_REGISTER_TYPE(MovePoint);
-		MovePoint(const MovePoint &);
-		MovePoint(MovePoint &);
-		MovePoint& operator=(const MovePoint &);
-		MovePoint& operator=(MovePoint &&);
-		
-
-	private:
-		struct Imp;
-		aris::core::ImpPtr<Imp> imp_;
-	};
-
-	class Grasp : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit Grasp(const std::string &name = "Grasp_plan");
-		ARIS_REGISTER_TYPE(Grasp);
-	};
-
-	class ListenDI : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		explicit ListenDI(const std::string &name = "ListenDI_plan");
-		ARIS_REGISTER_TYPE(ListenDI);
-	};
-
-	class MoveEA : public aris::plan::Plan
-	{
-	public:
-		//平均值速度滤波、摩擦力滤波器初始化//
-		std::vector<double> fore_vel;
-		IIR_FILTER::IIR iir;
-		double tempforce;
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit MoveEA(const std::string &name = "MoveEA_plan");
-		ARIS_REGISTER_TYPE(MoveEA);
-	};
-
-	class MoveEAP : public aris::plan::Plan
-	{
-	public:
-		//平均值速度滤波、摩擦力滤波器初始化//
-		std::vector<double> fore_vel;
-		IIR_FILTER::IIR iir;
-		double tempforce;
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit MoveEAP(const std::string &name = "MoveEAP_plan");
-		ARIS_REGISTER_TYPE(MoveEAP);
-	};
-
-	class FSSignal : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-		explicit FSSignal(const std::string &name = "FSSignal_plan");
-		ARIS_REGISTER_TYPE(FSSignal);
 	};
 
 }
