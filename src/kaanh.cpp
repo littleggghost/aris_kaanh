@@ -1185,6 +1185,8 @@ namespace kaanh
 		plan_root->planPool().add<aris::plan::MoveJ>();
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveJR>();
+		plan_root->planPool().add<kaanh::MoveJP>();
+		plan_root->planPool().add<kaanh::ShowAll>();
 		plan_root->planPool().add<kaanh::MovePoint>();
 		plan_root->planPool().add<forcecontrol::MoveJRC>();
 
