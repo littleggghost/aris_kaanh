@@ -99,25 +99,25 @@
             <Id name="id_96" value="id_96"/>
             <Id name="id_97" value="id_97"/>
             <Id name="id_98" value="id_98"/>
-			<Id name="id_99" value="id_99"/>
-			<Id name="id_100" value="id_100"/>
-			<Id name="id_101" value="id_101"/>
-			<Id name="id_102" value="id_102"/>
-			<Id name="id_103" value="id_103"/>
-			<Id name="id_104" value="id_104"/>
-			<Id name="id_105" value="id_105"/>
-			<Id name="id_106" value="id_106"/>
-			<Id name="id_107" value="id_107"/>
-			<Id name="id_108" value="id_108"/>
-			<Id name="id_109" value="id_109"/>
-			<Id name="id_110" value="id_110"/>
-			<Id name="id_111" value="id_111"/>
-			<Id name="id_112" value="id_112"/>
-			<Id name="id_113" value="id_113"/>
-			<Id name="id_114" value="id_114"/>
-			<Id name="id_115" value="id_115"/>
-			<Id name="id_116" value="id_116"/>
-			<Id name="id_117" value="id_117"/>			
+            <Id name="id_99" value="id_99"/>
+            <Id name="id_100" value="id_100"/>
+            <Id name="id_101" value="id_101"/>
+            <Id name="id_102" value="id_102"/>
+            <Id name="id_103" value="id_103"/>
+            <Id name="id_104" value="id_104"/>
+            <Id name="id_105" value="id_105"/>
+            <Id name="id_106" value="id_106"/>
+            <Id name="id_107" value="id_107"/>
+            <Id name="id_108" value="id_108"/>
+            <Id name="id_109" value="id_109"/>
+            <Id name="id_110" value="id_110"/>
+            <Id name="id_111" value="id_111"/>
+            <Id name="id_112" value="id_112"/>
+            <Id name="id_113" value="id_113"/>
+            <Id name="id_114" value="id_114"/>
+            <Id name="id_115" value="id_115"/>
+            <Id name="id_116" value="id_116"/>
+            <Id name="id_117" value="id_117"/>
             <Id name="id_1001" value="id_1001"/>
             <Id name="id_1002" value="id_1002"/>
             <Id name="id_1003" value="id_1003"/>
@@ -147,128 +147,129 @@
             <Id name="id_1027" value="id_1027"/>
             <Id name="id_1028" value="id_1028"/>
             <Id name="id_1029" value="id_1029"/>
-			<Id name="id_1029" value="id_1030"/>
-			<Id name="id_1029" value="id_1031"/>
-			<Id name="id_1029" value="id_1032"/>
-			<Id name="id_1029" value="id_1033"/>
-			<Id name="id_1029" value="id_1034"/>
-			<Id name="id_1029" value="id_1035"/>
-			<Id name="id_1029" value="id_1036"/>
-			<Id name="id_1029" value="id_1037"/>
-			<Id name="id_1029" value="id_1038"/>
+            <Id name="id_1029" value="id_1030"/>
+            <Id name="id_1029" value="id_1031"/>
+            <Id name="id_1029" value="id_1032"/>
+            <Id name="id_1029" value="id_1033"/>
+            <Id name="id_1029" value="id_1034"/>
+            <Id name="id_1029" value="id_1035"/>
+            <Id name="id_1029" value="id_1036"/>
+            <Id name="id_1029" value="id_1037"/>
+            <Id name="id_1029" value="id_1038"/>
         </UiIdPoolObject>
-        <!--layout 为页面布局，必须包括ui-layout-center。布局可相互嵌套-->
-        <!--layout id必须有-->
-        <!--可以设置size，一般center不设置size，会自动浮动-->
-        <Layout pos="ui-layout-center" id="id_1001">
-            <CmdInterfacePoolObject>
-                <Tabs id="id_44" text="Tab">
-                    <TabItem text="Command">
-                        <Panel text="|CMD" id="id_1">
-                            <!--default：input内的默认值-->
-                            <!--parameter:所对应的参数名称，会显示在输入框的前面-->
-							<Table id="id_1033">
-								<tr style="width: 100px;height: 30px">
-									<td>                            
-										<Button id="id_48" text="ds" cmd="ds" return_attached=""/>
-									</td>
-									<td>
-										<Button id="id_49" text="md" cmd="md" return_attached=""/>
-									</td>
-									<td>
-										<Button id="id_50" text="en" cmd="en;rc" return_attached=""/>
-									</td>
-								</tr>	
-							</Table>								
-                            <!--text:显示在UI上的文字-->
-                            <!---->
-                            <!--repeat:-1:one time click单次按钮，不重复发送;0: mouse down repeat鼠标左键按下重复发送，松开停止发送; 1:mouse click repeat按钮单击后重复发送，再次单击停止发送;-->
-                            <!--rate:cmd send rate 重复发送的间隔ms-->
-                            <!--cmd:命令的内容，多条命令以";"隔开参数可以按id索引控件的内容-->
-                            <!--return_attached：返回值绑定的UI或处理的方式，label直接显示，chart绘制图表-->
-                        </Panel>
-                    </TabItem>
-                </Tabs>
-            </CmdInterfacePoolObject>
-        </Layout>
-        <Layout pos="ui-layout-north" size="100" id="id_1002">
-            <CmdInterfacePoolObject>
-                <Figure src="images/logo.PNG" alt="" style="width: 200px;height: 60px;margin-left:0px;margin-top: 0px"/>
-                <!--Figure，显示图片-->
-            </CmdInterfacePoolObject>
-        </Layout>
-        <Layout pos="ui-layout-west" size="100" id="id_1004">
-            <CmdInterfacePoolObject>
-                <Accordion id="51">
-                    <AccordionItem text="single axis_jog" id="52">
-                        <Panel>
-                            <Panel text="|CMD" id="id_27">
-                                <Button id="id_28" text="start" cmd="moveJP --start" return_attached=""/>
-                                <Button id="id_30" text="stop" cmd="moveJP --stop" return_attached=""/>
+        <Page name="index">
+            <Layout pos="ui-layout-center" id="id_1001">
+                <CmdInterfacePoolObject>
+                    <Tabs id="id_44" text="Tab">
+                        <TabItem text="Command">
+                            <Panel text="|CMD" id="id_1">
+                                <Table id="id_1033">
+                                    <tr style="width: 100px;height: 30px">
+                                        <td>
+                                            <Button id="id_48" text="ds" cmd="ds" return_attached=""/>
+                                        </td>
+                                        <td>
+                                            <Button id="id_49" text="md" cmd="md" return_attached=""/>
+                                        </td>
+                                        <td>
+                                            <Button id="id_50" text="en" cmd="en;rc" return_attached=""/>
+                                        </td>
+                                    </tr>
+                                </Table>
                             </Panel>
-                            <Panel text="|CMD" id="id_7">
-                                <Slider id="id_9" default="10" max="100" min="0" step="1" parameter="vel_percent"/>
-                                <Br/>
-                                <Button id="id_31" text="j0-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=0 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Button id="id_32" text="j0+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=0 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_33" text="j1-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=1 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Button id="id_34" text="j1+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=1 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_35" text="j2-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=2 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Button id="id_36" text="j2+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=2 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_37" text="j3-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=3 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Button id="id_38" text="j3+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=3 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_39" text="j4-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=4 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Button id="id_40" text="j4+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=4 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_41" text="j5-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=5 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
-                                <Button id="id_42" text="j5+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=5 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                        </TabItem>
+                    </Tabs>
+                </CmdInterfacePoolObject>
+            </Layout>
+            <Layout pos="ui-layout-north" size="100" id="id_1002">
+                <CmdInterfacePoolObject>
+                    <Table id="">
+                        <tr style="width: 100px;height: 30px">
+                            <td>
+                                <Figure src="images/logo.PNG" alt="" style="width: 200px;height: 60px;margin-left:0px;margin-top: 0px"/>
+                            </td>
+                            <td>
+                                <B id="" text="Operating UI" style="width:200px;height:60px"/>
+                            </td>
+                            <td>
+                                <B id="" text=" " style="width:200px;height:60px"/>
+                            </td>
+                        </tr>
+                    </Table>
+                </CmdInterfacePoolObject>
+            </Layout>
+            <Layout pos="ui-layout-west" size="100" id="id_1004">
+                <CmdInterfacePoolObject>
+                    <Accordion id="51">
+                        <AccordionItem text="single axis_jog" id="52">
+                            <Panel>
+                                <Panel text="|CMD" id="id_27">
+                                    <Button id="id_28" text="start" cmd="moveJP --start" return_attached=""/>
+                                    <Button id="id_30" text="stop" cmd="moveJP --stop" return_attached=""/>
+                                </Panel>
+                                <Panel text="|CMD" id="id_7">
+                                    <Slider id="id_9" default="10" max="100" min="0" step="1" parameter="vel_percent"/>
+                                    <Br/>
+                                    <Button id="id_31" text="j0-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=0 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Button id="id_32" text="j0+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=0 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_33" text="j1-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=1 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Button id="id_34" text="j1+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=1 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_35" text="j2-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=2 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Button id="id_36" text="j2+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=2 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_37" text="j3-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=3 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Button id="id_38" text="j3+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=3 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_39" text="j4-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=4 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Button id="id_40" text="j4+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=4 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_41" text="j5-" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=5 --direction=-1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                    <Button id="id_42" text="j5+" repeat="0" rate="20" style="width: 100px" cmd="moveJP -m=5 --direction=1 --vel_percent=$Slider{id_9}" return_attached=""/>
+                                </Panel>
                             </Panel>
-                        </Panel>
-                    </AccordionItem>
-                    <AccordionItem text="coordinate jog" id="53">
-                        <Panel>
-                            <Panel text="|CMD" id="id_23">
-                                <Button id="id_24" text="start" cmd="movePoint --start" return_attached=""/>
-                                <Button id="id_26" text="stop" cmd="movePoint --stop" return_attached=""/>
+                        </AccordionItem>
+                        <AccordionItem text="coordinate jog" id="53">
+                            <Panel>
+                                <Panel text="|CMD" id="id_23">
+                                    <Button id="id_24" text="start" cmd="movePoint --start" return_attached=""/>
+                                    <Button id="id_26" text="stop" cmd="movePoint --stop" return_attached=""/>
+                                </Panel>
+                                <Panel text="|CMD" id="id_22">
+                                    <Select id="id_8" parameter="cor">
+                                        <Option value="0" selected="selected">world</Option>
+                                        <Option value="1">end</Option>
+                                    </Select>
+                                    <Slider id="id_6" default="10" max="100" min="0" step="1" parameter="vel_percent"/>
+                                    <Br/>
+                                    <Button id="id_10" text="x-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --x=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Button id="id_11" text="x+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --x=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_12" text="y-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --y=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Button id="id_13" text="y+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --y=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_14" text="z-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --z=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Button id="id_15" text="z+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --z=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_16" text="a-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --a=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Button id="id_17" text="a+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --a=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_18" text="b-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --b=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Button id="id_19" text="b+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --b=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Br/>
+                                    <Button id="id_20" text="c-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --c=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                    <Button id="id_21" text="c+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --c=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
+                                </Panel>
                             </Panel>
-                            <Panel text="|CMD" id="id_22">
-                                <Select id="id_8" parameter="cor">
-                                    <Option value="0" selected="selected">world</Option>
-                                    <Option value="1">end</Option>
-                                </Select>
-                                <Slider id="id_6" default="10" max="100" min="0" step="1" parameter="vel_percent"/>
-                                <Br/>
-                                <Button id="id_10" text="x-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --x=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Button id="id_11" text="x+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --x=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_12" text="y-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --y=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Button id="id_13" text="y+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --y=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_14" text="z-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --z=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Button id="id_15" text="z+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --z=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_16" text="a-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --a=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Button id="id_17" text="a+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --a=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_18" text="b-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --b=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Button id="id_19" text="b+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --b=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Br/>
-                                <Button id="id_20" text="c-" repeat="0" rate="20" style="width: 100px" cmd="movePoint --c=-1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                                <Button id="id_21" text="c+" repeat="0" rate="20" style="width: 100px" cmd="movePoint --c=1 --cor=${id_8} --vel_percent=$Slider{id_6}" return_attached=""/>
-                            </Panel>
-                        </Panel>
-                    </AccordionItem>
-                </Accordion>
-                <!--可折叠控件，-->
-            </CmdInterfacePoolObject>
-        </Layout>
-        <Layout pos="ui-layout-east" size="100" id="id_1005">	
-			<View3DInterfacePoolObject show="true" rate="50"/>
-        </Layout>
+                        </AccordionItem>
+                    </Accordion>
+                </CmdInterfacePoolObject>
+            </Layout>
+            <Layout pos="ui-layout-east" size="100" id="id_1005">
+                <View3DInterfacePoolObject show="true" rate="50"/>
+            </Layout>
+        </Page>
     </InterfaceRoot>
     <EthercatController name="ethercat_controller">
         <SlavePoolObject name="slave_pool">
@@ -435,63 +436,49 @@
                     <Marker name="joint_0_j" active="true" pe="{0,0,0.3295,0.785398163397448,0,0.785398163397448}"/>
                     <Marker name="ee_makJ" active="true" pe="{0,0,0,-0,0,-0}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l0.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L1" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0,0,0,0,0,0.59026333537827,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_0_i" active="true" pe="{0,0,0.3295,0.785398163397448,0,0.785398163397448}"/>
                     <Marker name="joint_1_j" active="true" pe="{0.04,0,0.3295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l1.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L2" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,-0.02551872200978,0,3.05660683326413,2.85905166943306,0,0,-0.00855352993039,-0.09946674483372,-0.00712210734359}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_1_i" active="true" pe="{0.04,0,0.3295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_2_j" active="true" pe="{0.04,0,0.6045,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l2.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L3" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0,0,0.02733022277747,0,0.37382629693302,0,0.00312006493276,-0.00578410451516,0.0057060612854}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_2_i" active="true" pe="{0.04,0,0.6045,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_3_j" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l3.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L4" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,1.06223330086669,0,0.0031174824296,0,0.24420385558544,0.24970286555981,0.00305759215246,-0.66644096559686,0.00228253380852}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_3_i" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                     <Marker name="joint_4_j" active="true" pe="{0.32,0,0.6295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l4.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L5" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0.0536228689791,0.00528925153464,-0.00842588023014,0.00128498153337,-0.00389810210572,0,-0.00223677867576,-0.03365036368035,-0.00415647085627}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_4_i" active="true" pe="{0.32,0,0.6295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_5_j" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l5.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L6" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0,0.00066049870832,0.00012563800445,-0.00085124094833,0.04209529937135,0.04102481443654,-0.00067596644891,0.00017482449876,-0.00041025776053}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_5_i" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                     <Marker name="ee_makI" active="true" pe="{0.398,0,0.6295,1.5707963267949,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l6.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
         </PartPoolElement>
         <JointPoolElement name="joint_pool">

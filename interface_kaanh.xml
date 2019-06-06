@@ -161,18 +161,6 @@
                 <CmdInterfacePoolObject>
                     <Tabs id="id_44" text="Tab">
                         <TabItem text="Command">
-                            <Panel text="|CMD" id="id_84">
-                                <Table id="id_1032">
-                                    <tr style="width: 100px;height: 30px">
-                                        <td>
-                                            <Button id="id_85" text="StartCS" cmd="startCS" return_attached=""/>
-                                        </td>
-                                        <td>
-                                            <Button id="id_86" text="StopCS" cmd="stopCS" return_attached=""/>
-                                        </td>
-                                    </tr>
-                                </Table>
-                            </Panel>
                             <Panel text="|CMD" id="id_1">
                                 <Table id="id_1033">
                                     <tr style="width: 100px;height: 30px">
@@ -184,34 +172,6 @@
                                         </td>
                                         <td>
                                             <Button id="id_50" text="en" cmd="en;rc" return_attached=""/>
-                                        </td>
-                                    </tr>
-                                </Table>
-                            </Panel>
-                            <Panel>
-                                <Table id="id_1034">
-                                    <tr>
-                                        <td>
-                                            <Button id="" text="Get pq" style="width:180px" repeat="1" rate="200" cmd="get_ee_pq" return_attached="$BinaryLabel{id_109}"/>
-                                        </td>
-                                        <td>
-                                            <BinaryLabel id="id_109" style="width:400px"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <Button id="" text="Get pe" style="width:180px" repeat="1" rate="200" cmd="get_ee_pe" return_attached="$BinaryLabel{id_110}"/>
-                                        </td>
-                                        <td>
-                                            <BinaryLabel id="id_110" style="width:400px"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <Button id="" text="Get joint pos" style="width:180px" repeat="1" rate="200" cmd="get_joint_pos" return_attached="$BinaryLabel{id_111}"/>
-                                        </td>
-                                        <td>
-                                            <BinaryLabel id="id_111" style="width:400px"/>
                                         </td>
                                     </tr>
                                 </Table>

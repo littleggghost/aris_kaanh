@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
 
 	cs.loadXmlFile(xmlpath.string().c_str());
 	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
-	//cs.start();
+	cs.saveXmlFile(xmlpath.string().c_str());
+	cs.start();
 
 
 	//Start Web Socket//
