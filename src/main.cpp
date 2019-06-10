@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
 	auto port = argc < 2 ? 5866 : std::stoi(argv[1]);
 
 	//生成kaanh.xml文档
-
+    /*
 	//-------for rokae robot begin//
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
 	cs.resetModel(kaanh::createModelRokae().release());
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
 	cs.saveXmlFile(xmlpath.string().c_str());
 	//-------for rokae robot end//
-
+    */
 
 	/*
 	//-------for sanxiang robot begin//
@@ -52,8 +52,8 @@ int main(int argc, char *argv[])
 	*/
 
 	cs.loadXmlFile(xmlpath.string().c_str());
-	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
-	cs.saveXmlFile(xmlpath.string().c_str());
+    cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
+    cs.saveXmlFile(xmlpath.string().c_str());
     cs.start();
 
 
