@@ -83,6 +83,10 @@ namespace kaanh
 
 		}
 
+		dynamic_cast<aris::control::EthercatController*>(controller.get())->scanInfoForCurrentSlaves();
+
+		dynamic_cast<aris::control::EthercatController*>(controller.get())->scanPdoForCurrentSlaves();
+
 		return controller;
 	};
 	auto createModelRokae()->std::unique_ptr<aris::dynamic::Model>
@@ -427,10 +431,11 @@ namespace kaanh
 				param.axis_pos_vec[i] = target.model->motionPool().at(i).mp();
 #endif
 			}
-			target.model->generalMotionPool().at(0).getMpq(param.axis_pq_vec.data());
+			
 		}
 
-		if (target.model->solverPool().at(0).kinPos())return -1;
+		if (target.model->solverPool().at(1).kinPos())return -1;
+		target.model->generalMotionPool().at(0).getMpq(param.axis_pq_vec.data());
 
 		// 打印 //
 		auto &cout = controller->mout();
@@ -536,7 +541,7 @@ namespace kaanh
 			}
 		}
 		//3D模型同步
-		if (!target.model->solverPool().at(1).kinPos())return -1;
+		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
 		auto &cout = controller->mout();
