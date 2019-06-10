@@ -427,10 +427,10 @@ namespace kaanh
 				param.axis_pos_vec[i] = target.model->motionPool().at(i).mp();
 #endif
 			}
-			target.model->generalMotionPool().at(0).getMpq(param.axis_pq_vec.data());
 		}
 
-		if (target.model->solverPool().at(0).kinPos())return -1;
+        if (target.model->solverPool().at(1).kinPos())return -1;
+        target.model->generalMotionPool().at(0).getMpq(param.axis_pq_vec.data());
 
 		// 打印 //
 		auto &cout = controller->mout();
@@ -502,7 +502,7 @@ namespace kaanh
 
 		target.param = param;
 
-		//std::fill(target.mot_options.begin(), target.mot_options.end(), Plan::USE_TARGET_POS);
+        //std::fill(target.mot_options.begin(), target.mot_options.end(), Plan::USE_TARGET_POS);
 	}
 	auto MoveJR::executeRT(PlanTarget &target)->int
 	{
@@ -536,7 +536,7 @@ namespace kaanh
 			}
 		}
 		//3D模型同步
-		if (!target.model->solverPool().at(1).kinPos())return -1;
+        if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
 		auto &cout = controller->mout();
@@ -553,7 +553,7 @@ namespace kaanh
 				{
 					cout << "actualPos" << ":" << controller->motionAtAbs(i).actualPos() << " ";
 					cout << "actualVel" << ":" << controller->motionAtAbs(i).actualVel() << " ";
-					cout << "actualCur" << ":" << controller->motionAtAbs(i).actualCur() << " ";
+                    cout << "actualCur" << ":" << controller->motionAtAbs(i).actualCur() << " ";
 				}
 			}
 
@@ -567,7 +567,7 @@ namespace kaanh
 			lout << controller->motionAtAbs(i).targetPos() << ",";
 			lout << controller->motionAtAbs(i).actualPos() << ",";
 			lout << controller->motionAtAbs(i).actualVel() << ",";
-			lout << controller->motionAtAbs(i).actualCur() << ",";
+            lout << controller->motionAtAbs(i).actualCur() << ",";
 		}
 		lout << std::endl;
 
@@ -584,72 +584,6 @@ namespace kaanh
 			"		<Param name=\"vel\" abbreviation=\"v\" default=\"0.5\"/>"
 			"		<Param name=\"acc\" default=\"1\"/>"
 			"		<Param name=\"dec\" default=\"1\"/>"
-			"		<UniqueParam default=\"check_none\">"
-			"			<Param name=\"check_all\"/>"
-			"			<Param name=\"check_none\"/>"
-			"			<GroupParam>"
-			"				<UniqueParam default=\"check_pos\">"
-			"					<Param name=\"check_pos\"/>"
-			"					<Param name=\"not_check_pos\"/>"
-			"					<GroupParam>"
-			"						<UniqueParam default=\"check_pos_max\">"
-			"							<Param name=\"check_pos_max\"/>"
-			"							<Param name=\"not_check_pos_max\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_pos_min\">"
-			"							<Param name=\"check_pos_min\"/>"
-			"							<Param name=\"not_check_pos_min\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_pos_continuous\">"
-			"							<Param name=\"check_pos_continuous\"/>"
-			"							<Param name=\"not_check_pos_continuous\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_pos_continuous_at_start\">"
-			"							<Param name=\"check_pos_continuous_at_start\"/>"
-			"							<Param name=\"not_check_pos_continuous_at_start\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_pos_continuous_second_order\">"
-			"							<Param name=\"check_pos_continuous_second_order\"/>"
-			"							<Param name=\"not_check_pos_continuous_second_order\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_pos_continuous_second_order_at_start\">"
-			"							<Param name=\"check_pos_continuous_second_order_at_start\"/>"
-			"							<Param name=\"not_check_pos_continuous_second_order_at_start\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_pos_following_error\">"
-			"							<Param name=\"check_pos_following_error\"/>"
-			"							<Param name=\"not_check_pos_following_error\"/>"
-			"						</UniqueParam>"
-			"					</GroupParam>"
-			"				</UniqueParam>"
-			"				<UniqueParam default=\"check_vel\">"
-			"					<Param name=\"check_vel\"/>"
-			"					<Param name=\"not_check_vel\"/>"
-			"					<GroupParam>"
-			"						<UniqueParam default=\"check_vel_max\">"
-			"							<Param name=\"check_vel_max\"/>"
-			"							<Param name=\"not_check_vel_max\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_vel_min\">"
-			"							<Param name=\"check_vel_min\"/>"
-			"							<Param name=\"not_check_vel_min\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_vel_continuous\">"
-			"							<Param name=\"check_vel_continuous\"/>"
-			"							<Param name=\"not_check_vel_continuous\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_vel_continuous_at_start\">"
-			"							<Param name=\"check_vel_continuous_at_start\"/>"
-			"							<Param name=\"not_check_vel_continuous_at_start\"/>"
-			"						</UniqueParam>"
-			"						<UniqueParam default=\"check_vel_following_error\">"
-			"							<Param name=\"check_vel_following_error\"/>"
-			"							<Param name=\"not_check_vel_following_error\"/>"
-			"						</UniqueParam>"
-			"					</GroupParam>"
-			"				</UniqueParam>"
-			"			</GroupParam>"
-			"		</UniqueParam>"
 			"	</GroupParam>"
 			"</Command>");
 	}
