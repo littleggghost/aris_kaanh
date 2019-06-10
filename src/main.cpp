@@ -24,7 +24,6 @@ int main(int argc, char *argv[])
 	/*
 	//-------for rokae robot begin//
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
-	//cs.resetModel(aris::robot::createModelRokaeXB4().release());
 	cs.resetModel(kaanh::createModelRokae().release());
 	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
