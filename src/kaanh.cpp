@@ -17,13 +17,40 @@ namespace kaanh
 	auto createEA()->std::unique_ptr<aris::control::Controller>
 	{
 		std::unique_ptr<aris::control::Controller> controller;
-		controller->slavePool().add<aris::control::EthercatMotion>();
-		dynamic_cast<aris::control::EthercatController*>(controller.get())->scanInfoForCurrentSlaves();
-		dynamic_cast<aris::control::EthercatController*>(controller.get())->scanPdoForCurrentSlaves();
-		for (int i = 0; i < controller->slavePool().size(); i++)
-		{
-			dynamic_cast<aris::control::EthercatMotion&>(controller->slavePool()[0]).setDcAssignActivate(0x300);
-		}
+		std::string xml_str =
+			"<m_servo_press type=\"EthercatMotion\" phy_id=\"0\" product_code=\"0x60380007\""
+			" vendor_id=\"0x0000066F\" revision_num=\"0x00010000\" dc_assign_activate=\"0x0300\""
+			" min_pos=\"0.01\" max_pos=\"0.26\" max_vel=\"0.125\" min_vel=\"-0.125\""
+			" max_acc=\"2.0\" min_acc=\"-2.0\" max_pos_following_error=\"0.005\" max_vel_following_error=\"0.005\""
+			" home_pos=\"0\" pos_factor=\"-3355443200\" pos_offset=\"0.0\">"
+			"	<sm_pool type=\"SyncManagerPoolObject\">"
+			"		<sm type=\"SyncManager\" is_tx=\"false\"/>"
+			"		<sm type=\"SyncManager\" is_tx=\"true\"/>"
+			"		<sm type=\"SyncManager\" is_tx=\"false\">"
+			"			<index_1600 type=\"Pdo\" default_child_type=\"PdoEntry\" index=\"0x1600\" is_tx=\"false\">"
+			"				<control_word index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+			"				<mode_of_operation index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+			"				<target_pos index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+			"				<target_vel index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
+			"				<offset_vel index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+			"				<targer_tor index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+			"				<offset_tor index=\"0x60B2\" subindex=\"0x00\" size=\"16\"/>"
+			"			</index_1600>"
+			"		</sm>"
+			"		<sm type=\"SyncManager\" is_tx=\"true\">"
+			"			<index_1a00 type=\"Pdo\" default_child_type=\"PdoEntry\" index=\"0x1A00\" is_tx=\"true\">"
+			"				<status_word index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+			"				<mode_of_display index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+			"				<pos_actual_value index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+			"				<vel_actual_value index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
+			"				<cur_actual_value index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
+			"			</index_1a00>"
+			"		</sm>"
+			"	</sm_pool>"
+			"	<sdo_pool type=\"SdoPoolObject\" default_child_type=\"Sdo\">"
+			"	</sdo_pool>"
+			"</m_servo_press>";
+		controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
 		return controller;
 	};
 
@@ -2810,27 +2837,27 @@ namespace kaanh
 
 			if (target.count == 1)
 			{
-				begin_p = controller->motionAtAbs(6).targetPos();
-				fore_vel.assign(FORE_VEL_LENGTH + 1, controller->motionAtAbs(6).actualVel());
+				begin_p = controller->motionAtAbs(0).targetPos();
+				fore_vel.assign(FORE_VEL_LENGTH + 1, controller->motionAtAbs(0).actualVel());
 			}
 			double end_p;
 			end_p = begin_p + param.s*(1 - std::cos(2 * PI*target.count / time)) / 2;
-			controller->motionAtAbs(6).setTargetPos(end_p);
+			controller->motionAtAbs(0).setTargetPos(end_p);
 			
 			//根据电流值换算压力值//
 			int phase;	//标记采用那一段公式计算压力值//
-			double force = 0, ff = 0, fc = controller->motionAtAbs(6).actualCur() * ea_index, fg = ea_gra, fs = std::abs(ea_c * ea_index);
-			if (std::abs(controller->motionAtAbs(6).actualVel()) > 0.001)
+			double force = 0, ff = 0, fc = controller->motionAtAbs(0).actualCur() * ea_index, fg = ea_gra, fs = std::abs(ea_c * ea_index);
+			if (std::abs(controller->motionAtAbs(0).actualVel()) > 0.001)
 			{
-				if (controller->motionAtAbs(6).actualVel() > 0)
+				if (controller->motionAtAbs(0).actualVel() > 0)
 				{
-					ff = (-ea_a * controller->motionAtAbs(6).actualVel()*controller->motionAtAbs(6).actualVel() + ea_b * controller->motionAtAbs(6).actualVel() + ea_c) * ea_index;
+					ff = (-ea_a * controller->motionAtAbs(0).actualVel()*controller->motionAtAbs(0).actualVel() + ea_b * controller->motionAtAbs(0).actualVel() + ea_c) * ea_index;
 					force = ff + fg + fc;
 					phase = 1;
 				}
 				else
 				{
-					ff = (ea_a * controller->motionAtAbs(6).actualVel()*controller->motionAtAbs(6).actualVel() + ea_b * controller->motionAtAbs(6).actualVel() - ea_c) * ea_index;
+					ff = (ea_a * controller->motionAtAbs(0).actualVel()*controller->motionAtAbs(0).actualVel() + ea_b * controller->motionAtAbs(0).actualVel() - ea_c) * ea_index;
 					force = ff + fg + fc;
 					phase = 2;
 				}
@@ -2864,7 +2891,7 @@ namespace kaanh
 			{
 				fore_vel[i] = fore_vel[i + 1];
 			}
-			fore_vel[FORE_VEL_LENGTH] = controller->motionAtAbs(6).actualVel();
+			fore_vel[FORE_VEL_LENGTH] = controller->motionAtAbs(0).actualVel();
 			if (target.count < 21)
 			{
 				mean_vel = (fore_vel.back() - fore_vel.front()) * 1000 / target.count;
@@ -2897,17 +2924,17 @@ namespace kaanh
 			if (data_num >= buffer_length)
 			{
 				std::copy_n(&fce_data[4], buffer_length - 4, fce_data);
-				fce_data[buffer_length - 4] = controller->motionAtAbs(6).actualPos();
-				fce_data[buffer_length - 3] = controller->motionAtAbs(6).actualVel();
-				fce_data[buffer_length - 2] = controller->motionAtAbs(6).actualCur();
+				fce_data[buffer_length - 4] = controller->motionAtAbs(0).actualPos();
+				fce_data[buffer_length - 3] = controller->motionAtAbs(0).actualVel();
+				fce_data[buffer_length - 2] = controller->motionAtAbs(0).actualCur();
 				fce_data[buffer_length - 1] = fe;
 				data_num = buffer_length;
 			}
 			else
 			{
-				fce_data[data_num++] = controller->motionAtAbs(6).actualPos();
-				fce_data[data_num++] = controller->motionAtAbs(6).actualVel();
-				fce_data[data_num++] = controller->motionAtAbs(6).actualCur();
+				fce_data[data_num++] = controller->motionAtAbs(0).actualPos();
+				fce_data[data_num++] = controller->motionAtAbs(0).actualVel();
+				fce_data[data_num++] = controller->motionAtAbs(0).actualCur();
 				fce_data[data_num++] = fe;
 			}
 
@@ -2915,11 +2942,11 @@ namespace kaanh
 			auto &cout = controller->mout();
 			if (target.count % 100 == 0)
 			{
-				cout << controller->motionAtAbs(6).targetPos() << "  " << controller->motionAtAbs(6).actualPos() << "  " << controller->motionAtAbs(6).actualVel() << "  " << controller->motionAtAbs(6).actualCur() << "  " << force << "  " << phase << "  " << fe << std::endl;
+				cout << controller->motionAtAbs(0).targetPos() << "  " << controller->motionAtAbs(0).actualPos() << "  " << controller->motionAtAbs(0).actualVel() << "  " << controller->motionAtAbs(0).actualCur() << "  " << force << "  " << phase << "  " << fe << std::endl;
 			}
 			// log 目标位置、实际位置、实际速度、实际电流、压力 //
 			auto &lout = controller->lout();
-			lout << controller->motionAtAbs(6).targetPos() << "  " << controller->motionAtAbs(6).actualPos() << "  " << controller->motionAtAbs(6).actualVel() << "  " << controller->motionAtAbs(6).actualCur() << "  " << force << "  " << filteredforce << "  " << phase << "  " << fe << std::endl;
+			lout << controller->motionAtAbs(0).targetPos() << "  " << controller->motionAtAbs(0).actualPos() << "  " << controller->motionAtAbs(0).actualVel() << "  " << controller->motionAtAbs(0).actualCur() << "  " << force << "  " << filteredforce << "  " << phase << "  " << fe << std::endl;
 
 			return time - target.count;
 		}
@@ -2993,8 +3020,8 @@ namespace kaanh
 			static double median_filter[MEDIAN_LENGTH] = {0.0};
 			if (target.count == 1)
 			{
-				param.begin_pos = controller->motionAtAbs(6).targetPos();
-				fore_vel.assign(FORE_VEL_LENGTH + 1, controller->motionAtAbs(6).actualVel());
+				param.begin_pos = controller->motionAtAbs(0).targetPos();
+				fore_vel.assign(FORE_VEL_LENGTH + 1, controller->motionAtAbs(0).actualVel());
 				
 				/*iir.m_px.assign(iir.m_num_order, 0.0);
 				iir.m_py.assign(iir.m_den_order, 0.0);*/
@@ -3013,30 +3040,30 @@ namespace kaanh
 			{
 				aris::plan::moveAbsolute(target.count, param.begin_pos, param.begin_pos + param.pos, param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
 			}
-			controller->motionAtAbs(6).setTargetPos(p);
+			controller->motionAtAbs(0).setTargetPos(p);
 			//速度前馈//
-			controller->motionAtAbs(6).setOffsetVel(v*1000);
+			controller->motionAtAbs(0).setOffsetVel(v*1000);
 
 			total_count = std::max(total_count, t_count);
 
 			//根据电流值换算压力值//
 			int phase;	//标记采用那一段公式计算压力值//
 			double fore_cur = 0, force = 0, ff = 0, fc, fg, fs;
-			fc = controller->motionAtAbs(6).actualCur() * ea_index;
+			fc = controller->motionAtAbs(0).actualCur() * ea_index;
 			fg = ea_gra;
 			fs = std::abs(ea_c * ea_index);
-			if(std::abs(controller->motionAtAbs(6).actualVel())>0.001)
+			if(std::abs(controller->motionAtAbs(0).actualVel())>0.001)
 			{
-				if (controller->motionAtAbs(6).actualVel() > 0)
+				if (controller->motionAtAbs(0).actualVel() > 0)
 				{
-					ff = (-ea_a * controller->motionAtAbs(6).actualVel()*controller->motionAtAbs(6).actualVel() + ea_b * controller->motionAtAbs(6).actualVel() + ea_c) * ea_index;
+					ff = (-ea_a * controller->motionAtAbs(0).actualVel()*controller->motionAtAbs(0).actualVel() + ea_b * controller->motionAtAbs(0).actualVel() + ea_c) * ea_index;
 					force = ff + fg + fc;
 					phase = 1;
 					fore_cur = (1810 * a * 1000 * 1000 - ff - fg)/ ea_index;
 				}
 				else
 				{
-					ff = (ea_a * controller->motionAtAbs(6).actualVel()*controller->motionAtAbs(6).actualVel() + ea_b * controller->motionAtAbs(6).actualVel() - ea_c) * ea_index;
+					ff = (ea_a * controller->motionAtAbs(0).actualVel()*controller->motionAtAbs(0).actualVel() + ea_b * controller->motionAtAbs(0).actualVel() - ea_c) * ea_index;
 					force = ff + fg + fc;
 					phase = 2;
 					fore_cur = (1810 * a * 1000 * 1000 - ff - fg)/ ea_index;
@@ -3069,7 +3096,7 @@ namespace kaanh
 			}
 
 			//电流前馈//
-			controller->motionAtAbs(6).setOffsetCur(fore_cur);
+			controller->motionAtAbs(0).setOffsetCur(fore_cur);
 
 			//对速度进行均值滤波, 对摩擦力进行滤波//
 			double mean_vel, fe, filteredforce;
@@ -3078,7 +3105,7 @@ namespace kaanh
 			{
 				fore_vel[i] = fore_vel[i+1];
 			}
-			fore_vel[FORE_VEL_LENGTH] = controller->motionAtAbs(6).actualVel();
+			fore_vel[FORE_VEL_LENGTH] = controller->motionAtAbs(0).actualVel();
 			if (target.count < 21)
 			{
 				mean_vel = (fore_vel.back() - fore_vel.front()) * 1000 / target.count;
@@ -3111,17 +3138,17 @@ namespace kaanh
 			if (data_num >= buffer_length)
 			{
 				std::copy_n(&fce_data[4], buffer_length-4, fce_data);
-				fce_data[buffer_length-4] = controller->motionAtAbs(6).actualPos();
-				fce_data[buffer_length-3] = controller->motionAtAbs(6).actualVel();
-				fce_data[buffer_length-2] = controller->motionAtAbs(6).actualCur();
+				fce_data[buffer_length-4] = controller->motionAtAbs(0).actualPos();
+				fce_data[buffer_length-3] = controller->motionAtAbs(0).actualVel();
+				fce_data[buffer_length-2] = controller->motionAtAbs(0).actualCur();
 				fce_data[buffer_length-1] = fe;
 				data_num = buffer_length;
 			}
 			else
 			{
-				fce_data[data_num++] = controller->motionAtAbs(6).actualPos();
-				fce_data[data_num++] = controller->motionAtAbs(6).actualVel();
-				fce_data[data_num++] = controller->motionAtAbs(6).actualCur();
+				fce_data[data_num++] = controller->motionAtAbs(0).actualPos();
+				fce_data[data_num++] = controller->motionAtAbs(0).actualVel();
+				fce_data[data_num++] = controller->motionAtAbs(0).actualCur();
 				fce_data[data_num++] = fe;
 			}
 
@@ -3129,13 +3156,13 @@ namespace kaanh
 			auto &cout = controller->mout();
 			if (target.count % 100 == 0)
 			{
-				cout << controller->motionAtAbs(6).targetPos() << "  " << controller->motionAtAbs(6).actualPos() << "  " << v << "  " << controller->motionAtAbs(6).actualVel() << "  "
-					<< a << "  " << fore_cur << "  " << controller->motionAtAbs(6).actualCur() << "  " << ff << "  " << fg << "  " << fc << "  " << force << "  " << filteredforce << "  " << phase << "  " << fe << std::endl;
+				cout << controller->motionAtAbs(0).targetPos() << "  " << controller->motionAtAbs(0).actualPos() << "  " << v << "  " << controller->motionAtAbs(0).actualVel() << "  "
+					<< a << "  " << fore_cur << "  " << controller->motionAtAbs(0).actualCur() << "  " << ff << "  " << fg << "  " << fc << "  " << force << "  " << filteredforce << "  " << phase << "  " << fe << std::endl;
 			}
 			// log 目标位置、实际位置、实际速度、实际电流、压力 //
 			auto &lout = controller->lout();
-			lout << controller->motionAtAbs(6).targetPos() << "  " << controller->motionAtAbs(6).actualPos() << "  " << v << "  " << controller->motionAtAbs(6).actualVel() << "  " 
-				<< a << "  " << fore_cur << "  " << controller->motionAtAbs(6).actualCur() << "  " << ff << "  " << fg << "  " << fc << "  " << force << "  " << filteredforce << "  " << phase << "  " << fe << std::endl;
+			lout << controller->motionAtAbs(0).targetPos() << "  " << controller->motionAtAbs(0).actualPos() << "  " << v << "  " << controller->motionAtAbs(0).actualVel() << "  " 
+				<< a << "  " << fore_cur << "  " << controller->motionAtAbs(0).actualCur() << "  " << ff << "  " << fg << "  " << fc << "  " << force << "  " << filteredforce << "  " << phase << "  " << fe << std::endl;
 
 			return total_count - target.count;
 		}
