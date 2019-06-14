@@ -1,10 +1,7 @@
 ﻿#include <algorithm>
 #include"kaanh.h"
-#include "sixdistalfc.h"
-#include "jointfc.h"
-#include "sevenjointfc.h"
 #include <array>
-#include"move_series.h"
+
 
 using namespace aris::dynamic;
 using namespace aris::plan;
@@ -17,19 +14,17 @@ extern std::atomic_bool is_automatic;
 namespace kaanh
 {
 	aris::dynamic::Marker tool1;
-	auto createInterface()->std::unique_ptr<aris::server::InterfaceRoot>
+	auto createEA()->std::unique_ptr<aris::control::Controller>
 	{
-		std::unique_ptr<aris::server::InterfaceRoot> interfaceroot;/*创建std::unique_ptr实例*/
-	
-		auto uixmlpath = std::filesystem::absolute(".");//获取当前工程所在的路径
-		const std::string uixmlfile = "interface_kaanh.xml";
-		uixmlpath = uixmlpath / uixmlfile;
-		aris::core::XmlDocument ui_doc;
-		ui_doc.LoadFile(uixmlpath.string().c_str());
-
-		interfaceroot->loadXmlDoc(ui_doc);
-
-		return interfaceroot;
+		std::unique_ptr<aris::control::Controller> controller;
+		controller->slavePool().add<aris::control::EthercatMotion>();
+		dynamic_cast<aris::control::EthercatController*>(controller.get())->scanInfoForCurrentSlaves();
+		dynamic_cast<aris::control::EthercatController*>(controller.get())->scanPdoForCurrentSlaves();
+		for (int i = 0; i < controller->slavePool().size(); i++)
+		{
+			dynamic_cast<aris::control::EthercatMotion&>(controller->slavePool()[0]).setDcAssignActivate(0x300);
+		}
+		return controller;
 	};
 
 	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>	/*函数返回的是一个类指针，指针指向Controller,controller的类型是智能指针std::unique_ptr*/
@@ -3995,8 +3990,6 @@ namespace kaanh
         plan_root->planPool().add<aris::plan::Start>();
         plan_root->planPool().add<aris::plan::Stop>();
 
-
-
 		plan_root->planPool().add<kaanh::ShowAll>();
 		plan_root->planPool().add<kaanh::Get_ee_pq>();
 		plan_root->planPool().add<kaanh::Get_ee_pe>();
@@ -4014,7 +4007,6 @@ namespace kaanh
 		plan_root->planPool().add<forcecontrol::MoveJFB>();
 		plan_root->planPool().add<forcecontrol::MoveJPID>();
 		plan_root->planPool().add<forcecontrol::MoveStop>();
-		plan_root->planPool().add<forcecontrol::MoveSPQ>();
 		plan_root->planPool().add<kaanh::MoveJM>();
 		plan_root->planPool().add<kaanh::MoveJI>();
 		plan_root->planPool().add<kaanh::MovePoint>();
@@ -4034,38 +4026,6 @@ namespace kaanh
 		plan_root->planPool().add<kaanh::SaveConfig>();
 		plan_root->planPool().add<kaanh::StartCS>();
 		plan_root->planPool().add<kaanh::StopCS>();
-
-		plan_root->planPool().add<MoveXYZ>();
-		plan_root->planPool().add<MoveJoint>();
-		plan_root->planPool().add<MoveDistal>();
-        plan_root->planPool().add<DistalTest>();
-		plan_root->planPool().add<SetTool>();
-		plan_root->planPool().add<MovePressure>();
-		plan_root->planPool().add<MoveFeed>();
-		plan_root->planPool().add<MovePressureToolYZ>();
-		plan_root->planPool().add<MovePressureToolXY>();
-		plan_root->planPool().add<GetForce>();
-        plan_root->planPool().add<MoveSeriesGK>();
-
-		//plan_root->planPool().add<GetError>();
-		plan_root->planPool().add<JointDyna>();
-		plan_root->planPool().add<JointTest>();
-		plan_root->planPool().add<DragTeach>();
-		plan_root->planPool().add<LoadDyna>();
-		plan_root->planPool().add<SaveFile>();
-
-		plan_root->planPool().add<SevenJointDyna>();
-		plan_root->planPool().add<SevenJointTest>();
-        plan_root->planPool().add<SevenDragTeach>();
-		plan_root->planPool().add<SevenLoadDyna>();
-
-		plan_root->planPool().add<cplan::MoveCircle>();
-		plan_root->planPool().add<cplan::MoveTroute>();
-		plan_root->planPool().add<cplan::MoveFile>();
-		plan_root->planPool().add<cplan::RemoveFile>();
-		plan_root->planPool().add<cplan::MoveinModel>();
-		plan_root->planPool().add<cplan::FMovePath>();
-		plan_root->planPool().add<cplan::OpenFile>();
 
 		return plan_root;
 	}

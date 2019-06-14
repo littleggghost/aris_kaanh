@@ -5,7 +5,6 @@
 #include <memory>
 #include <aris.hpp>
 #include <atomic>
-#include"cplan.h"
 
 
 namespace forcecontrol
@@ -124,13 +123,6 @@ namespace forcecontrol
 		ARIS_REGISTER_TYPE(MoveStop);
 	};
 
-	class MoveSPQ : public aris::plan::Plan
-	{
-	public:
-		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-		explicit MoveSPQ(const std::string &name = "MoveSPQ_plan");
-		ARIS_REGISTER_TYPE(MoveSPQ);
-	};
 }
 
 #endif

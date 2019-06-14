@@ -29,7 +29,7 @@ namespace kaanh
 	//其他参数和函数声明 
 	using Size = std::size_t;
 	constexpr double PI = 3.141592653589793;
-	auto createInterface()->std::unique_ptr<aris::server::InterfaceRoot>;
+	auto createEA()->std::unique_ptr<aris::control::Controller>;
 	auto createModelRokaeXB4(const double *robot_pm = nullptr)->std::unique_ptr<aris::dynamic::Model>;
 	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>;
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>;
