@@ -66,11 +66,11 @@ int main(int argc, char *argv[])
 
 	cs.resetController(kaanh::createEA().release());
 	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
-	cs.resetSensorRoot(new aris::sensor::SensorRoot);
+	//cs.resetSensorRoot(new aris::sensor::SensorRoot);
 	cs.saveXmlFile(xmlpath.string().c_str());
 
 	cs.loadXmlFile(xmlpath.string().c_str());
-	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
+	//cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
     cs.start();
 
 	
