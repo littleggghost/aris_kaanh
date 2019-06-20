@@ -1,6 +1,6 @@
-﻿cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.12)
 
-project(kaanh)
+project(EA)
 
 # aris use c++ 17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -15,21 +15,7 @@ IF(WIN32)
 endif(WIN32)
 include_directories(${aris_INCLUDE_DIRS})
 
-message(${aris_DIR})
-
-# add_library(kaanh_lib STATIC src/kaanh.cpp src/iir.cpp src/forcecontrol.cpp src/kaanh.h src/iir.h src/forcecontrol.h)
-
 # user program started...
-set(SOURCE_FILES src/main.cpp src/kaanh.cpp src/iir.cpp src/forcecontrol.cpp src/kaanh.h src/iir.h src/forcecontrol.h)
-add_executable(kaanh ${SOURCE_FILES})
-
-# add_executable(kaanh src/main.cpp)
-# target_link_libraries(kaanh kaanh_lib)
-
-
-if(UNIX)
-	target_link_libraries(kaanh ${aris_LIBRARIES} atomic)
-endif(UNIX)
-IF(WIN32)
-	target_link_libraries(kaanh ${aris_LIBRARIES})
-endif(WIN32)
+set(SOURCE_FILES src/moveEA.cpp)
+add_executable(EA ${SOURCE_FILES})
+target_link_libraries(EA ${aris_LIBRARIES})
