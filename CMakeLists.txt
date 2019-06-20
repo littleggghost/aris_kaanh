@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(EA)
+project(kaanh)
 
 # aris use c++ 17 standard
 set(CMAKE_CXX_STANDARD 17)
@@ -17,5 +17,5 @@ include_directories(${aris_INCLUDE_DIRS})
 
 # user program started...
 set(SOURCE_FILES src/moveEA.cpp)
-add_executable(EA ${SOURCE_FILES})
-target_link_libraries(EA ${aris_LIBRARIES})
+add_executable(kaanh ${SOURCE_FILES})
+target_link_libraries(kaanh ${aris_LIBRARIES})
