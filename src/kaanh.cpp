@@ -27,13 +27,13 @@ namespace kaanh
 #ifdef UNIX
 			double pos_offset[6]
 			{
-                0.075517187683872,   -0.985045881303604,   -0.303016836083556,   0.0283613113109543,   0.7938403840531,   0.070040604036869
+                0.075517187683872,  -0.303016836083556,  0.985045881303604,   0.0283613113109543,   0.7938403840531,   -0.070040604036869
 
 			};
 #endif
 			double pos_factor[6]
 			{
-				131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 72.857 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 50 / 2 / PI
+                131072.0 * 81 / 2 / PI, 131072.0 * 81 / 2 / PI, -131072.0 * 81 / 2 / PI, 131072.0 * 72.857 / 2 / PI, 131072.0 * 81 / 2 / PI, -131072.0 * 50 / 2 / PI
 			};
 			double max_pos[6]
 			{
@@ -52,41 +52,117 @@ namespace kaanh
                 2200.0 / 360 * 2 * PI, 1800.0 / 360 * 2 * PI, 2200.0 / 360 * 2 * PI, 2400.0 / 360 * 2 * PI, 2250.0 / 360 * 2 * PI, 3525.0 / 360 * 2 * PI,
 			};
 
-			std::string xml_str =
-                "<EthercatMotion phy_id=\"" + std::to_string(i) + "\" product_code=\"0x000002ec\""
-                " vendor_id=\"0x000002e1\" revision_num=\"0x00029002\" dc_assign_activate=\"0x0300\""
-				" min_pos=\"" + std::to_string(min_pos[i]) + "\" max_pos=\"" + std::to_string(max_pos[i]) + "\" max_vel=\"" + std::to_string(max_vel[i]) + "\" min_vel=\"" + std::to_string(-max_vel[i]) + "\""
-				" max_acc=\"" + std::to_string(max_acc[i]) + "\" min_acc=\"" + std::to_string(-max_acc[i]) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
-				" home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor[i]) + "\" pos_offset=\"" + std::to_string(pos_offset[i]) + "\">"
-				"	<SyncManagerPoolObject>"
-				"		<SyncManager is_tx=\"false\"/>"
-				"		<SyncManager is_tx=\"true\"/>"
-				"		<SyncManager is_tx=\"false\">"
-				"			<Pdo index=\"0x1600\" is_tx=\"false\">"
-				"				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
-				"				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
-				"				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
-				"				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
-				"				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
-				"				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
-				"			</Pdo>"
-				"		</SyncManager>"
-				"		<SyncManager is_tx=\"true\">"
-				"			<Pdo index=\"0x1A00\" is_tx=\"true\">"
-				"				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
-				"				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
-				"				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
-				"				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
-				"				<PdoEntry name=\"cur_actual_value\" index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
-				"			</Pdo>"
-				"		</SyncManager>"
-				"	</SyncManagerPoolObject>"
-                "</EthercatMotion>";
+            if(i==1)
+            {
+                std::string xml_str =
+                    "<EthercatMotion phy_id=\"" + std::to_string(2) + "\" product_code=\"0x000002ec\""
+                    " vendor_id=\"0x000002e1\" revision_num=\"0x00029002\" dc_assign_activate=\"0x0300\""
+                    " min_pos=\"" + std::to_string(min_pos[i]) + "\" max_pos=\"" + std::to_string(max_pos[i]) + "\" max_vel=\"" + std::to_string(max_vel[i]) + "\" min_vel=\"" + std::to_string(-max_vel[i]) + "\""
+                    " max_acc=\"" + std::to_string(max_acc[i]) + "\" min_acc=\"" + std::to_string(-max_acc[i]) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
+                    " home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor[i]) + "\" pos_offset=\"" + std::to_string(pos_offset[i]) + "\">"
+                    "	<SyncManagerPoolObject>"
+                    "		<SyncManager is_tx=\"false\"/>"
+                    "		<SyncManager is_tx=\"true\"/>"
+                    "		<SyncManager is_tx=\"false\">"
+                    "			<Pdo index=\"0x1600\" is_tx=\"false\">"
+                    "				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+                    "				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+                    "			</Pdo>"
+                    "		</SyncManager>"
+                    "		<SyncManager is_tx=\"true\">"
+                    "			<Pdo index=\"0x1A00\" is_tx=\"true\">"
+                    "				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+                    "				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"cur_actual_value\" index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
+                    "			</Pdo>"
+                    "		</SyncManager>"
+                    "	</SyncManagerPoolObject>"
+                    "</EthercatMotion>";
 
-            controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+                controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+            }
+            else if(i==2)
+            {
+                std::string xml_str =
+                    "<EthercatMotion phy_id=\"" + std::to_string(1) + "\" product_code=\"0x000002ec\""
+                    " vendor_id=\"0x000002e1\" revision_num=\"0x00029002\" dc_assign_activate=\"0x0300\""
+                    " min_pos=\"" + std::to_string(min_pos[i]) + "\" max_pos=\"" + std::to_string(max_pos[i]) + "\" max_vel=\"" + std::to_string(max_vel[i]) + "\" min_vel=\"" + std::to_string(-max_vel[i]) + "\""
+                    " max_acc=\"" + std::to_string(max_acc[i]) + "\" min_acc=\"" + std::to_string(-max_acc[i]) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
+                    " home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor[i]) + "\" pos_offset=\"" + std::to_string(pos_offset[i]) + "\">"
+                    "	<SyncManagerPoolObject>"
+                    "		<SyncManager is_tx=\"false\"/>"
+                    "		<SyncManager is_tx=\"true\"/>"
+                    "		<SyncManager is_tx=\"false\">"
+                    "			<Pdo index=\"0x1600\" is_tx=\"false\">"
+                    "				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+                    "				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+                    "			</Pdo>"
+                    "		</SyncManager>"
+                    "		<SyncManager is_tx=\"true\">"
+                    "			<Pdo index=\"0x1A00\" is_tx=\"true\">"
+                    "				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+                    "				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"cur_actual_value\" index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
+                    "			</Pdo>"
+                    "		</SyncManager>"
+                    "	</SyncManagerPoolObject>"
+                    "</EthercatMotion>";
+
+                controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+            }
+            else
+            {
+
+                std::string xml_str =
+                    "<EthercatMotion phy_id=\"" + std::to_string(i) + "\" product_code=\"0x000002ec\""
+                    " vendor_id=\"0x000002e1\" revision_num=\"0x00029002\" dc_assign_activate=\"0x0300\""
+                    " min_pos=\"" + std::to_string(min_pos[i]) + "\" max_pos=\"" + std::to_string(max_pos[i]) + "\" max_vel=\"" + std::to_string(max_vel[i]) + "\" min_vel=\"" + std::to_string(-max_vel[i]) + "\""
+                    " max_acc=\"" + std::to_string(max_acc[i]) + "\" min_acc=\"" + std::to_string(-max_acc[i]) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
+                    " home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor[i]) + "\" pos_offset=\"" + std::to_string(pos_offset[i]) + "\">"
+                    "	<SyncManagerPoolObject>"
+                    "		<SyncManager is_tx=\"false\"/>"
+                    "		<SyncManager is_tx=\"true\"/>"
+                    "		<SyncManager is_tx=\"false\">"
+                    "			<Pdo index=\"0x1600\" is_tx=\"false\">"
+                    "				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+                    "				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+                    "			</Pdo>"
+                    "		</SyncManager>"
+                    "		<SyncManager is_tx=\"true\">"
+                    "			<Pdo index=\"0x1A00\" is_tx=\"true\">"
+                    "				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+                    "				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+                    "				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
+                    "				<PdoEntry name=\"cur_actual_value\" index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
+                    "			</Pdo>"
+                    "		</SyncManager>"
+                    "	</SyncManagerPoolObject>"
+                    "</EthercatMotion>";
+
+                controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+            }
+
 
 		}
 
+        /*
         //auto scan
         dynamic_cast<aris::control::EthercatController*>(controller.get())->scanInfoForCurrentSlaves();
         dynamic_cast<aris::control::EthercatController*>(controller.get())->scanPdoForCurrentSlaves();
@@ -96,6 +172,7 @@ namespace kaanh
         {
             dynamic_cast<aris::control::EthercatMotion&>(controller->slavePool().at(i)).setDcAssignActivate(0x300);
         }
+        */
 
 		return controller;
 	};
@@ -284,6 +361,8 @@ namespace kaanh
 		auto c = target.controller;
 		MoveJRParam param;
 
+        param.joint_active_vec.clear();
+
 		for (auto cmd_param : params)
 		{
 			if (cmd_param.first == "motion_id")
@@ -318,6 +397,7 @@ namespace kaanh
 		auto &param = std::any_cast<MoveJRParam&>(target.param);
 		auto controller = target.controller;
 		
+
 		//获取第一个count时，电机的当前角度位置//
 		if (target.count == 1)
 		{
@@ -325,11 +405,11 @@ namespace kaanh
 			{
 				if (param.joint_active_vec[i])
 				{
-					param.begin_pos = target.model->motionPool().at(i).mp();
+                    param.begin_pos = controller->motionAtAbs(i).actualPos();
 				}
 			}
 		}
-		
+
 		//梯形轨迹//
 		aris::Size total_count{ 1 };
 		for (Size i = 0; i < param.joint_active_vec.size(); ++i)
@@ -361,7 +441,7 @@ namespace kaanh
 				if (param.joint_active_vec[i])
 				{
 					cout << "actualPos" << ":" << controller->motionAtAbs(i).actualPos() << " ";
-					cout << "actualVel" << ":" << controller->motionAtAbs(i).actualVel() << " ";
+                    cout << "actualVel" << ":" << controller->motionAtAbs(i).actualVel() << " ";
                     cout << "actualCur" << ":" << controller->motionAtAbs(i).actualCur() << " ";
 				}
 			}
@@ -375,7 +455,7 @@ namespace kaanh
 		{
 			lout << controller->motionAtAbs(i).targetPos() << ",";
 			lout << controller->motionAtAbs(i).actualPos() << ",";
-			lout << controller->motionAtAbs(i).actualVel() << ",";
+            lout << controller->motionAtAbs(i).actualVel() << ",";
             lout << controller->motionAtAbs(i).actualCur() << ",";
 		}
 		lout << std::endl;
@@ -646,7 +726,7 @@ namespace kaanh
 			lout << v_now[i] << " ";
 			lout << a_now[i] << " ";
 			lout << controller->motionAtAbs(i).actualPos() << " ";
-			lout << controller->motionAtAbs(i).actualVel() << " ";
+            lout << controller->motionAtAbs(i).actualVel() << " ";
 		}
 		lout << std::endl;
 
@@ -741,7 +821,7 @@ namespace kaanh
 				imp_->vel = std::stod(params.at("vel"));
 				imp_->acc = std::stod(params.at("acc"));
 				imp_->dec = std::stod(params.at("dec"));
-
+                std::cout<<"prepare2"<<std::endl;
 				std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | USE_TARGET_POS);
 				//target.option |= EXECUTE_WHEN_ALL_PLAN_COLLECTED | NOT_PRINT_EXECUTE_COUNT;
 			}
@@ -924,6 +1004,7 @@ namespace kaanh
 		plan_root->planPool().add<aris::plan::MoveL>();
         plan_root->planPool().add<aris::plan::GetXml>();
         plan_root->planPool().add<aris::plan::GetPartPq>();
+        plan_root->planPool().add<aris::plan::SetXml>();
 		plan_root->planPool().add<aris::plan::MoveJ>();
 		plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<kaanh::MoveJR>();
