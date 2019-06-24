@@ -16,6 +16,6 @@ endif(WIN32)
 include_directories(${aris_INCLUDE_DIRS})
 
 # user program started...
-set(SOURCE_FILES src/moveEA.cpp)
+set(SOURCE_FILES src/moveEA.cpp src/moveEA.h)
 add_executable(kaanh ${SOURCE_FILES})
 target_link_libraries(kaanh ${aris_LIBRARIES})
