@@ -14,6 +14,30 @@ constexpr double ea_a = 3765.8, ea_b = 1334.8, ea_c = 45.624, ea_gra = 24, ea_in
 using Size = std::size_t;
 constexpr double PI = 3.141592653589793;
 
+class MoveJS : public aris::plan::Plan
+{
+public:
+	auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+	auto virtual executeRT(aris::plan::PlanTarget &target)->int;
+	auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
+
+	explicit MoveJS(const std::string &name = "MoveJS_plan");
+	ARIS_REGISTER_TYPE(MoveJS);
+};
+
+
+class MoveEAP : public aris::plan::Plan
+{
+public:
+	auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+	auto virtual executeRT(aris::plan::PlanTarget &target)->int;
+	auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
+
+	explicit MoveEAP(const std::string &name = "MoveEAP_plan");
+	ARIS_REGISTER_TYPE(MoveEAP);
+};
+
+
 class MoveEAC : public aris::plan::Plan
 {
 public:
