@@ -11,8 +11,8 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 {
 	std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
 	std::string xml_str =
-		"<EthercatMotion phy_id=\"0\" product_code=\"0x60380007\""
-		" vendor_id=\"0x0000066F\" revision_num=\"0x00010000\" dc_assign_activate=\"0x0300\""
+        "<EthercatMotion phy_id=\"0\" product_code=\"0x20180829\""
+        " vendor_id=\"0x00000009\" revision_num=\"0x00000001\" dc_assign_activate=\"0x300\""
 		" min_pos=\"0.01\" max_pos=\"0.26\" max_vel=\"0.125\" min_vel=\"-0.125\""
 		" max_acc=\"2.0\" min_acc=\"-2.0\" max_pos_following_error=\"0.005\" max_vel_following_error=\"0.005\""
 		" home_pos=\"0\" pos_factor=\"-3355443200\" pos_offset=\"0.0\">"
@@ -22,21 +22,20 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 		"		<SyncManager is_tx=\"false\">"
 		"			<Pdo index=\"0x1600\" is_tx=\"false\">"
 		"				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
-		"				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
 		"				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
 		"				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
 		"				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
-		"				<PdoEntry name=\"offset_tor\" index=\"0x60B2\" subindex=\"0x00\" size=\"16\"/>"
+        "				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
 		"			</Pdo>"
 		"		</SyncManager>"
 		"		<SyncManager is_tx=\"true\">"
 		"			<Pdo index=\"0x1A00\" is_tx=\"true\">"
 		"				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
-		"				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
 		"				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
 		"				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"cur_actual_value\" index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
+        "				<PdoEntry name=\"middle_index\" index=\"0x20b6\" subindex=\"0x00\" size=\"32\"/>"
+        "				<PdoEntry name=\"cur_actual_value\" index=\"0x6077\" subindex=\"0x00\" size=\"16\"/>"
+        "				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
 		"			</Pdo>"
 		"		</SyncManager>"
 		"	</SyncManagerPoolObject>"
@@ -432,6 +431,7 @@ int main(int argc, char *argv[])
     cs.resetPlanRoot(createPlanRootRokaeXB4().release());
 
     std::cout<<"start controller server"<<std::endl;
+    std::cout<<cs.xmlString()<<std::endl;
 	//启动线程
 	cs.start();
 	//getline是将输入的值赋值给command_in
