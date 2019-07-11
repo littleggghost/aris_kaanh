@@ -53,7 +53,7 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setHomePos(0);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosOffset(0);
-	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosFactor(0);
+	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosFactor(804140);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setMaxPos(6.28);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setMinPos(-6.28);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setMaxVel(12.56);
