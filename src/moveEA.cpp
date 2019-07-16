@@ -10,7 +10,7 @@ using namespace aris::plan;
 auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>	
 {
 	std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
-	/*
+	
 	std::string xml_str =
 		"<EthercatMotion phy_id=\"0\" product_code=\"0x60380007\""
 		" vendor_id=\"0x0000066F\" revision_num=\"0x00010000\" dc_assign_activate=\"0x0300\""
@@ -43,7 +43,7 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 		"	</SyncManagerPoolObject>"
 		"</EthercatMotion>";
 	controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
-	*/
+	
 
 	controller->slavePool().add<aris::control::EthercatSlave>();
 	controller->slavePool().back().setPhyId(0);
@@ -51,6 +51,7 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 	dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
 	dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x300);
 
+	/*
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setHomePos(0);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosOffset(0);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosFactor(804140);
@@ -62,6 +63,7 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setMinAcc(-60);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setMaxPosFollowingError(0.1);
 	dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setMaxVelFollowingError(0.5);
+	*/
 	return controller;
 };
 
