@@ -351,267 +351,165 @@ namespace kaanh
 
 
 	// 梯形轨迹2测试--输入单个关节，角度位置；关节按照梯形速度轨迹执行；速度前馈//
-	struct MoveTTTParam
+	auto interpolate(double x1, double x2, double y1, double y2, double x)->double
 	{
-		std::vector<double> axis_vel_vec;
-		std::vector<double> axis_acc_vec;
-		std::vector<double> axis_dec_vec;
-		std::vector<double> begin_axis_vel_vec;
-		std::vector<double> begin_axis_acc_vec;
-		std::vector<double> begin_axis_dec_vec;
-		std::vector<double> joint_pos_vec, begin_joint_pos_vec;
-		std::vector<bool> joint_active_vec;
+		double y;
+		if (abs(x2 - x1) < 1e-6)
+		{
+			y = x2;
+		}
+		else
+		{
+			y = y1 + (x - x1)*(y2 - y1) / (x2 - x1);
+		}
+		return y;
+	}
+	struct MoveTParam
+	{
+		std::vector<std::vector<double>> pos;
+		std::vector<double> begin_pos;
+		std::int16_t col, interval;
 	};
-	auto MoveTTT::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	auto MoveT::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
 		auto c = target.controller;
-		MoveTTTParam param;
+		MoveTParam param;
+		param.pos.clear();
+		param.begin_pos.clear();
+		std::ifstream infile;
 
 		for (auto cmd_param : params)
 		{
-			if (cmd_param.first == "all")
+			if (cmd_param.first == "col")
 			{
-				param.joint_active_vec.resize(c->motionPool().size(), true);
+				param.col = std::stoi(cmd_param.second);
+				param.pos.resize(param.col);
+				param.begin_pos.resize(param.col - 1);
 			}
-			else if (cmd_param.first == "none")
+			else if (cmd_param.first == "path")
 			{
-				param.joint_active_vec.resize(c->motionPool().size(), false);
-			}
-			else if (cmd_param.first == "motion_id")
-			{
-				param.joint_active_vec.resize(c->motionPool().size(), false);
-				param.joint_active_vec.at(std::stoi(cmd_param.second)) = true;
-			}
-			else if (cmd_param.first == "physical_id")
-			{
-				param.joint_active_vec.resize(c->motionPool().size(), false);
-				param.joint_active_vec.at(c->motionAtPhy(std::stoi(cmd_param.second)).phyId()) = true;
-			}
-			else if (cmd_param.first == "slave_id")
-			{
-				param.joint_active_vec.resize(c->motionPool().size(), false);
-				param.joint_active_vec.at(c->motionAtPhy(std::stoi(cmd_param.second)).slaId()) = true;
-			}
-			else if (cmd_param.first == "pos")
-			{
-				aris::core::Matrix mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (mat.size() == 1)param.joint_pos_vec.resize(c->motionPool().size(), mat.toDouble());
-				else
-				{
-					param.joint_pos_vec.resize(mat.size());
-					std::copy(mat.begin(), mat.end(), param.joint_pos_vec.begin());
-				}
-			}
-			else if (cmd_param.first == "vel")
-			{
-				auto v = target.model->calculator().calculateExpression(cmd_param.second);
-				if (v.size() == 1)
-				{
-					param.axis_vel_vec.resize(c->motionPool().size(), v.toDouble());
-				}
-				else if (v.size() == c->motionPool().size())
-				{
-					param.axis_vel_vec.assign(v.begin(), v.end());
-				}
-				else
-				{
-					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-				}
+				std::vector<std::vector<double>> pos(param.col);
+				auto path = cmd_param.second;
+				infile.open(path);
+				//检查读取文件是否成功//
+				if (!infile)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " fail to open the file");
 
-				for (Size i = 0; i < c->motionPool().size(); ++i)
+				std::string data;
+				while(std::getline(infile, data))
 				{
-					if (param.axis_vel_vec[i] > 1.0)
+					if (data == "[HEADER]")
 					{
-						param.axis_vel_vec[i] = 1.0;
+						continue;
 					}
-					if (param.axis_vel_vec[i] < 0.0)
+					if (data == "  GEAR_NOMINAL_VEL = 1.000000")
 					{
-						param.axis_vel_vec[i] = 0.0;
+						continue;
 					}
-					param.axis_vel_vec[i] = param.axis_vel_vec[i] * c->motionPool()[i].maxVel();
-				}
-			}
-			else if (cmd_param.first == "acc")
-			{
-				auto a = target.model->calculator().calculateExpression(cmd_param.second);
-				if (a.size() == 1)
-				{
-					param.axis_acc_vec.resize(c->motionPool().size(), a.toDouble());
-				}
-				else if (a.size() == c->motionPool().size())
-				{
-					param.axis_acc_vec.assign(a.begin(), a.end());
-				}
-				else
-				{
-					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-				}
-
-				for (Size i = 0; i < c->motionPool().size(); ++i)
-				{
-					if (param.axis_acc_vec[i] > 1.0)
+					if (data == "[RECORDS]")
 					{
-						param.axis_acc_vec[i] = 1.0;
+						continue;
 					}
-					if (param.axis_acc_vec[i] < 0.0)
+					if (data == "[END]")
 					{
-						param.axis_acc_vec[i] = 0.0;
+						break;
 					}
-					param.axis_acc_vec[i] = param.axis_acc_vec[i] * c->motionPool()[i].maxAcc();
-				}
-			}
-			else if (cmd_param.first == "dec")
-			{
-				auto d = target.model->calculator().calculateExpression(cmd_param.second);
-				if (d.size() == 1)
-				{
-					param.axis_dec_vec.resize(c->motionPool().size(), d.toDouble());
-				}
-				else if (d.size() == c->motionPool().size())
-				{
-					param.axis_dec_vec.assign(d.begin(), d.end());
-				}
-				else
-				{
-					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-				}
-
-				for (Size i = 0; i < c->motionPool().size(); ++i)
-				{
-					if (param.axis_dec_vec[i] > 1.0)
+						
+					char *s_input = (char *)data.c_str();
+					const char *split = "   ";
+					// 以‘ ’为分隔符拆分字符串
+					char *sp_input = strtok(s_input, split);
+					double data_input;
+					int i = 0;
+					while (sp_input != NULL)
 					{
-						param.axis_dec_vec[i] = 1.0;
+						data_input = atof(sp_input);
+						pos[i++].push_back(data_input);
+						sp_input = strtok(NULL, split);
 					}
-					if (param.axis_dec_vec[i] < 0.0)
-					{
-						param.axis_dec_vec[i] = 0.0;
-					}
-					param.axis_dec_vec[i] = param.axis_dec_vec[i] * c->motionPool()[i].minAcc();
 				}
+				for (int i = 0; i < pos.size(); i++)
+				{
+					for (int j = 0; j < pos[0].size() - 1; j++)
+					{
+						for (double count = pos[0][j]; count < pos[0][j + 1]; count = count + 0.001)
+						{
+							param.pos[i].push_back(interpolate(pos[0][j], pos[0][j + 1], pos[i][j], pos[i][j + 1], count)* PI/180.0);
+						}
+					}
+				}
+				infile.close();
 			}
 		}
-
-		param.begin_joint_pos_vec.resize(c->motionPool().size(), 0.0);
-		param.begin_axis_vel_vec.resize(c->motionPool().size(), 0.0);
-		param.begin_axis_acc_vec.resize(c->motionPool().size(), 0.0);
-		param.begin_axis_dec_vec.resize(c->motionPool().size(), 0.0);
-
-
 		target.param = param;
 
-		std::fill(target.mot_options.begin(), target.mot_options.end(),
-			Plan::USE_TARGET_POS);
+		//std::fill(target.mot_options.begin(), target.mot_options.end(), Plan::USE_TARGET_POS);
+		for (int j = 0; j < param.col; j++)
+		{
+			for (int i = 0; i < 13; i++)
+			{
+				std::cout << param.pos[j][i] << "  ";
+			}
+			std::cout << std::endl;
+		}
 
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
 	}
-	auto MoveTTT::executeRT(PlanTarget &target)->int
+	auto MoveT::executeRT(PlanTarget &target)->int
+	{
+		auto &param = std::any_cast<MoveTParam&>(target.param);
+		auto controller = target.controller;
+
+		/*
+		if (target.count == 1)
 		{
-			auto &param = std::any_cast<MoveTTTParam&>(target.param);
-			auto controller = target.controller;
-
-			if (target.count == 1)
+			for(int i=0; i< controller->motionPool().size(); i++)
 			{
-				for (Size i = 0; i < param.joint_active_vec.size(); ++i)
-				{
-					if (param.joint_active_vec[i])
-					{
-						//param.begin_joint_pos_vec[i] = controller->motionPool()[i].actualPos();
-						param.begin_joint_pos_vec[i] = target.model->motionPool().at(i).mp();
-					}
-				}
+				param.begin_pos[i] = controller->motionPool().at(i).actualPos();
 			}
-
-			aris::Size total_count{ 1 };
-			for (Size i = 0; i < param.joint_active_vec.size(); ++i)
-			{
-				if (param.joint_active_vec[i])
-				{
-					double p, v, a;
-					aris::Size t_count;
-					auto result = aris::plan::moveAbsolute2(param.begin_joint_pos_vec[i], param.begin_axis_vel_vec[i], param.begin_axis_acc_vec[i], param.joint_pos_vec[i], 0.0, 0.0, param.axis_vel_vec[i], param.axis_acc_vec[i], param.axis_acc_vec[i], 1e-3, 1e-10, p, v, a, t_count);
-					//controller->motionAtAbs(i).setTargetPos(p);
-					target.model->motionPool().at(i).setMp(p);
-                    total_count = result;
-                    //total_count = std::max(total_count, t_count);
-
-					param.begin_joint_pos_vec[i] = p;
-					param.begin_axis_vel_vec[i] = v;
-					param.begin_axis_acc_vec[i] = a;
-				}
-			}
-
-            if (target.model->solverPool().at(1).kinPos())return -1;
-			   
-			// 打印电流 //
-			auto &cout = controller->mout();
-            if (target.count % 1000 == 0)
-			{
-				for (Size i = 0; i < 6; i++)
-				{
-                    if (param.joint_active_vec[i])
-                    {
-                        cout << "pos" << i + 1 << ":" << controller->motionAtAbs(i).actualPos() << "  ";
-                        cout << "vel" << i + 1 << ":" << controller->motionAtAbs(i).actualVel() << "  ";
-                        cout << "cur" << i + 1 << ":" << controller->motionAtAbs(i).actualCur() << "  ";
-                    }
-				}
-				cout << std::endl;
-			}
-
-			auto &fwd = dynamic_cast<aris::dynamic::ForwardKinematicSolver&>(target.model->solverPool()[1]);
-			fwd.cptJacobi();
-
-			auto &lout = controller->lout();
-			for (Size i = 0; i < 36; ++i)
-			{
-				lout <<fwd.Jf()[i] << ",";
-			}
-			for (Size i = 0; i < param.joint_active_vec.size(); ++i)
-			{
-				if (param.joint_active_vec[i])
-				{
-					lout << param.begin_joint_pos_vec[i] << ",";
-					lout << param.begin_axis_vel_vec[i] << ",";
-					lout << param.begin_axis_acc_vec[i] << ",";
-					lout << param.joint_pos_vec[i] << ",";
-					lout << param.axis_vel_vec[i] << ",";
-					lout << param.axis_acc_vec[i] << ",";
-					lout << std::endl;
-				}
-			}
-
-			// log 电流 //
-            //auto &lout = controller->lout();
-            //for (Size i = 0; i < 6; i++)
-            //{
-                //lout << controller->motionAtAbs(i).targetPos() << ",";
-                //lout << controller->motionAtAbs(i).actualPos() << ",";
-                //lout << controller->motionAtAbs(i).actualVel() << ",";
-                //lout << controller->motionAtAbs(i).actualCur() << ",";
-            //}
-            //lout << std::endl;
-
-            //return total_count - target.count;
-            return total_count;
 		}
-	auto MoveTTT::collectNrt(PlanTarget &target)->void {}
-	MoveTTT::MoveTTT(const std::string &name) :Plan(name)
+		*/
+
+		for (int i = 0; i < controller->motionPool().size(); i++)
+		{
+			controller->motionPool()[i].setTargetPos(param.pos[i + 1][target.count]);
+			target.model->motionPool().at(i).setMp(param.pos[i + 1][target.count]);
+		}
+        if (target.model->solverPool().at(1).kinPos())return -1;
+			   
+		// 打印 //
+		auto &cout = controller->mout();
+        if (target.count % 100 == 0)
+		{
+			for (Size i = 0; i < controller->motionPool().size(); i++)
+			{
+				cout << target.model->motionPool().at(i).mp() << "  ";
+				//cout << controller->motionPool()[i].actualPos() << "  ";
+			}
+			cout << std::endl;
+		}
+		// log //
+		auto &lout = controller->lout();
+		for (Size i = 0; i < controller->motionPool().size(); ++i)
+		{
+			for (Size i = 0; i < controller->motionPool().size(); i++)
+			{
+				cout << controller->motionPool()[i].actualPos() << "  ";
+			}
+			cout << std::endl;
+		}    
+
+		return param.pos[0].size() - target.count - 1;
+	}
+	auto MoveT::collectNrt(PlanTarget &target)->void {}
+	MoveT::MoveT(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
-            "<Command name=\"moveTTT\">"
+            "<Command name=\"movet\">"
 			"	<GroupParam>"
-			"		<UniqueParam default=\"all\">"
-			"			<Param name=\"all\" abbreviation=\"a\"/>"
-			"			<Param name=\"motion_id\" abbreviation=\"m\" default=\"0\"/>"
-			"			<Param name=\"physical_id\" abbreviation=\"p\" default=\"0\"/>"
-			"			<Param name=\"slave_id\" abbreviation=\"s\" default=\"0\"/>"
-			"		</UniqueParam>"
-			"		<Param name=\"pos\" default=\"0\"/>"
-            "		<Param name=\"vel\" default=\"0.04\"/>"
-            "		<Param name=\"acc\" default=\"0.1\"/>"
-            "		<Param name=\"dec\" default=\"0.1\"/>"
+			"		<Param name=\"col\" default=\"7\"/>"
+			"		<Param name=\"path\" default=\"C:\\Users\\kevin\\Desktop\\tuying\\example.emily\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}
@@ -836,8 +734,6 @@ namespace kaanh
 			for (Size i = 0; i < 6; i++)
 			{
 				cout << "pos" << i + 1 << ":" << controller->motionAtAbs(i).actualPos() << "  ";
-				cout << "vel" << i + 1 << ":" << controller->motionAtAbs(i).actualVel() << "  ";
-				cout << "cur" << i + 1 << ":" << controller->motionAtAbs(i).actualCur() << "  ";
 			}
 			cout << std::endl;
 		}
@@ -846,10 +742,7 @@ namespace kaanh
 		auto &lout = controller->lout();
 		for (Size i = 0; i < 6; i++)
 		{
-			lout << controller->motionAtAbs(i).targetPos() << ",";
 			lout << controller->motionAtAbs(i).actualPos() << ",";
-			lout << controller->motionAtAbs(i).actualVel() << ",";
-			lout << controller->motionAtAbs(i).actualCur() << ",";
 		}
 		lout << std::endl;
 
@@ -1897,6 +1790,7 @@ namespace kaanh
 	}
 	auto JogJ1::collectNrt(PlanTarget &target)->void 
 	{
+		JogJParam::j1_count = 0;
 		if (target.ret_code < 0)
 		{
 			JogJParam::j1_count.store(0);
@@ -2051,6 +1945,7 @@ namespace kaanh
 	}
 	auto JogJ2::collectNrt(PlanTarget &target)->void 
 	{
+		JogJParam::j2_count = 0;
 		if (target.ret_code < 0)
 		{
 			JogJParam::j2_count.store(0);
@@ -2203,7 +2098,9 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ3::collectNrt(PlanTarget &target)->void {
+	auto JogJ3::collectNrt(PlanTarget &target)->void 
+	{
+		JogJParam::j3_count = 0;
 		if (target.ret_code < 0)
 		{
 			JogJParam::j3_count.store(0);
@@ -2356,7 +2253,9 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ4::collectNrt(PlanTarget &target)->void {
+	auto JogJ4::collectNrt(PlanTarget &target)->void 
+	{
+		JogJParam::j4_count = 0;
 		if (target.ret_code < 0)
 		{
 			JogJParam::j4_count.store(0);
@@ -2509,7 +2408,9 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ5::collectNrt(PlanTarget &target)->void {
+	auto JogJ5::collectNrt(PlanTarget &target)->void 
+	{
+		JogJParam::j5_count = 0;
 		if (target.ret_code < 0)
 		{
 			JogJParam::j5_count.store(0);
@@ -2662,7 +2563,9 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ6::collectNrt(PlanTarget &target)->void {
+	auto JogJ6::collectNrt(PlanTarget &target)->void 
+	{
+		JogJParam::j6_count = 0;
 		if (target.ret_code < 0)
 		{
 			JogJParam::j6_count.store(0);
@@ -2873,7 +2776,9 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JX::collectNrt(PlanTarget &target)->void {
+	auto JX::collectNrt(PlanTarget &target)->void 
+	{
+		JCParam::jx_count = 0;
 		if (target.ret_code < 0)
 		{
 			JCParam::jx_count.store(0);
@@ -3074,7 +2979,9 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JY::collectNrt(PlanTarget &target)->void {
+	auto JY::collectNrt(PlanTarget &target)->void 
+	{
+		JCParam::jy_count = 0;
 		if (target.ret_code < 0)
 		{
 			JCParam::jy_count.store(0);
@@ -3275,7 +3182,9 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JZ::collectNrt(PlanTarget &target)->void {
+	auto JZ::collectNrt(PlanTarget &target)->void 
+	{
+		JCParam::jz_count = 0;
 		if (target.ret_code < 0)
 		{
 			JCParam::jz_count.store(0);
@@ -3476,7 +3385,9 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JRX::collectNrt(PlanTarget &target)->void {
+	auto JRX::collectNrt(PlanTarget &target)->void 
+	{
+		JCParam::jrx_count = 0;
 		if (target.ret_code < 0)
 		{
 			JCParam::jrx_count.store(0);
@@ -3684,7 +3595,9 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JRY::collectNrt(PlanTarget &target)->void {
+	auto JRY::collectNrt(PlanTarget &target)->void 
+	{
+		JCParam::jry_count = 0;
 		if (target.ret_code < 0)
 		{
 			JCParam::jry_count.store(0);
@@ -3885,7 +3798,9 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JRZ::collectNrt(PlanTarget &target)->void {
+	auto JRZ::collectNrt(PlanTarget &target)->void 
+	{
+		JCParam::jrz_count = 0;
 		if (target.ret_code < 0)
 		{
 			JCParam::jrz_count.store(0);
@@ -3909,7 +3824,10 @@ namespace kaanh
 	}
 
 
-    // 力传感器信号测试 //
+    
+	
+	
+	// 力传感器信号测试 //
     struct FSParam
     {
         bool real_data;
@@ -4562,7 +4480,7 @@ namespace kaanh
         plan_root->planPool().add<aris::plan::Stop>();
 
 		plan_root->planPool().add<kaanh::Get>();
-		plan_root->planPool().add<kaanh::MoveTTT>();
+		plan_root->planPool().add<kaanh::MoveT>();
 		plan_root->planPool().add<kaanh::MoveJM>();
 		plan_root->planPool().add<kaanh::MoveC>();
 		plan_root->planPool().add<kaanh::JogC>();

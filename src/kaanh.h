@@ -34,15 +34,15 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(Get);
 	};
 
-	class MoveTTT : public aris::plan::Plan
+	class MoveT : public aris::plan::Plan
 	{
 	public:
 		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
 		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
 		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
 
-		explicit MoveTTT(const std::string &name = "MoveTTT_plan");
-		ARIS_REGISTER_TYPE(MoveTTT);
+		explicit MoveT(const std::string &name = "MoveT_plan");
+		ARIS_REGISTER_TYPE(MoveT);
 	};
 
 	class MoveJM : public aris::plan::Plan
