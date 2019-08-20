@@ -232,6 +232,96 @@ namespace kaanh
 		return std::move(model);
 	}
 
+	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>	/*函数返回的是一个类指针，指针指向Controller,controller的类型是智能指针std::unique_ptr*/
+	{
+		std::unique_ptr<aris::control::Controller> controller(aris::robot::createControllerRokaeXB4());/*创建std::unique_ptr实例*/
+
+#ifdef UNIX
+
+		dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosOffset(0.00293480352126769);
+		dynamic_cast<aris::control::Motion&>(controller->slavePool()[1]).setPosOffset(-2.50023777179214);
+		dynamic_cast<aris::control::Motion&>(controller->slavePool()[2]).setPosOffset(-0.292382537944081);
+		dynamic_cast<aris::control::Motion&>(controller->slavePool()[3]).setPosOffset(0.0582675097338009);
+		dynamic_cast<aris::control::Motion&>(controller->slavePool()[4]).setPosOffset(1.53363576057128);
+		dynamic_cast<aris::control::Motion&>(controller->slavePool()[5]).setPosOffset(25.924544999999998);
+
+		for (int i = 0; i < 6; i++)
+		{
+			dynamic_cast<aris::control::EthercatMotion&>(controller->slavePool()[i]).setDcAssignActivate(0x300);
+		}
+		// controller->slavePool().add<aris::control::EthercatSlave>();
+		// controller->slavePool().back().setPhyId(6);
+		// dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanInfoForCurrentSlave();
+		// dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
+		// dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x300);
+
+		// controller->slavePool().add<aris::control::EthercatSlave>();
+		// controller->slavePool().back().setPhyId(7);
+		 //dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanInfoForCurrentSlave();
+		 //dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
+
+		controller->slavePool().add<aris::control::EthercatSlave>();
+		controller->slavePool().back().setPhyId(6);
+		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanInfoForCurrentSlave();
+		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
+		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x00);
+#endif
+
+		return controller;
+	};
+	auto createModelRokae()->std::unique_ptr<aris::dynamic::Model>
+	{
+		aris::dynamic::PumaParam param;
+		param.d1 = 0.3295;
+		param.a1 = 0.04;
+		param.a2 = 0.275;
+		param.d3 = 0.0;
+		param.a3 = 0.025;
+		param.d4 = 0.28;
+
+		param.tool0_pe[2] = 0.078;
+
+		param.iv_vec =
+		{
+			{ 0.00000000000000,   0.00000000000000,   0.00000000000000,   0.00000000000000,   0.00000000000000,   0.00000000000000,   0.59026333537827,   0.00000000000000,   0.00000000000000,   0.00000000000000 },
+			{ 0.00000000000000, -0.02551872200978,   0.00000000000000,   3.05660683326413,   2.85905166943306,   0.00000000000000,   0.00000000000000, -0.00855352993039, -0.09946674483372, -0.00712210734359 },
+			{ 0.00000000000000,   0.00000000000000,   0.00000000000000,   0.02733022277747,   0.00000000000000,   0.37382629693302,   0.00000000000000,   0.00312006493276, -0.00578410451516,   0.00570606128540 },
+			{ 0.00000000000000,   1.06223330086669,   0.00000000000000,   0.00311748242960,   0.00000000000000,   0.24420385558544,   0.24970286555981,   0.00305759215246, -0.66644096559686,   0.00228253380852 },
+			{ 0.00000000000000,   0.05362286897910,   0.00528925153464, -0.00842588023014,   0.00128498153337, -0.00389810210572,   0.00000000000000, -0.00223677867576, -0.03365036368035, -0.00415647085627 },
+			{ 0.00000000000000,   0.00000000000000,   0.00066049870832,   0.00012563800445, -0.00085124094833,   0.04209529937135,   0.04102481443654, -0.00067596644891,   0.00017482449876, -0.00041025776053 },
+		};
+
+		param.mot_frc_vec =
+		{
+			{ 9.34994758321915, 7.80825641041495, 0.00000000000000 },
+			{ 11.64080253106441, 13.26518528472506, 3.55567932576820 },
+			{ 4.77014054273075, 7.85644357492508, 0.34445460269183 },
+			{ 3.63141668516122, 3.35461524886318, 0.14824771620542 },
+			{ 2.58310846982020, 1.41963212641879, 0.04855267273770 },
+			{ 1.78373986219597, 0.31920640440152, 0.03381545544099 },
+		};
+
+		auto model = aris::dynamic::createModelPuma(param);
+		/*
+		//根据tool0，添加一个tool1，tool1相对于tool0在x方向加上0.1m//
+		auto &tool0 = model->partPool().back().markerPool().findByName("general_motion_0_i");//获取tool0
+
+		double pq_ee_i[7];
+		s_pm2pq(*tool0->prtPm(), pq_ee_i);
+		pq_ee_i[0] += 0.1;//在tool0的x方向加上0.1m
+
+		double pm_ee_i[16];
+		s_pq2pm(pq_ee_i, pm_ee_i);
+
+		auto &tool1 = model->partPool().back().markerPool().add<Marker>("tool1", pm_ee_i);//添加tool1
+
+		//在根据tool1位姿反解到每一个关节时，需要调用下面两行代码来实现
+		//tool1.setPm(pm_ee_i);
+		//model->generalMotionPool()[0].updMpm();
+		*/
+		return std::move(model);
+	}
+
 
 	// 获取part_pq，end_pq，end_pe等 //
 	struct GetParam

@@ -21,6 +21,10 @@ namespace kaanh
 
 	auto createControllerQifan()->std::unique_ptr<aris::control::Controller>;
 	auto createModelQifan()->std::unique_ptr<aris::dynamic::Model>;
+
+	auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>;
+	auto createModelRokae()->std::unique_ptr<aris::dynamic::Model>;
+
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>;
 
 

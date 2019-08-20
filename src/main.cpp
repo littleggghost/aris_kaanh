@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	auto&cs = aris::server::ControlServer::instance();
 	auto port = argc < 2 ? 5866 : std::stoi(argv[1]);
 
-  
+	/*
 	//生成kaanh.xml文档	
 	//-------for qifan robot begin//
 	cs.resetController(kaanh::createControllerQifan().release());
@@ -38,6 +38,17 @@ int main(int argc, char *argv[])
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
 	cs.saveXmlFile(xmlpath.string().c_str());
 	//-------for qifan robot end// 
+	*/
+
+	//-------for rokae robot begin//
+	cs.resetController(kaanh::createControllerRokaeXB4().release());
+	cs.resetModel(kaanh::createModelRokae().release());
+	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
+	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
+	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
+	cs.resetSensorRoot(new aris::sensor::SensorRoot);
+	cs.saveXmlFile(xmlpath.string().c_str());
+	//-------for rokae robot end// 
 	
 
 	cs.loadXmlFile(xmlpath.string().c_str());
