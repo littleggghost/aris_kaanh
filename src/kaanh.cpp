@@ -269,7 +269,7 @@ namespace kaanh
 			}
 
 			cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
-			cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data());
+			cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
 
 			for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
 			{
@@ -368,7 +368,8 @@ namespace kaanh
 	{
 		std::vector<std::vector<double>> pos;
 		std::vector<double> begin_pos;
-		std::int16_t col, interval;
+		std::int16_t col;
+		double ratio;
 	};
 	auto MoveT::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
@@ -397,19 +398,27 @@ namespace kaanh
 				std::string data;
 				while(std::getline(infile, data))
 				{
-					if (data == "[HEADER]")
+					if (data.find("[HEADER]") != std::string::npos)
 					{
 						continue;
 					}
-					if (data == "  GEAR_NOMINAL_VEL = 1.000000")
+					if (data.find("GEAR_NOMINAL_VEL") != std::string::npos)
+					{
+						char *s_vel = (char *)data.c_str();
+						const char *split = "=";
+						// 以‘=’为分隔符拆分字符串
+						char *sp_vel = strtok(s_vel, split);
+						sp_vel = strtok(NULL, split);
+						std::string vel = sp_vel;
+						param.ratio = std::stod(vel) / 1.0;
+						std::cout << "ratio:" << param.ratio << std::endl;
+						continue;
+					}
+					if (data.find("[RECORDS]") != std::string::npos)
 					{
 						continue;
 					}
-					if (data == "[RECORDS]")
-					{
-						continue;
-					}
-					if (data == "[END]")
+					if (data.find("[END]") != std::string::npos)
 					{
 						break;
 					}
@@ -431,7 +440,7 @@ namespace kaanh
 				{
 					for (int j = 0; j < pos[0].size() - 1; j++)
 					{
-						for (double count = pos[0][j]; count < pos[0][j + 1]; count = count + 0.001)
+						for (double count = pos[0][j]; count < pos[0][j + 1]; count = count + 0.001*param.ratio)
 						{
 							param.pos[i].push_back(interpolate(pos[0][j], pos[0][j + 1], pos[i][j], pos[i][j + 1], count)* PI/180.0);
 						}
@@ -782,14 +791,14 @@ namespace kaanh
 		else if (pos_unit_found->second == "m")pos_unit = 1.0;
 		else if (pos_unit_found->second == "mm")pos_unit = 0.001;
 		else if (pos_unit_found->second == "cm")pos_unit = 0.01;
-		else THROW_FILE_AND_LINE("");
+		else THROW_FILE_LINE("");
 
 		for (auto cmd_param : params)
 		{
 			if (cmd_param.first == "mid_pq")
 			{
 				auto pq_mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (pq_mat.size() != 7)THROW_FILE_AND_LINE("");
+				if (pq_mat.size() != 7)THROW_FILE_LINE("");
 				aris::dynamic::s_vc(7, pq_mat.data(), mid_pq_out);
 				aris::dynamic::s_nv(3, pos_unit, mid_pq_out);
 				return true;
@@ -797,7 +806,7 @@ namespace kaanh
 			else if (cmd_param.first == "mid_pm")
 			{
 				auto pm_mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (pm_mat.size() != 16)THROW_FILE_AND_LINE("");
+				if (pm_mat.size() != 16)THROW_FILE_LINE("");
 				aris::dynamic::s_pm2pq(pm_mat.data(), mid_pq_out);
 				aris::dynamic::s_nv(3, pos_unit, mid_pq_out);
 				return true;
@@ -809,16 +818,16 @@ namespace kaanh
 				if (ori_unit_found == params.end()) ori_unit = 1.0;
 				else if (ori_unit_found->second == "rad")ori_unit = 1.0;
 				else if (ori_unit_found->second == "degree")ori_unit = PI / 180.0;
-				else THROW_FILE_AND_LINE("");
+				else THROW_FILE_LINE("");
 
 				std::string eul_type;
 				auto eul_type_found = params.find("mid_eul_type");
 				if (eul_type_found == params.end()) eul_type = "321";
 				else if (check_eul_validity(eul_type_found->second.data()))	eul_type = eul_type_found->second;
-				else THROW_FILE_AND_LINE("");
+				else THROW_FILE_LINE("");
 
 				auto pe_mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (pe_mat.size() != 6)THROW_FILE_AND_LINE("");
+				if (pe_mat.size() != 6)THROW_FILE_LINE("");
 				aris::dynamic::s_nv(3, ori_unit, pe_mat.data() + 3);
 				aris::dynamic::s_pe2pq(pe_mat.data(), mid_pq_out, eul_type.data());
 				aris::dynamic::s_nv(3, pos_unit, mid_pq_out);
@@ -826,7 +835,7 @@ namespace kaanh
 			}
 		}
 
-		THROW_FILE_AND_LINE("No mid pose input");
+		THROW_FILE_LINE("No mid pose input");
 	}
 	auto find_end_pq(const std::map<std::string, std::string> &params, PlanTarget &target, double *end_pq_out)->bool
 	{
@@ -836,14 +845,14 @@ namespace kaanh
 		else if (pos_unit_found->second == "m")pos_unit = 1.0;
 		else if (pos_unit_found->second == "mm")pos_unit = 0.001;
 		else if (pos_unit_found->second == "cm")pos_unit = 0.01;
-		else THROW_FILE_AND_LINE("");
+		else THROW_FILE_LINE("");
 
 		for (auto cmd_param : params)
 		{
 			if (cmd_param.first == "end_pq")
 			{
 				auto pq_mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (pq_mat.size() != 7)THROW_FILE_AND_LINE("");
+				if (pq_mat.size() != 7)THROW_FILE_LINE("");
 				aris::dynamic::s_vc(7, pq_mat.data(), end_pq_out);
 				aris::dynamic::s_nv(3, pos_unit, end_pq_out);
 				return true;
@@ -851,7 +860,7 @@ namespace kaanh
 			else if (cmd_param.first == "end_pm")
 			{
 				auto pm_mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (pm_mat.size() != 16)THROW_FILE_AND_LINE("");
+				if (pm_mat.size() != 16)THROW_FILE_LINE("");
 				aris::dynamic::s_pm2pq(pm_mat.data(), end_pq_out);
 				aris::dynamic::s_nv(3, pos_unit, end_pq_out);
 				return true;
@@ -863,16 +872,16 @@ namespace kaanh
 				if (ori_unit_found == params.end()) ori_unit = 1.0;
 				else if (ori_unit_found->second == "rad")ori_unit = 1.0;
 				else if (ori_unit_found->second == "degree")ori_unit = PI / 180.0;
-				else THROW_FILE_AND_LINE("");
+				else THROW_FILE_LINE("");
 
 				std::string eul_type;
 				auto eul_type_found = params.find("mid_eul_type");
 				if (eul_type_found == params.end()) eul_type = "321";
 				else if (check_eul_validity(eul_type_found->second.data()))	eul_type = eul_type_found->second;
-				else THROW_FILE_AND_LINE("");
+				else THROW_FILE_LINE("");
 
 				auto pe_mat = target.model->calculator().calculateExpression(cmd_param.second);
-				if (pe_mat.size() != 6)THROW_FILE_AND_LINE("");
+				if (pe_mat.size() != 6)THROW_FILE_LINE("");
 				aris::dynamic::s_nv(3, ori_unit, pe_mat.data() + 3);
 				aris::dynamic::s_pe2pq(pe_mat.data(), end_pq_out, eul_type.data());
 				aris::dynamic::s_nv(3, pos_unit, end_pq_out);
@@ -880,7 +889,7 @@ namespace kaanh
 			}
 		}
 
-		THROW_FILE_AND_LINE("No end pose input");
+		THROW_FILE_LINE("No end pose input");
 	}
 	void slerp(double starting[4], double ending[4], double result[4], double t)
 	{
@@ -931,8 +940,8 @@ namespace kaanh
 		mvc_param.ee_begin_pq.resize(7);
 		mvc_param.ee_mid_pq.resize(7);
 		mvc_param.ee_end_pq.resize(7);
-		if (!find_mid_pq(params, target, mvc_param.ee_mid_pq.data()))THROW_FILE_AND_LINE("");
-		if (!find_end_pq(params, target, mvc_param.ee_end_pq.data()))THROW_FILE_AND_LINE("");
+		if (!find_mid_pq(params, target, mvc_param.ee_mid_pq.data()))THROW_FILE_LINE("");
+		if (!find_end_pq(params, target, mvc_param.ee_end_pq.data()))THROW_FILE_LINE("");
 
 		for (auto cmd_param : params)
 		{
@@ -1180,18 +1189,18 @@ namespace kaanh
 				imp_->s1_rt.vel_percent = 10;
 
 				imp_->increase_count = std::stoi(params.at("increase_count"));
-				if (imp_->increase_count < 0 || imp_->increase_count>1e5)THROW_FILE_AND_LINE("");
+				if (imp_->increase_count < 0 || imp_->increase_count>1e5)THROW_FILE_LINE("");
 
 				auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-				if (mat.size() != 6)THROW_FILE_AND_LINE("");
+				if (mat.size() != 6)THROW_FILE_LINE("");
 				std::copy(mat.begin(), mat.end(), imp_->vel);
 
 				mat = target.model->calculator().calculateExpression(params.at("acc"));
-				if (mat.size() != 6)THROW_FILE_AND_LINE("");
+				if (mat.size() != 6)THROW_FILE_LINE("");
 				std::copy(mat.begin(), mat.end(), imp_->acc);
 
 				mat = target.model->calculator().calculateExpression(params.at("dec"));
-				if (mat.size() != 6)THROW_FILE_AND_LINE("");
+				if (mat.size() != 6)THROW_FILE_LINE("");
 				std::copy(mat.begin(), mat.end(), imp_->dec);
 
 				std::fill(target.mot_options.begin(), target.mot_options.end(), USE_TARGET_POS);
@@ -1474,7 +1483,7 @@ namespace kaanh
 				imp_->s1_rt.vel_percent = 10;
 
 				imp_->increase_count = std::stoi(params.at("increase_count"));
-				if (imp_->increase_count < 0 || imp_->increase_count>1e5)THROW_FILE_AND_LINE("");
+				if (imp_->increase_count < 0 || imp_->increase_count>1e5)THROW_FILE_LINE("");
 				imp_->vel = std::stod(params.at("vel"));
 				imp_->acc = std::stod(params.at("acc"));
 				imp_->dec = std::stod(params.at("dec"));
@@ -1677,7 +1686,7 @@ namespace kaanh
 		for (auto &p : params)
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 			/*
 			param.vel = std::stod(params.at("vel"));
 			param.acc = std::stod(params.at("acc"));
@@ -1836,7 +1845,7 @@ namespace kaanh
 		for (auto &p : params)
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			param.vel = c->motionPool().at(1).maxVel();
 			param.acc = c->motionPool().at(1).maxAcc();
@@ -1991,7 +2000,7 @@ namespace kaanh
 		for (auto &p : params)
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			param.vel = c->motionPool().at(2).maxVel();
 			param.acc = c->motionPool().at(2).maxAcc();
@@ -2146,7 +2155,7 @@ namespace kaanh
 		for (auto &p : params)
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			param.vel = c->motionPool().at(3).maxVel();
 			param.acc = c->motionPool().at(3).maxAcc();
@@ -2301,7 +2310,7 @@ namespace kaanh
 		for (auto &p : params)
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			param.vel = c->motionPool().at(4).maxVel();
 			param.acc = c->motionPool().at(4).maxAcc();
@@ -2456,7 +2465,7 @@ namespace kaanh
 		for (auto &p : params)
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			param.vel = c->motionPool().at(5).maxVel();
 			param.acc = c->motionPool().at(5).maxAcc();
@@ -2621,18 +2630,18 @@ namespace kaanh
 			velocity = std::max(std::min(100, velocity), -100);
 			param.vel_percent = velocity;
 
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.vel);
 
 			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.acc);
 
 			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.dec);
 
 			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
@@ -2824,18 +2833,18 @@ namespace kaanh
 			velocity = std::max(std::min(100, velocity), -100);
 			param.vel_percent = velocity;
 
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.vel);
 
 			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.acc);
 
 			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.dec);
 
 			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
@@ -3027,18 +3036,18 @@ namespace kaanh
 			velocity = std::max(std::min(100, velocity), -100);
 			param.vel_percent = velocity;
 
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.vel);
 
 			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.acc);
 
 			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.dec);
 
 			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
@@ -3230,18 +3239,18 @@ namespace kaanh
 			velocity = std::max(std::min(100, velocity), -100);
 			param.vel_percent = velocity;
 
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.vel);
 
 			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.acc);
 
 			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.dec);
 
 			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
@@ -3440,18 +3449,18 @@ namespace kaanh
 			velocity = std::max(std::min(100, velocity), -100);
 			param.vel_percent = velocity;
 
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.vel);
 
 			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.acc);
 
 			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.dec);
 
 			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
@@ -3643,18 +3652,18 @@ namespace kaanh
 			velocity = std::max(std::min(100, velocity), -100);
 			param.vel_percent = velocity;
 
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_AND_LINE("");
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
 			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.vel);
 
 			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.acc);
 
 			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_AND_LINE("");
+			if (mat.size() != 6)THROW_FILE_LINE("");
 			std::copy(mat.begin(), mat.end(), param.dec);
 
 			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
