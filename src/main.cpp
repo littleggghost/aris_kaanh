@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <aris.hpp>
 #include "kaanh.h"
+#include "xyz.h"
 #include<atomic>
 #include<string>
 #include<filesystem>
@@ -15,7 +16,10 @@ auto uixmlpath = std::filesystem::absolute(".");
 auto modelxmlpath = std::filesystem::absolute(".");
 const std::string xmlfile = "kaanh.xml";
 const std::string uixmlfile = "interface_kaanh.xml";
-const std::string modelxmlfile = "model_qifan.xml";
+//for qifan robot//
+//const std::string modelxmlfile = "model_qifan.xml";
+//for rokae robot//
+const std::string modelxmlfile = "model_rokae.xml";
 
 int main(int argc, char *argv[])
 {
@@ -32,7 +36,7 @@ int main(int argc, char *argv[])
 	//-------for qifan robot begin//
 	cs.resetController(kaanh::createControllerQifan().release());
 	cs.resetModel(kaanh::createModelQifan().release());
-	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
+	cs.resetPlanRoot(xyz::createPlanRootRokaeXB4().release());
 	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
 	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
@@ -43,7 +47,7 @@ int main(int argc, char *argv[])
 	//-------for rokae robot begin//
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
 	cs.resetModel(kaanh::createModelRokae().release());
-	cs.resetPlanRoot(kaanh::createPlanRootRokaeXB4().release());
+	cs.resetPlanRoot(xyz::createPlanRootRokaeXB4().release());
 	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
 	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
