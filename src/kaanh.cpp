@@ -238,12 +238,12 @@ namespace kaanh
 
 #ifdef UNIX
 
-		dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosOffset(0.00293480352126769);
-		dynamic_cast<aris::control::Motion&>(controller->slavePool()[1]).setPosOffset(-2.50023777179214);
-		dynamic_cast<aris::control::Motion&>(controller->slavePool()[2]).setPosOffset(-0.292382537944081);
-		dynamic_cast<aris::control::Motion&>(controller->slavePool()[3]).setPosOffset(0.0582675097338009);
-		dynamic_cast<aris::control::Motion&>(controller->slavePool()[4]).setPosOffset(1.53363576057128);
-		dynamic_cast<aris::control::Motion&>(controller->slavePool()[5]).setPosOffset(25.924544999999998);
+        dynamic_cast<aris::control::Motion&>(controller->slavePool()[0]).setPosOffset(0.083326167813560906);
+        dynamic_cast<aris::control::Motion&>(controller->slavePool()[1]).setPosOffset(0.40688722035956698);
+        dynamic_cast<aris::control::Motion&>(controller->slavePool()[2]).setPosOffset(-0.063596878644675794);
+        dynamic_cast<aris::control::Motion&>(controller->slavePool()[3]).setPosOffset(0.65575523199999997);
+        dynamic_cast<aris::control::Motion&>(controller->slavePool()[4]).setPosOffset(-1.49538803280913);
+        dynamic_cast<aris::control::Motion&>(controller->slavePool()[5]).setPosOffset(-3.2476329105045001);
 
 		for (int i = 0; i < 6; i++)
 		{
