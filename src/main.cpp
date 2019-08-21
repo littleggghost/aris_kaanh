@@ -15,7 +15,11 @@ auto uixmlpath = std::filesystem::absolute(".");
 auto modelxmlpath = std::filesystem::absolute(".");
 const std::string xmlfile = "kaanh.xml";
 const std::string uixmlfile = "interface_kaanh.xml";
-const std::string modelxmlfile = "model_qifan.xml";
+//for qifan robot//
+//const std::string modelxmlfile = "model_qifan.xml";
+const std::string modelxmlfile = "model_rokae.xml";
+
+
 
 int main(int argc, char *argv[])
 {
