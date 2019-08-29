@@ -202,6 +202,18 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(JogJ6);
 	};
 
+	class JogJ7 : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+		auto virtual executeRT(aris::plan::PlanTarget &target)->int;
+		auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
+
+		virtual ~JogJ7();
+		explicit JogJ7(const std::string &name = "JogJ7_plan");
+		ARIS_REGISTER_TYPE(JogJ7);
+	};
+
 	class JX : public aris::plan::Plan
 	{
 	public:

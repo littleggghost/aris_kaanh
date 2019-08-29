@@ -209,7 +209,50 @@ namespace kaanh
 
 				controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
 			}
-		}
+		}	
+		double pos_offset = 500.0 / 8388608.0 * 250;	//在零位时，为500count
+		double pos_factor = 8388608.0 * 250;	//运行1m需要转250转
+		double max_pos = 10.0;
+		double min_pos = 0.0;
+		double max_vel = 1.0;	//1m/s
+		double max_acc = 5.0;	//5m/s2
+		std::string xml_str =
+			"<EthercatMotion phy_id=\"" + std::to_string(6) + "\" product_code=\"0x6038000D\""
+			" vendor_id=\"0x0000066F\" revision_num=\"0x00010000\" dc_assign_activate=\"0x0300\""
+			" min_pos=\"" + std::to_string(min_pos) + "\" max_pos=\"" + std::to_string(max_pos) + "\" max_vel=\"" + std::to_string(max_vel) + "\" min_vel=\"" + std::to_string(-max_vel) + "\""
+			" max_acc=\"" + std::to_string(max_acc) + "\" min_acc=\"" + std::to_string(-max_acc) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
+			" home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor) + "\" pos_offset=\"" + std::to_string(pos_offset) + "\">"
+			"	<SyncManagerPoolObject>"
+			"		<SyncManager is_tx=\"false\"/>"
+			"		<SyncManager is_tx=\"true\"/>"
+			"		<SyncManager is_tx=\"false\">"
+			"			<Pdo index=\"0x1600\" is_tx=\"false\">"
+			"				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+			"				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"touch_probe\" index=\"0x60B8\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"offset_tor\" index=\"0x60B2\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+			"			</Pdo>"
+			"		</SyncManager>"
+			"		<SyncManager is_tx=\"true\">"
+			"			<Pdo index=\"0x1a01\" is_tx=\"true\">"
+			"				<PdoEntry name=\"error_code\" index=\"0x603F\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+			"				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"vel_actual_value\" index=\"0x606C\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"cur_actual_value\" index=\"0x6077\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"touch_probe_status\" index=\"0x60b9\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"touch_probe_pos1\" index=\"0x60ba\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"digital_input\" index=\"0x60fd\" subindex=\"0x00\" size=\"32\"/>"
+			"			</Pdo>"
+			"		</SyncManager>"
+			"	</SyncManagerPoolObject>"
+			"</EthercatMotion>";
+
+		controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
 		return controller;
 	};
 	auto createModelQifan()->std::unique_ptr<aris::dynamic::Model>
@@ -267,7 +310,52 @@ namespace kaanh
 		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
 		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x00);
 #endif
+		
+		double pos_offset = 0.0 / 8388608.0 * 250;	//在零位时，为500count
+		double pos_factor = 8388608.0 * 250;	//运行1m需要转250转
+		double max_pos = 10.0;
+		double min_pos = 0.0;
+		double max_vel = 1.0;	//1m/s
+		double max_acc = 5.0;	//5m/s2
 
+		std::string xml_str =
+			"<EthercatMotion phy_id=\"" + std::to_string(6) + "\" product_code=\"0x6038000D\""
+			" vendor_id=\"0x0000066F\" revision_num=\"0x00010000\" dc_assign_activate=\"0x0300\""
+			" min_pos=\"" + std::to_string(min_pos) + "\" max_pos=\"" + std::to_string(max_pos) + "\" max_vel=\"" + std::to_string(max_vel) + "\" min_vel=\"" + std::to_string(-max_vel) + "\""
+			" max_acc=\"" + std::to_string(max_acc) + "\" min_acc=\"" + std::to_string(-max_acc) + "\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.5\""
+			" home_pos=\"0\" pos_factor=\"" + std::to_string(pos_factor) + "\" pos_offset=\"" + std::to_string(pos_offset) + "\">"
+			"	<SyncManagerPoolObject>"
+			"		<SyncManager is_tx=\"false\"/>"
+			"		<SyncManager is_tx=\"true\"/>"
+			"		<SyncManager is_tx=\"false\">"
+			"			<Pdo index=\"0x1600\" is_tx=\"false\">"
+			"				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+			"				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"touch_probe\" index=\"0x60B8\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"offset_tor\" index=\"0x60B2\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
+			"			</Pdo>"
+			"		</SyncManager>"
+			"		<SyncManager is_tx=\"true\">"
+			"			<Pdo index=\"0x1a01\" is_tx=\"true\">"
+			"				<PdoEntry name=\"error_code\" index=\"0x603F\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+			"				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"vel_actual_value\" index=\"0x606C\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"cur_actual_value\" index=\"0x6077\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"touch_probe_status\" index=\"0x60b9\" subindex=\"0x00\" size=\"16\"/>"
+			"				<PdoEntry name=\"touch_probe_pos1\" index=\"0x60ba\" subindex=\"0x00\" size=\"32\"/>"
+			"				<PdoEntry name=\"digital_input\" index=\"0x60fd\" subindex=\"0x00\" size=\"32\"/>"
+			"			</Pdo>"
+			"		</SyncManager>"
+			"	</SyncManagerPoolObject>"
+			"</EthercatMotion>";
+
+		controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+		
 		return controller;
 	};
 	auto createModelRokae()->std::unique_ptr<aris::dynamic::Model>
@@ -362,7 +450,7 @@ namespace kaanh
 			cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
 			cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
 
-			for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
+			for (aris::Size i = 0; i < cs.model().motionPool().size(); i++)
 			{
 				std::any_cast<GetParam &>(data).motion_pos[i] = cs.controller().motionPool()[i].actualPos();
 				std::any_cast<GetParam &>(data).motion_vel[i] = cs.controller().motionPool()[i].actualVel();
@@ -609,40 +697,80 @@ namespace kaanh
 
 
 	// 多关节插值梯形轨迹 //
+	static std::atomic<std::array<double, 7> > axis_temp_pos;
 	struct MoveAbJParam
 	{
 		std::vector<Size> total_count_vec;
-		std::vector<double> axis_begin_pos_vec;
+		std::vector<double> p_now, v_now, a_now;
 		std::vector<double> axis_pos_vec;
 		std::vector<double> axis_vel_vec;
 		std::vector<double> axis_acc_vec;
 		std::vector<double> axis_dec_vec;
-		bool ab;
 	};
 	auto MoveAbJ::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
+		auto&cs = aris::server::ControlServer::instance();
 		auto c = target.controller;
 		MoveAbJParam param;
-		param.total_count_vec.resize(6, 1);
-		param.axis_begin_pos_vec.resize(6, 0.0);
+		param.total_count_vec.resize(c->motionPool().size(), 1);
+		param.axis_pos_vec.resize(c->motionPool().size(), 0.0);
+		param.p_now.resize(c->motionPool().size(), 0.0);
+		param.v_now.resize(c->motionPool().size(), 0.0);
+		param.a_now.resize(c->motionPool().size(), 0.0);
 
-		//params.at("pos")
-		for (auto &p : params)
+		//当前有指令在执行//
+		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
+		if (planptr && planptr->plan != this)
 		{
-			if (p.first == "pos")
+			throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+		}
+		else if (planptr && planptr->plan == this)
+		{
+			std::array<double, 7> temp = { 0,0,0,0,0,0,0 };
+			for (auto &p : params)
 			{
-				if (p.second == "current_pos")
-				{
-					target.option |= aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+				if (p.first == "pos")
+				{	
+					auto pos = target.model->calculator().calculateExpression(p.second);
+					if (pos.size() == c->motionPool().size())
+					{			
+						std::copy(pos.begin(), pos.end(), temp.begin());
+					}
+					else
+					{
+						throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+					}
+
+					//超阈值保护//
+					for (Size i = 0; i < c->motionPool().size(); ++i)
+					{
+						if (temp[i] > c->motionPool()[i].maxPos())
+						{
+							temp[i] = c->motionPool()[i].maxPos();
+						}
+						if (temp[i] < c->motionPool()[i].minPos())
+						{
+							temp[i] = c->motionPool()[i].minPos();
+						}
+					}
 				}
-				else
+			}
+			
+			axis_temp_pos.store(temp);
+			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+		}
+		else
+		{
+			for (auto &p : params)
+			{
+				if (p.first == "pos")
 				{
 					auto pos = target.model->calculator().calculateExpression(p.second);
 					if (pos.size() == 1)
 					{
-						param.axis_pos_vec.resize(param.axis_begin_pos_vec.size(), pos.toDouble());
+						param.axis_pos_vec.resize(c->motionPool().size(), pos.toDouble());
 					}
-					else if (pos.size() == param.axis_begin_pos_vec.size())
+					else if (pos.size() == c->motionPool().size())
 					{
 						param.axis_pos_vec.assign(pos.begin(), pos.end());
 					}
@@ -651,122 +779,112 @@ namespace kaanh
 						throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
 					}
 
-					for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
+					//超阈值保护//
+					for (Size i = 0; i < c->motionPool().size(); ++i)
 					{
-						//超阈值保护//
-						if (param.axis_pos_vec[i] > 1.0)
+						if (param.axis_pos_vec[i] > c->motionPool()[i].maxPos())
 						{
-							param.axis_pos_vec[i] = 1.0;
+							param.axis_pos_vec[i] = c->motionPool()[i].maxPos();
 						}
-						if (param.axis_pos_vec[i] < -1.0)
+						if (param.axis_pos_vec[i] < c->motionPool()[i].minPos())
 						{
-							param.axis_pos_vec[i] = -1.0;
-						}
-						if (param.axis_pos_vec[i] >= 0)
-						{
-							param.axis_pos_vec[i] = param.axis_pos_vec[i] * c->motionPool()[i].maxPos();
-						}
-						else
-						{
-							param.axis_pos_vec[i] = param.axis_pos_vec[i] * c->motionPool()[i].minPos();
+							param.axis_pos_vec[i] = c->motionPool()[i].minPos();
 						}
 					}
+					std::array<double, 7> temp = { 0,0,0,0,0,0,0 };
+					std::copy(param.axis_pos_vec.begin(), param.axis_pos_vec.end(), temp.begin());
+					axis_temp_pos.store(temp);
 				}
-			}
-			else if (p.first == "vel")
-			{
-				auto v = target.model->calculator().calculateExpression(p.second);
-				if (v.size() == 1)
+				else if (p.first == "vel")
 				{
-					param.axis_vel_vec.resize(param.axis_begin_pos_vec.size(), v.toDouble());
-				}
-				else if (v.size() == param.axis_begin_pos_vec.size())
-				{
-					param.axis_vel_vec.assign(v.begin(), v.end());
-				}
-				else
-				{
-					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-				}
+					auto v = target.model->calculator().calculateExpression(p.second);
+					if (v.size() == 1)
+					{
+						param.axis_vel_vec.resize(c->motionPool().size(), v.toDouble());
+					}
+					else if (v.size() == c->motionPool().size())
+					{
+						param.axis_vel_vec.assign(v.begin(), v.end());
+					}
+					else
+					{
+						throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+					}
 
-				for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
-				{
-					//if (param.axis_vel_vec[i] > 1.0 || param.axis_vel_vec[i] < 0.01)
-					//	throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-					if (param.axis_vel_vec[i] > 1.0)
+					for (Size i = 0; i < c->motionPool().size(); ++i)
 					{
-						param.axis_vel_vec[i] = 1.0;
+						if (param.axis_vel_vec[i] > 1.0)
+						{
+							param.axis_vel_vec[i] = 1.0;
+						}
+						if (param.axis_vel_vec[i] < 0.0)
+						{
+							param.axis_vel_vec[i] = 0.0;
+						}
+						param.axis_vel_vec[i] = param.axis_vel_vec[i] * c->motionPool()[i].maxVel();
 					}
-					if (param.axis_vel_vec[i] < 0.0)
+				}
+				else if (p.first == "acc")
+				{
+					auto a = target.model->calculator().calculateExpression(p.second);
+					if (a.size() == 1)
 					{
-						param.axis_vel_vec[i] = 0.0;
+						param.axis_acc_vec.resize(c->motionPool().size(), a.toDouble());
 					}
-					param.axis_vel_vec[i] = param.axis_vel_vec[i] * c->motionPool()[i].maxVel();
-				}
-			}
-			else if (p.first == "acc")
-			{
-				auto a = target.model->calculator().calculateExpression(p.second);
-				if (a.size() == 1)
-				{
-					param.axis_acc_vec.resize(param.axis_begin_pos_vec.size(), a.toDouble());
-				}
-				else if (a.size() == param.axis_begin_pos_vec.size())
-				{
-					param.axis_acc_vec.assign(a.begin(), a.end());
-				}
-				else
-				{
-					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-				}
+					else if (a.size() == c->motionPool().size())
+					{
+						param.axis_acc_vec.assign(a.begin(), a.end());
+					}
+					else
+					{
+						throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+					}
 
-				for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
-				{
-					if (param.axis_acc_vec[i] > 1.0)
+					for (Size i = 0; i < c->motionPool().size(); ++i)
 					{
-						param.axis_acc_vec[i] = 1.0;
+						if (param.axis_acc_vec[i] > 1.0)
+						{
+							param.axis_acc_vec[i] = 1.0;
+						}
+						if (param.axis_acc_vec[i] < 0.0)
+						{
+							param.axis_acc_vec[i] = 0.0;
+						}
+						param.axis_acc_vec[i] = param.axis_acc_vec[i] * c->motionPool()[i].maxAcc();
 					}
-					if (param.axis_acc_vec[i] < 0.0)
+				}
+				else if (p.first == "dec")
+				{
+					auto d = target.model->calculator().calculateExpression(p.second);
+					if (d.size() == 1)
 					{
-						param.axis_acc_vec[i] = 0.0;
+						param.axis_dec_vec.resize(c->motionPool().size(), d.toDouble());
 					}
-					param.axis_acc_vec[i] = param.axis_acc_vec[i] * c->motionPool()[i].maxAcc();
-				}
-			}
-			else if (p.first == "dec")
-			{
-				auto d = target.model->calculator().calculateExpression(p.second);
-				if (d.size() == 1)
-				{
-					param.axis_dec_vec.resize(param.axis_begin_pos_vec.size(), d.toDouble());
-				}
-				else if (d.size() == param.axis_begin_pos_vec.size())
-				{
-					param.axis_dec_vec.assign(d.begin(), d.end());
-				}
-				else
-				{
-					throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
-				}
+					else if (d.size() == c->motionPool().size())
+					{
+						param.axis_dec_vec.assign(d.begin(), d.end());
+					}
+					else
+					{
+						throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + " failed");
+					}
 
-				for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
-				{
-					if (param.axis_dec_vec[i] > 1.0)
+					for (Size i = 0; i < c->motionPool().size(); ++i)
 					{
-						param.axis_dec_vec[i] = 1.0;
+						if (param.axis_dec_vec[i] > 1.0)
+						{
+							param.axis_dec_vec[i] = 1.0;
+						}
+						if (param.axis_dec_vec[i] < 0.0)
+						{
+							param.axis_dec_vec[i] = 0.0;
+						}
+						param.axis_dec_vec[i] = param.axis_dec_vec[i] * c->motionPool()[i].minAcc();
 					}
-					if (param.axis_dec_vec[i] < 0.0)
-					{
-						param.axis_dec_vec[i] = 0.0;
-					}
-					param.axis_dec_vec[i] = param.axis_dec_vec[i] * c->motionPool()[i].minAcc();
 				}
-			}
-			else if (p.first == "ab")
-			{
-				param.ab = std::stod(p.second);
 			}
 		}
+
 		target.param = param;
 
 		//std::fill(target.mot_options.begin(), target.mot_options.end(), Plan::USE_TARGET_POS);
@@ -780,47 +898,55 @@ namespace kaanh
 		//获取驱动//
 		auto controller = target.controller;
 		auto &param = std::any_cast<MoveAbJParam&>(target.param);
-		static double begin_pos[6];
-		static double pos[6];
+
 		// 取得起始位置 //
 		if (target.count == 1)
 		{
-			for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
+			for (Size i = 0; i < param.p_now.size(); ++i)
 			{
-				param.axis_begin_pos_vec[i] = controller->motionPool().at(i).targetPos();
+				if (i < 6)
+				{
+					param.p_now[i] = target.model->motionPool().at(i).mp();
+					param.v_now[i] = target.model->motionPool().at(i).mv();
+					param.a_now[i] = target.model->motionPool().at(i).ma();
+				}
+				else
+				{
+					param.p_now[i] = controller->motionAtAbs(i).actualPos();
+					param.v_now[i] = controller->motionAtAbs(i).actualVel();
+					param.a_now[i] = 0.0;
+				}
 			}
 		}
-		// 设置驱动器的位置 //
-		if (param.ab)
+		
+		auto temp_pos = axis_temp_pos.load();
+		param.axis_pos_vec.assign(temp_pos.begin(), temp_pos.end());
+		
+		// 梯形轨迹规划 //
+		static double p_next, v_next, a_next;
+		for (int i = 0; i < param.p_now.size(); i++)
 		{
-			for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
+			aris::Size t;
+			param.total_count_vec[i] = aris::plan::moveAbsolute2(param.p_now[i], param.v_now[i], param.a_now[i]
+				, param.axis_pos_vec[i], 0.0, 0.0
+				, param.axis_vel_vec[i], param.axis_acc_vec[i], param.axis_dec_vec[i]
+				, 1e-3, 1e-4, p_next, v_next, a_next, t);
+			controller->motionAtAbs(i).setTargetPos(p_next);
+			if (i < 6)
 			{
-				double p, v, a;
-				aris::plan::moveAbsolute(target.count, param.axis_begin_pos_vec[i], param.axis_pos_vec[i], param.axis_vel_vec[i] / 1000
-					, param.axis_acc_vec[i] / 1000 / 1000, param.axis_dec_vec[i] / 1000 / 1000, p, v, a, param.total_count_vec[i]);
-				controller->motionAtAbs(i).setTargetPos(p);
-				target.model->motionPool().at(i).setMp(p);
+				target.model->motionPool().at(i).setMp(p_next);
 			}
+			param.p_now[i] = p_next;
+			param.v_now[i] = v_next;
+			param.a_now[i] = a_next;
 		}
-		else
-		{
-			for (Size i = 0; i < param.axis_begin_pos_vec.size(); ++i)
-			{
-				double p, v, a;
-				aris::plan::moveAbsolute(target.count, param.axis_begin_pos_vec[i], param.axis_begin_pos_vec[i] + param.axis_pos_vec[i], param.axis_vel_vec[i] / 1000
-					, param.axis_acc_vec[i] / 1000 / 1000, param.axis_dec_vec[i] / 1000 / 1000, p, v, a, param.total_count_vec[i]);
-				controller->motionAtAbs(i).setTargetPos(p);
-				target.model->motionPool().at(i).setMp(p);
-			}
-		}
-
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印电流 //
 		auto &cout = controller->mout();
 		if (target.count % 100 == 0)
 		{
-			for (Size i = 0; i < 6; i++)
+			for (Size i = 0; i < param.axis_pos_vec.size(); i++)
 			{
 				cout << "pos" << i + 1 << ":" << controller->motionAtAbs(i).actualPos() << "  ";
 			}
@@ -829,13 +955,13 @@ namespace kaanh
 
 		// log 电流 //
 		auto &lout = controller->lout();
-		for (Size i = 0; i < 6; i++)
+		for (Size i = 0; i < param.axis_pos_vec.size(); i++)
 		{
 			lout << controller->motionAtAbs(i).actualPos() << ",";
 		}
 		lout << std::endl;
-
-		return (static_cast<int>(*std::max_element(param.total_count_vec.begin(), param.total_count_vec.end())) > target.count) ? 1 : 0;
+		auto re = *std::max_element(param.total_count_vec.begin(), param.total_count_vec.end());
+		return re;
 	}
 	auto MoveAbJ::collectNrt(PlanTarget &target)->void {}
 	MoveAbJ::MoveAbJ(const std::string &name) :Plan(name)
@@ -843,11 +969,10 @@ namespace kaanh
 		command().loadXmlStr(
 			"<Command name=\"mvabj\">"
 			"	<GroupParam>"
-			"		<Param name=\"pos\" default=\"current_pos\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.2,0.2,0.2}\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"{0.1,0.1,0.1,0.1,0.1,0.1}\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"{0.1,0.1,0.1,0.1,0.1,0.1}\" abbreviation=\"d\"/>"
-			"		<Param name=\"ab\" default=\"1\"/>"
+			"		<Param name=\"pos\" default=\"{0.2,0.2,0.2,0.2,0.2,0.2,0.2}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.2,0.2,0.2,0.2}\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"{0.1,0.1,0.1,0.1,0.1,0.1,0.1}\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"{0.1,0.1,0.1,0.1,0.1,0.1,0.1}\" abbreviation=\"d\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}
@@ -1991,7 +2116,7 @@ namespace kaanh
 		int increase_status;
 		int increase_count;
 		int vel_percent;
-		static std::atomic_int32_t j1_count, j2_count, j3_count, j4_count, j5_count, j6_count;
+		static std::atomic_int32_t j1_count, j2_count, j3_count, j4_count, j5_count, j6_count, j7_count;
 	};
 	std::atomic_int32_t JogJParam::j1_count = 0;
 	auto JogJ1::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
@@ -2016,17 +2141,13 @@ namespace kaanh
 		{
 			param.increase_count = std::stoi(params.at("increase_count"));
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-			/*
-			param.vel = std::stod(params.at("vel"));
-			param.acc = std::stod(params.at("acc"));
-			param.dec = std::stod(params.at("dec"));
-			*/
-			param.vel = c->motionPool().at(0).maxVel();
-			param.acc = c->motionPool().at(0).maxAcc();
-			param.dec = c->motionPool().at(0).maxAcc();
+					
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
 		}
@@ -2042,7 +2163,7 @@ namespace kaanh
 		else
 		{
             std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[0] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
+            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
 		}
 		target.param = param;
 	}
@@ -2141,9 +2262,9 @@ namespace kaanh
 			"<Command name=\"j1\">"
 			"	<GroupParam>"
             "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
 			"		<Param name=\"vel_percent\" default=\"10\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -2176,12 +2297,12 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			param.vel = c->motionPool().at(1).maxVel();
-			param.acc = c->motionPool().at(1).maxAcc();
-			param.dec = c->motionPool().at(1).maxAcc();
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
 		}
@@ -2197,7 +2318,7 @@ namespace kaanh
 		else
 		{
 			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[1] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
+            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
 		}
 		target.param = param;
 	}
@@ -2296,9 +2417,9 @@ namespace kaanh
 			"<Command name=\"j2\">"
 			"	<GroupParam>"
             "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
 			"		<Param name=\"vel_percent\" default=\"10\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -2331,12 +2452,12 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			param.vel = c->motionPool().at(2).maxVel();
-			param.acc = c->motionPool().at(2).maxAcc();
-			param.dec = c->motionPool().at(2).maxAcc();
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
 		}
@@ -2352,7 +2473,7 @@ namespace kaanh
 		else
 		{
 			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[2] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
+            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
 		}
 		target.param = param;
 	}
@@ -2451,9 +2572,9 @@ namespace kaanh
 			"<Command name=\"j3\">"
 			"	<GroupParam>"
             "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
 			"		<Param name=\"vel_percent\" default=\"10\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -2486,12 +2607,12 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			param.vel = c->motionPool().at(3).maxVel();
-			param.acc = c->motionPool().at(3).maxAcc();
-			param.dec = c->motionPool().at(3).maxAcc();
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
 		}
@@ -2507,7 +2628,7 @@ namespace kaanh
 		else
 		{
 			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[3] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
+            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
 		}
 		target.param = param;
 	}
@@ -2606,9 +2727,9 @@ namespace kaanh
 			"<Command name=\"j4\">"
 			"	<GroupParam>"
             "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
 			"		<Param name=\"vel_percent\" default=\"10\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -2641,12 +2762,12 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			param.vel = c->motionPool().at(4).maxVel();
-			param.acc = c->motionPool().at(4).maxAcc();
-			param.dec = c->motionPool().at(4).maxAcc();
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
 		}
@@ -2662,7 +2783,7 @@ namespace kaanh
 		else
 		{
 			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[4] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
+            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
 		}
 		target.param = param;
 	}
@@ -2761,9 +2882,9 @@ namespace kaanh
 			"<Command name=\"j5\">"
 			"	<GroupParam>"
             "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
 			"		<Param name=\"vel_percent\" default=\"10\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -2796,12 +2917,12 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			param.vel = c->motionPool().at(5).maxVel();
-			param.acc = c->motionPool().at(5).maxAcc();
-			param.dec = c->motionPool().at(5).maxAcc();
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
 		}
@@ -2817,7 +2938,7 @@ namespace kaanh
 		else
 		{
 			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[5] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
+            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
 		}
 		target.param = param;
 	}
@@ -2916,9 +3037,153 @@ namespace kaanh
 			"<Command name=\"j6\">"
 			"	<GroupParam>"
             "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
+			"		<Param name=\"vel_percent\" default=\"10\"/>"
+			"		<Param name=\"direction\" default=\"1\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
+	// 示教运动--关节6点动 //
+	std::atomic_int32_t JogJParam::j7_count = 0;
+	auto JogJ7::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
+		auto&cs = aris::server::ControlServer::instance();
+		auto c = target.controller;
+		JogJParam param;
+
+		std::vector<std::pair<std::string, std::any>> ret;
+		target.ret = ret;
+
+		param.motion_id = 6;
+		param.p_now = 0.0;
+		param.v_now = 0.0;
+		param.a_now = 0.0;
+		param.target_pos = 0.0;
+		param.max_vel = 0.0;
+		param.increase_status = 0;
+		param.vel_percent = 0;
+
+		for (auto &p : params)
+		{
+			param.increase_count = std::stoi(params.at("increase_count"));
+			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
+
+			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+
+			auto velocity = std::stoi(params.at("vel_percent"));
+			velocity = std::max(std::min(100, velocity), 0);
+			param.vel_percent = velocity;
+			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
+		}
+
+		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
+		//当前有指令在执行//
+		if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+
+		if (param.j7_count.exchange(param.increase_count))
+		{
+			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+		}
+		else
+		{
+			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | NOT_CHECK_ENABLE);
+			target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+		}
+		target.param = param;
+	}
+	auto JogJ7::executeRT(PlanTarget &target)->int
+	{
+		//获取驱动//
+		auto controller = target.controller;
+		auto &param = std::any_cast<JogJParam&>(target.param);
+
+		// get current pos //
+		if (target.count == 1)
+		{
+			param.target_pos = controller->motionAtAbs(param.motion_id).actualPos();
+			param.p_now = controller->motionAtAbs(param.motion_id).actualPos();
+			param.v_now = controller->motionAtAbs(param.motion_id).actualVel();
+			param.a_now = 0.0;
+		}
+
+		// init status and calculate target pos and max vel //
+		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
+
+		// 梯形轨迹规划 //
+		static double p_next, v_next, a_next;
+
+		aris::Size t;
+		auto finished = aris::plan::moveAbsolute2(param.p_now, param.v_now, param.a_now
+			, param.target_pos, 0.0, 0.0
+			, param.max_vel, param.acc, param.dec
+			, 1e-3, 1e-10, p_next, v_next, a_next, t);
+
+		//当计数器j7_count等于0时，increase_status=0，即目标位置不再变更//
+		if (param.j7_count == 0)
+		{
+			param.increase_status = 0;
+		}
+		else
+		{
+			--param.j7_count;
+		}
+
+		controller->motionAtAbs(param.motion_id).setTargetPos(p_next);
+		param.p_now = p_next;
+		param.v_now = v_next;
+		param.a_now = a_next;
+
+		// 打印 //
+		auto &cout = controller->mout();
+		if (target.count % 10 == 0)
+		{
+			cout << param.j7_count << "  ";
+			cout << param.target_pos << "  ";
+			cout << param.p_now << "  ";
+			cout << param.v_now << "  ";
+			cout << param.a_now << "  ";
+			cout << "------------------------------------------" << std::endl;
+		}
+
+		// log //
+		auto &lout = controller->lout();
+		{
+			lout << param.target_pos << " ";
+			lout << param.p_now << " ";
+			lout << param.v_now << " ";
+			lout << param.a_now << " ";
+			lout << controller->motionAtAbs(param.motion_id).actualPos() << " ";
+			lout << controller->motionAtAbs(param.motion_id).actualVel() << " ";
+			lout << std::endl;
+		}
+
+		return finished;
+	}
+	auto JogJ7::collectNrt(PlanTarget &target)->void
+	{
+		JogJParam::j7_count = 0;
+		if (target.ret_code < 0)
+		{
+			JogJParam::j7_count.store(0);
+		}
+	}
+	JogJ7::~JogJ7() = default;
+	JogJ7::JogJ7(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"j7\">"
+			"	<GroupParam>"
+			"		<Param name=\"increase_count\" default=\"100\"/>"
+			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
+			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
+			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
 			"		<Param name=\"vel_percent\" default=\"10\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -2956,7 +3221,7 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			param.cor_system = std::stoi(params.at("cor"));
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
@@ -3129,9 +3394,9 @@ namespace kaanh
 			"<Command name=\"jx\">"
 			"	<GroupParam>"
 			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
+			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
@@ -3159,7 +3424,7 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			param.cor_system = std::stoi(params.at("cor"));
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
@@ -3332,9 +3597,9 @@ namespace kaanh
 			"<Command name=\"jy\">"
 			"	<GroupParam>"
 			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
+			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
@@ -3362,7 +3627,7 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			param.cor_system = std::stoi(params.at("cor"));
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
@@ -3535,9 +3800,9 @@ namespace kaanh
 			"<Command name=\"jz\">"
 			"	<GroupParam>"
 			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
+			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
@@ -3565,7 +3830,7 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			param.cor_system = std::stoi(params.at("cor"));
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
@@ -3738,9 +4003,9 @@ namespace kaanh
 			"<Command name=\"jrx\">"
 			"	<GroupParam>"
 			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
+			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
@@ -3775,7 +4040,7 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			param.cor_system = std::stoi(params.at("cor"));
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
@@ -3948,9 +4213,9 @@ namespace kaanh
 			"<Command name=\"jry\">"
 			"	<GroupParam>"
 			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
+			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
@@ -3978,7 +4243,7 @@ namespace kaanh
 			param.increase_count = std::stoi(params.at("increase_count"));
 			param.cor_system = std::stoi(params.at("cor"));
 			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), -100);
+			velocity = std::max(std::min(100, velocity), 0);
 			param.vel_percent = velocity;
 
 			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
@@ -4151,9 +4416,9 @@ namespace kaanh
 			"<Command name=\"jrz\">"
 			"	<GroupParam>"
 			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.05,0.05,0.05,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{0.2,0.2,0.2,1,1,1}\"/>"
+			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
+			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
@@ -4819,6 +5084,7 @@ namespace kaanh
         plan_root->planPool().add<aris::plan::Stop>();
 
 		plan_root->planPool().add<kaanh::Get>();
+		plan_root->planPool().add<kaanh::MoveAbJ>();
 		plan_root->planPool().add<kaanh::MoveT>();
 		plan_root->planPool().add<kaanh::MoveJM>();
 		plan_root->planPool().add<kaanh::MoveC>();
@@ -4830,6 +5096,7 @@ namespace kaanh
 		plan_root->planPool().add<kaanh::JogJ4>();
 		plan_root->planPool().add<kaanh::JogJ5>();
 		plan_root->planPool().add<kaanh::JogJ6>();
+		plan_root->planPool().add<kaanh::JogJ7>();
 		plan_root->planPool().add<kaanh::JX>();
 		plan_root->planPool().add<kaanh::JY>();
 		plan_root->planPool().add<kaanh::JZ>();

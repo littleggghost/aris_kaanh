@@ -40,10 +40,13 @@ int main(int argc, char *argv[])
 	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
 	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
+	cs.model().loadXmlFile(modelxmlpath.string().c_str());
+	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
 	cs.saveXmlFile(xmlpath.string().c_str());
 	//-------for qifan robot end// 
 	*/
 
+	
 	//-------for rokae robot begin//
 	cs.resetController(kaanh::createControllerRokaeXB4().release());
 	cs.resetModel(kaanh::createModelRokae().release());
@@ -51,15 +54,14 @@ int main(int argc, char *argv[])
 	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
 	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);
+	cs.model().loadXmlFile(modelxmlpath.string().c_str());
+	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
 	cs.saveXmlFile(xmlpath.string().c_str());
 	//-------for rokae robot end// 
 	
 
 	cs.loadXmlFile(xmlpath.string().c_str());
-	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
-    cs.model().loadXmlFile(modelxmlpath.string().c_str());
-	cs.saveXmlFile(xmlpath.string().c_str());
-
+	
 	cs.start();
 
 	//Start Web Socket//
