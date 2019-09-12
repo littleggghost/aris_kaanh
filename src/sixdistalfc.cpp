@@ -45,9 +45,9 @@ void crossVector(const double* a, const double* b, double* c)
 }
 
 
-void GetATI(PlanTarget &target,double* FT)
+void GetATI(PlanTarget &target,double* FT, int32_t &status_code)
 {
-    int32_t FTint[6],status_code,sample_counter;
+    int32_t FTint[6],sample_counter;
 
     #ifdef UNIX
     auto conSensor = dynamic_cast<aris::control::EthercatController*>(target.controller);
@@ -188,12 +188,12 @@ void FT2World(PlanTarget &target,const double *FT, double *FmInWorld)
 }
 
 
-void RepeatTrapezoidal(PlanTarget &target,double *begin_pjs,double *step_pjs)
+void RepeatTrapezoidal(PlanTarget &target,double *begin_pjs,double *step_pjs, double *vArc)
 {
     static bool flag[6] = { true,true,true,true,true,true };
-    double PosLimit[6] = { 0.000,0.40,0,0,0,0};
-    double NegLimit[6] = { -0.000,-0.40,0,0,0,0};
-    static double pArc[6], vArc[6], aArc[6], vArcMax[6] = { 0.001,0.4,0.001,0.001,0.001,0.001 };
+    double PosLimit[6] = { 0.000,0.14,0,0,0,0};
+    double NegLimit[6] = { -0.000,-0.13,0,0,0,0};
+    static double pArc[6], aArc[6], vArcMax[6] = { 0.001,0.04,0.001,0.001,0.001,0.001 };
     static aris::Size t_count[6] = { 0 };
     static int CountOffsetPos[6] = { 1,1,1,1,1,1 }, CountOffsetNeg[6] = { 1,1,1,1,1,1 };
     int temp[6] = { 0 };
@@ -223,8 +223,8 @@ void RepeatTrapezoidal(PlanTarget &target,double *begin_pjs,double *step_pjs)
             if (step_pjs[i] > NegLimit[i])
             {
                 aris::plan::moveAbsolute(target.count - CountOffsetPos[i] + 1, 0, begin_pjs[i] - NegLimit[i], vArcMax[i] / 1000, 0.05 / 1000 / 1000, 0.05 / 1000 / 1000, pArc[i], vArc[i], aArc[i], t_count[i]);
-
-                step_pjs[i] = step_pjs[i] - vArc[i];
+                vArc[i]=-vArc[i];
+                step_pjs[i] = step_pjs[i] + vArc[i];
             }
 
             temp[i] = t_count[i] - (target.count - CountOffsetPos[i] + 1);
@@ -829,7 +829,7 @@ auto MoveDistal::executeRT(PlanTarget &target)->int
 	}
 
     static bool flag[6] = {true,true,true,true,true,true};
-    double PosLimit[6] = { 1,0.5,0.5,param.A5P,param.A6P};
+    double PosLimit[6] = { 1,0.5,0.5,0,param.A5P,param.A6P};
     double NegLimit[6] = { -1,-0.5,-0.5,-1,param.A5N,param.A6N};
     double dTheta = 0.00001;
     double vel_base = 0.15 / 100;
@@ -915,9 +915,9 @@ auto MoveDistal::executeRT(PlanTarget &target)->int
 	if (target.model->solverPool().at(1).kinPos())return -1;
 
 
-    double FT[6];
+    double FT[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FT);
+        GetATI(target,FT,status_code);
     else
         GetYuLi(target,FT);
 
@@ -931,7 +931,8 @@ auto MoveDistal::executeRT(PlanTarget &target)->int
 	{
 		//for (int i = 0; i < 6; i++)
 		{
-            cout << FT[2]<< "  ";
+            double temp=PosLimit[5];
+            cout << temp<<"*"<<step_pjs[5]<< "  ";
 			//cout << "vel" << i + 1 << ":" << target.model->motionPool()[i].mv() << "  ";
 			//cout << "cur" << i + 1 << ":" << target.model->motionPool()[i].ma() << "  ";
 		}
@@ -987,7 +988,8 @@ auto MoveDistal::collectNrt(aris::plan::PlanTarget &target)->void
         cout << sixDistalMatrix.estParasFT[i] << ",";
 
 	std::cout << "*****************************Statictic Model Error*****************************************" << std::endl;
-	for (int i = 0;i < 6;i++)
+    std::cout << "*****************************Statictic Model Error*****************************************" << std::endl;
+    for (int i = 0;i < 6;i++)
         cout << StatisError[i] << std::endl;
 
 	std::vector<double> load_params, torque_error;
@@ -1016,7 +1018,7 @@ MoveDistal::MoveDistal(const std::string &name) :Plan(name)
 	command().loadXmlStr(
 		"<Command name=\"mvDistal\">"
 		"	<GroupParam>"
-        "		<Param name=\"SensorType\"default=\"-1.0\"/>"
+        "		<Param name=\"SensorType\"default=\"1.0\"/>"
         "		<Param name=\"A5P\"default=\"1.5\"/>"
         "		<Param name=\"A5N\" default=\"-1.5\"/>"
         "		<Param name=\"A6P\"default=\"2.0\"/>"
@@ -1265,9 +1267,9 @@ auto DistalTest::executeRT(PlanTarget &target)->int
 
     if (target.model->solverPool().at(1).kinPos())return -1;
 
-    double FT[6];
+    double FT[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FT);
+        GetATI(target,FT,status_code);
     else
         GetYuLi(target,FT);
 
@@ -1813,9 +1815,9 @@ auto MovePressureToolYZ::executeRT(PlanTarget &target)->int
 	double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
 	double dTheta[6] = { 0 };
 
-    double FTReal[6],FT[6];
+    double FTReal[6],FT[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FTReal);
+        GetATI(target,FTReal,status_code);
     else
         GetYuLi(target,FTReal);
 
@@ -2585,9 +2587,9 @@ auto MovePressureToolXY::executeRT(PlanTarget &target)->int
 	double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
 	double dTheta[6] = { 0 };
 
-    double FT[6];
+    double FT[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FT);
+        GetATI(target,FT,status_code);
     else
         GetYuLi(target,FT);
 
@@ -3131,9 +3133,9 @@ auto MovePressureToolXLine::executeRT(PlanTarget &target)->int
     double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
     double dTheta[6] = { 0 };
 
-    double FT[6];
+    double FT[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FT);
+        GetATI(target,FT,status_code);
     else
         GetYuLi(target,FT);
 
@@ -3172,7 +3174,7 @@ auto MovePressureToolXLine::executeRT(PlanTarget &target)->int
 
 
     double dXpid[6] = { 0,0,0,0,0,0 };
-    dXpid[2] = 1 * (FT_KAI[2] - (-5)) / 220000;
+    dXpid[2] = 1 * (FT_KAI[2] - (-5)) / 420000;
     dXpid[3] = 0 * (FT_KAI[3]) / 2000;
     dXpid[4] = 0 * (FT_KAI[4]) / 2000;
     dXpid[5] = 0 * (FT_KAI[5]) / 2000;
@@ -3476,413 +3478,518 @@ MovePressureToolXLine::MovePressureToolXLine(const std::string &name) :Plan(name
 
 struct MovePressureToolYLineParam
 {
-	double PressF;
-	double SensorType;
+    double PressF;
+    double SensorType;
 
 
 };
 
 auto MovePressureToolYLine::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 {
-	MovePressureToolYLineParam param;
-	for (auto &p : params)
-	{
-		if (p.first == "PressF")
-			param.PressF = std::stod(p.second);
-		if (p.first == "SensorType")
-			param.SensorType = std::stod(p.second);
-	}
+    MovePressureToolYLineParam param;
+    for (auto &p : params)
+    {
+        if (p.first == "PressF")
+            param.PressF = std::stod(p.second);
+        if (p.first == "SensorType")
+            param.SensorType = std::stod(p.second);
+    }
 
-	target.param = param;
+    target.param = param;
+    target.ret = std::vector<std::pair<std::string, std::any>>();
 
-	for (auto &option : target.mot_options) option |=
-		Plan::USE_TARGET_POS |
-		Plan::NOT_CHECK_VEL_CONTINUOUS |
-		Plan::NOT_CHECK_ENABLE;
+    for (auto &option : target.mot_options) option |=
+        Plan::USE_TARGET_POS |
+        Plan::NOT_CHECK_VEL_CONTINUOUS |
+        Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER|
+        Plan::NOT_CHECK_ENABLE;
 
-	SetLimit(target, 6.0);
+    SetLimit(target, 5.0);
+
+    //读取动力学参数
+    auto mat0 = dynamic_cast<aris::dynamic::MatrixVariable*>(&*target.model->variablePool().findByName("estParasFT"));
+    for (int i = 0;i < GroupDim;i++)
+        sixDistalMatrix.estParasFT[i] = mat0->data().data()[i];
 
 
 }
 auto MovePressureToolYLine::executeRT(PlanTarget &target)->int
 {
-	auto &param = std::any_cast<MovePressureToolYLineParam&>(target.param);
-
-	static double step_pjs[6];
-	static double stateTor0[6][3], stateTor1[6][3], EndP0[3];
-	static double sT0[6][3], sT1[6][3];
-	static float FT0[6];
+    auto &param = std::any_cast<MovePressureToolYLineParam&>(target.param);
+
+    static double step_pjs[6];
+    static double stateTor0[6][3], stateTor1[6][3], EndP0[3];
+    static double sT0[6][3], sT1[6][3];
+    static float FT0[6];
+
+    // 访问主站 //
+    auto controller = target.controller;
+    auto &cout = controller->mout();
+    // 获取当前起始点位置 //
+    if (target.count == 1)
+    {
+        for (int i = 0; i < 6; ++i)
+        {
+            step_pjs[i] = target.model->motionPool()[i].mp();
+            // controller->motionPool().at(i).setModeOfOperation(10);	//切换到电流控制
+        }
+    }
+
+
+    if (target.model->solverPool().at(1).kinPos())return -1;
+
+
+    double PqEnd[7], TransVector[16], NormalVector[3], CosNormalAng, SinNormalAng, NormalAng;
+    double XBase[3] = { 1,0,0 }, YBase[3] = { 0,1,0 }, ZBase[3] = { 0,0,1 };
+    double CrossNormalZbase[3] = { 0 };
+
+    target.model->generalMotionPool().at(0).getMpm(TransVector);
+    target.model->generalMotionPool().at(0).getMpq(PqEnd);
+    NormalVector[0] = TransVector[2];NormalVector[1] = TransVector[6];NormalVector[2] = TransVector[10];
+
+    crossVector(NormalVector, ZBase, CrossNormalZbase);
+    CosNormalAng = NormalVector[2] / sqrt(NormalVector[0] * NormalVector[0] + NormalVector[1] * NormalVector[1] + NormalVector[2] * NormalVector[2]);
+    SinNormalAng = sqrt(CrossNormalZbase[0] * CrossNormalZbase[0] + CrossNormalZbase[1] * CrossNormalZbase[1] + CrossNormalZbase[2] * CrossNormalZbase[2]) / sqrt(NormalVector[0] * NormalVector[0] + NormalVector[1] * NormalVector[1] + NormalVector[2] * NormalVector[2]);
+    NormalAng = atan2(SinNormalAng, CosNormalAng);
+
+    double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
+    double dTheta[6] = { 0 };
+
+    double FT[6]; int32_t status_code;
+    if (param.SensorType > 0)
+        GetATI(target, FT,status_code);
+    else
+        GetYuLi(target, FT);
+
+    double pa[6],va[6],aa[6],idealFT[6],FTemp[6];
+
+    for (int i = 0; i < 6; i++)
+    {
+        pa[i] = controller->motionAtAbs(i).actualPos();
+        va[i] = controller->motionAtAbs(i).actualVel();
+        aa[i] = 0;
+    }
+
+    sixDistalMatrix.sixDistalCollision(pa, va, aa, FT, sixDistalMatrix.estParasFT, idealFT);
+
+    for (int j = 0; j < 6; j++)
+    {
+        FTemp[j]=FT[j];
+        FT[j]=FT[j]-idealFT[j];
+    }
+
+    // 获取当前起始点位置 //
+    if (target.count == 1)
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            stateTor0[j][0] = FT[j];
+            FT0[j] = FT[j];
+        }
+        for (int i = 0;i < 3;i++)
+            EndP0[i] = PqEnd[i];
+
+        int32_t controlcodes=0x1050;
+         dynamic_cast<aris::control::EthercatController*>(target.controller)->slavePool().at(6).writePdo(0x7010, 0x01, &controlcodes, 32);
+    }
+
+
+    SecondOrderFilter(FT, stateTor0, stateTor1, 380);
+
+
+    double FT_KAI[6];
+    for (int i = 0; i < 6; i++)
+    {
+        FT_KAI[i] = FT[i] - FT0[i];//In KAI Coordinate
+    }
+/*
+    double zero_check[6] = { 1,1,1,0.05,0.05,0.05 };
+    for (int i = 0; i < 6; i++)
+    {
+        if (FT_KAI[i] < zero_check[i] && FT_KAI[i]>0)
+            FT_KAI[i] = 1 / zero_check[i] * FT_KAI[i] * FT_KAI[i];//In KAI Coordinate
+        else if (FT_KAI[i]<0 && FT_KAI[i]>-zero_check[i])
+            FT_KAI[i] = -1 / zero_check[i] * FT_KAI[i] * FT_KAI[i];//In KAI Coordinate
+    }
+*/
+
+
+    double dXpid[6] = { 0,0,0,0,0,0 };
+    double target_force[6]={0,0,-5,0,0,0};
+    double torque_max[6]={40,40,40,40,40,40};
+    double torque_min[6]={-40,-40,-40,-40,-40,-40};
+    static double ForSum[6]={0};
+    double ForSumF[6]={0};
+     for (int i = 0; i < 6; i++)
+     {
 
-	// 访问主站 //
-	auto controller = target.controller;
-	auto &cout = controller->mout();
-	// 获取当前起始点位置 //
-	if (target.count == 1)
-	{
-		for (int i = 0; i < 6; ++i)
-		{
-			step_pjs[i] = target.model->motionPool()[i].mp();
-			// controller->motionPool().at(i).setModeOfOperation(10);	//切换到电流控制
-		}
-	}
+            ForSum[i]=ForSum[i]+(FT_KAI[i] - target_force[i])*0.001;
+            ForSumF[i] = std::max(torque_min[i], ForSum[i]);
+            ForSumF[i] = std::min(torque_max[i], ForSum[i]);
+     }
 
+    target_force[3]=-FT_KAI[1]*0.06;
+    target_force[4]=FT_KAI[0]*0.06;
 
-	if (target.model->solverPool().at(1).kinPos())return -1;
+    dXpid[2] = 1 * (FT_KAI[2] - (-25)) / 720000+0*ForSumF[2]/320000;
+    dXpid[3] = 1 * (FT_KAI[3]-target_force[3]) / 8000;
+    dXpid[4] = 1 * (FT_KAI[4]-target_force[4]) / 8000;
+    dXpid[5] = 0 * (FT_KAI[5]) / 2000;
 
+    double FmInWorld[6];
 
-	double PqEnd[7], TransVector[16], NormalVector[3], CosNormalAng, SinNormalAng, NormalAng;
-	double XBase[3] = { 1,0,0 }, YBase[3] = { 0,1,0 }, ZBase[3] = { 0,0,1 };
-	double CrossNormalZbase[3] = { 0 };
+    FT2World(target, dXpid, FmInWorld);
 
-	target.model->generalMotionPool().at(0).getMpm(TransVector);
-	target.model->generalMotionPool().at(0).getMpq(PqEnd);
-	NormalVector[0] = TransVector[2];NormalVector[1] = TransVector[6];NormalVector[2] = TransVector[10];
+    for (int i = 0;i < 6;i++)
+        dX[i] = FmInWorld[i];
 
-	crossVector(NormalVector, ZBase, CrossNormalZbase);
-	CosNormalAng = NormalVector[2] / sqrt(NormalVector[0] * NormalVector[0] + NormalVector[1] * NormalVector[1] + NormalVector[2] * NormalVector[2]);
-	SinNormalAng = sqrt(CrossNormalZbase[0] * CrossNormalZbase[0] + CrossNormalZbase[1] * CrossNormalZbase[1] + CrossNormalZbase[2] * CrossNormalZbase[2]) / sqrt(NormalVector[0] * NormalVector[0] + NormalVector[1] * NormalVector[1] + NormalVector[2] * NormalVector[2]);
-	NormalAng = atan2(SinNormalAng, CosNormalAng);
+    double TangentArc[3] = { 0 };
+    static double TangentArc0[3] = { 0 };
+    static double TangentArc1[3] = { 0 };
+    static double TangentArc2[3] = { 0 };
+    static bool MoveDirection = true;
+    static bool MoveDirectionChange = false;
+    static int StartCount = 1500;
+    double CosTheta1;
 
-	double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
-	double dTheta[6] = { 0 };
+
+    static double pArc, vArc, aArc, vArcMax = 0.05;
+    aris::Size t_count;
 
-	double FT[6];
-	if (param.SensorType > 0)
-		GetATI(target, FT);
-	else
-		GetYuLi(target, FT);
+    double Square[4][3] = { {EndP0[0],EndP0[1],0},
+                            {EndP0[0],EndP0[1]-0.14,0},
+                            {EndP0[0],EndP0[1]-0.14,0},
+                            {EndP0[0],EndP0[1],0} };
+
+
+    static double MoveLength = 0;
+    static double DecLength = 0.03, LengthY = 0.2;//LengthT>LengthF
+
+    LengthY = sqrt((Square[0][0] - Square[1][0])*(Square[0][0] - Square[1][0]) + (Square[0][1] - Square[1][1])*(Square[0][1] - Square[1][1]));
+
+    static int count_offsetY = StartCount;
+    static double vArcEndY = 0;
+    static int CountY = 0;
+
+    double Ktemp, temp0, temp1;
+    double CrossSurface[3] = { 0,0,0 };
+    double ExtendSurface[3] = { 0,0,0 };
+    temp0 = Square[1][0] - Square[0][0];temp1 = Square[1][1] - Square[0][1];
+    ExtendSurface[0] = temp0 / sqrt(temp0*temp0 + temp1 * temp1); ExtendSurface[1] = temp1 / sqrt(temp0*temp0 + temp1 * temp1); ExtendSurface[2] = 0;
+
+
+    if (target.count > StartCount)
+    {
+        if (CountY % 2 == 0)
+            MoveDirection = true;
+        else
+            MoveDirection = false;
+
+        if (abs(NormalVector[2]) < 0.01)
+        {
+            TangentArc1[0] = ExtendSurface[0]; TangentArc1[1] = ExtendSurface[1]; TangentArc1[2] = ExtendSurface[2];
+
+            TangentArc2[0] = -ExtendSurface[0]; TangentArc2[1] = -ExtendSurface[1]; TangentArc2[2] = ExtendSurface[2];
+
+            if (MoveDirection == true)
+                for (int i = 0;i < 3;i++)
+                    TangentArc[i] = TangentArc1[i];
+
+            if (MoveDirection == false)
+            {
+                for (int i = 0;i < 3;i++)
+                    TangentArc[i] = TangentArc2[i];
+
+            }
+
+        }
+        else
+        {
+            temp0 = ExtendSurface[0] * ExtendSurface[0] + ExtendSurface[1] * ExtendSurface[1];
+            temp1 = (ExtendSurface[0] * NormalVector[0] + ExtendSurface[1] * NormalVector[1]) / NormalVector[2];
+            Ktemp = 1 / sqrt(temp0 + temp1 * temp1);
+
+            TangentArc1[0] = Ktemp * ExtendSurface[0];
+            TangentArc1[1] = Ktemp * ExtendSurface[1];
+            TangentArc1[2] = -(NormalVector[0] * TangentArc1[0] + NormalVector[1] * TangentArc1[1]) / NormalVector[2];
 
+            CosTheta1 = TangentArc1[0] * TangentArc0[0] + TangentArc1[1] * TangentArc0[1] + TangentArc1[2] * TangentArc0[2];
 
+            temp0 = ExtendSurface[0] * ExtendSurface[0] + ExtendSurface[1] * ExtendSurface[1];
+            temp1 = (ExtendSurface[0] * NormalVector[0] + ExtendSurface[1] * NormalVector[1]) / NormalVector[2];
+            Ktemp = -1 / sqrt(temp0 + temp1 * temp1);
 
-	// 获取当前起始点位置 //
-	if (target.count == 1)
-	{
-		for (int j = 0; j < 6; j++)
-		{
-			stateTor0[j][0] = FT[j];
-			FT0[j] = FT[j];
-		}
-		for (int i = 0;i < 3;i++)
-			EndP0[i] = PqEnd[i];
-	}
+            TangentArc2[0] = Ktemp * ExtendSurface[0];
+            TangentArc2[1] = Ktemp * ExtendSurface[1];
+            TangentArc2[2] = -(NormalVector[0] * TangentArc2[0] + NormalVector[1] * TangentArc2[1]) / NormalVector[2];
 
-
-	SecondOrderFilter(FT, stateTor0, stateTor1, 80);
-
-
-	double FT_KAI[6];
-	for (int i = 0; i < 6; i++)
-	{
-		FT_KAI[i] = stateTor1[i][0] - FT0[i];//In KAI Coordinate
-	}
-
-	double zero_check[6] = { 1,1,1,0.05,0.05,0.05 };
-	for (int i = 0; i < 6; i++)
-	{
-		if (FT_KAI[i] < zero_check[i] && FT_KAI[i]>0)
-			FT_KAI[i] = 1 / zero_check[i] * FT_KAI[i] * FT_KAI[i];//In KAI Coordinate
-		else if (FT_KAI[i]<0 && FT_KAI[i]>-zero_check[i])
-			FT_KAI[i] = -1 / zero_check[i] * FT_KAI[i] * FT_KAI[i];//In KAI Coordinate
-	}
-
-
-	double dXpid[6] = { 0,0,0,0,0,0 };
-	dXpid[2] = 1 * (FT_KAI[2] - (-5)) / 220000;
-	dXpid[3] = 0 * (FT_KAI[3]) / 2000;
-	dXpid[4] = 0 * (FT_KAI[4]) / 2000;
-	dXpid[5] = 0 * (FT_KAI[5]) / 2000;
-
-	double FmInWorld[6];
-
-	FT2World(target, dXpid, FmInWorld);
-
-	for (int i = 0;i < 6;i++)
-		dX[i] = 0;//FmInWorld[i];
-
-
-	double TangentArc[3] = { 0 };
-	static double TangentArc0[3] = { 0 };
-	static double TangentArc1[3] = { 0 };
-	static double TangentArc2[3] = { 0 };
-	static bool MoveDirection = true;
-	static bool MoveDirectionY = true;
-	static bool MoveDirectionChange = false;
-	static int StartCount = 1500;
-	double CosTheta1;
-
-
-	static double pArc, vArc, aArc, vArcMax = 0.05;
-	aris::Size t_count;
-
-	double Square[4][3] = { {EndP0[0],EndP0[1],0},
-							{EndP0[0],EndP0[1]+0.04,0},
-							{EndP0[0],EndP0[1]+0.04,0},
-							{EndP0[0],EndP0[1],0} };
-
-
-	static double MoveLength = 0;
-	static double DecLength = 0.01, LengthY = 0.2;//LengthT>LengthF
-
-	LengthY = sqrt((Square[0][0] - Square[1][0])*(Square[0][0] - Square[1][0]) + (Square[0][1] - Square[1][1])*(Square[0][1] - Square[1][1]));
-
-	static int count_offsetY = StartCount;
-	static double vArcEndY = 0;
-	static int CountY = 0;
-
-	double Ktemp, temp0, temp1;
-	double CrossSurface[3] = { 0,0,0 };
-	double ExtendSurface[3] = { 0,0,0 };
-	temp0 = Square[1][0] - Square[0][0];temp1 = Square[1][1] - Square[0][1];
-	ExtendSurface[0] = temp0 / sqrt(temp0*temp0 + temp1 * temp1); ExtendSurface[1] = temp1 / sqrt(temp0*temp0 + temp1 * temp1); ExtendSurface[2] = 0;
-
-
-	if (target.count > StartCount)
-	{
-		if (CountY % 2 == 0)
-			MoveDirection = true;
-		else
-			MoveDirection = false;
-
-		if (abs(NormalVector[2]) < 0.01)
-		{
-			TangentArc1[0] = ExtendSurface[0]; TangentArc1[1] = ExtendSurface[1]; TangentArc1[2] = ExtendSurface[2];
-
-			TangentArc2[0] = -ExtendSurface[0]; TangentArc2[1] = -ExtendSurface[1]; TangentArc2[2] = ExtendSurface[2];
-
-			if (MoveDirection == true)
-				for (int i = 0;i < 3;i++)
-					TangentArc[i] = TangentArc1[i];
-
-			if (MoveDirection == false)
-			{
-				for (int i = 0;i < 3;i++)
-					TangentArc[i] = TangentArc2[i];
-
-			}
-
-		}
-		else
-		{
-			temp0 = ExtendSurface[0] * ExtendSurface[0] + ExtendSurface[1] * ExtendSurface[1];
-			temp1 = (ExtendSurface[0] * NormalVector[0] + ExtendSurface[1] * NormalVector[1]) / NormalVector[2];
-			Ktemp = 1 / sqrt(temp0 + temp1 * temp1);
-
-			TangentArc1[0] = Ktemp * ExtendSurface[0];
-			TangentArc1[1] = Ktemp * ExtendSurface[1];
-			TangentArc1[2] = -(NormalVector[0] * TangentArc1[0] + NormalVector[1] * TangentArc1[1]) / NormalVector[2];
-
-			CosTheta1 = TangentArc1[0] * TangentArc0[0] + TangentArc1[1] * TangentArc0[1] + TangentArc1[2] * TangentArc0[2];
-
-			temp0 = ExtendSurface[0] * ExtendSurface[0] + ExtendSurface[1] * ExtendSurface[1];
-			temp1 = (ExtendSurface[0] * NormalVector[0] + ExtendSurface[1] * NormalVector[1]) / NormalVector[2];
-			Ktemp = -1 / sqrt(temp0 + temp1 * temp1);
-
-			TangentArc2[0] = Ktemp * ExtendSurface[0];
-			TangentArc2[1] = Ktemp * ExtendSurface[1];
-			TangentArc2[2] = -(NormalVector[0] * TangentArc2[0] + NormalVector[1] * TangentArc2[1]) / NormalVector[2];
-
-			if (MoveDirection == true)
-				for (int i = 0;i < 3;i++)
-					TangentArc[i] = TangentArc1[i];
-
-			if (MoveDirection == false)
-				for (int i = 0;i < 3;i++)
-					TangentArc[i] = TangentArc2[i];
-
-		}
-
-
-		if (MoveDirection)
-			if (MoveLength < LengthY - DecLength)
-			{
-				aris::plan::moveAbsolute(target.count - count_offsetY + 1, 0, 1000, vArcMax / 1000, 0.05 / 1000 / 1000, 0.05 / 1000 / 1000, pArc, vArc, aArc, t_count);
-				vArc = vArc * 1000;
-				vArcEndY = vArc;
-			}
-			else
-			{
-
-				vArc = vArcEndY - 1 * (DecLength - (LengthY - MoveLength)) / DecLength * vArcEndY;
-
-				if (abs(vArc) < 0.0001)
-				{
-					count_offsetY = target.count;
-					MoveDirectionChange = true;
-					CountY = CountY + 1;
-				}
-			}
-
-		if (!MoveDirection)
-			if (MoveLength > (DecLength))
-			{
-				aris::plan::moveAbsolute(target.count - count_offsetY + 1, 0, 1000, vArcMax / 1000, 0.05 / 1000 / 1000, 0.05 / 1000 / 1000, pArc, vArc, aArc, t_count);
-				vArc = vArc * 1000;
-				vArcEndY = vArc;
-			}
-			else
-			{
-				vArc = vArcEndY - 1 * (DecLength - MoveLength) / DecLength * vArcEndY;
-
-				if (abs(vArc) < 0.0001)
-				{
-
-					count_offsetY = target.count;
-					MoveDirectionChange = true;
-					CountY = CountY + 1;
-				}
-			}
-
-	}
-
-
-
-
-
-	if (MoveDirection)
-	{
-		dX[0] = dX[0] + vArc * TangentArc[0] / 1000;
-		dX[1] = dX[1] + vArc * TangentArc[1] / 1000;
-		dX[2] = dX[2] + vArc * TangentArc[2] / 1000;
-
-	}
-	else
-	{
-		dX[0] = dX[0] + vArc * TangentArc[0] / 1000;
-		dX[1] = dX[1] + vArc * TangentArc[1] / 1000;
-		dX[2] = dX[2] + vArc * TangentArc[2] / 1000;
-
-	}
-	if (target.count > StartCount)
-		if (MoveDirection)
-			MoveLength = MoveLength + sqrt(dX[1] * dX[1] + dX[2] * dX[2]);
-		else
-			MoveLength = MoveLength - sqrt(dX[1] * dX[1] + dX[2] * dX[2]);
-
-
-	for (int j = 0; j < 6; j++)
-	{
-		if (dX[j] > 0.00025)
-			dX[j] = 0.00025;
-		if (dX[j] < -0.00025)
-			dX[j] = -0.00025;
-	}
-
-
-	// log 电流 //
-	auto &lout = controller->lout();
-
-	// lout << target.model->motionPool()[0].mp() << ",";
-	 //lout << target.model->motionPool()[1].mp() << ",";
-	 //lout << target.model->motionPool()[2].mp() << ",";
-	 //lout << target.model->motionPool()[3].mp() << ",";
-	 //lout << target.model->motionPool()[4].mp() << ",";
-	 //lout << target.model->motionPool()[5].mp() << ",";
-	//lout << vArc << endl;
-	//lout << FTnum << ",";
-	//lout << FT[2] << ",";lout << dX[2] << ",";
-	//lout << FmInWorld[2] << ",";lout << FT0[2] << ",";
-
-	//lout << stateTor1[0][0] << ",";lout << stateTor1[1][0] << ",";
-	//lout << stateTor1[2][0] << ",";lout << stateTor1[3][0] << ",";
+            if (MoveDirection == true)
+                for (int i = 0;i < 3;i++)
+                    TangentArc[i] = TangentArc1[i];
+
+            if (MoveDirection == false)
+                for (int i = 0;i < 3;i++)
+                    TangentArc[i] = TangentArc2[i];
+
+        }
+
+
+/*
+        if (MoveDirection)
+            if (MoveLength < LengthY - DecLength)
+            {
+                aris::plan::moveAbsolute(target.count - count_offsetY + 1, 0, 1000, vArcMax / 1000, 0.03 / 1000 / 1000, 0.03 / 1000 / 1000, pArc, vArc, aArc, t_count);
+                vArc = vArc * 1000;
+                vArcEndY = vArc;
+            }
+            else
+            {
+
+                vArc = vArcEndY - 1 * (DecLength - (LengthY - MoveLength)) / DecLength * vArcEndY;
+
+                if (vArc < 0)
+                {
+                    count_offsetY = target.count;
+                    MoveDirectionChange = true;
+                    CountY = CountY + 1;
+                }
+            }
+
+        if (!MoveDirection)
+            if (MoveLength > (DecLength))
+            {
+                aris::plan::moveAbsolute(target.count - count_offsetY + 1, 0, 1000, vArcMax / 1000, 0.03 / 1000 / 1000, 0.03 / 1000 / 1000, pArc, vArc, aArc, t_count);
+                vArc = vArc * 1000;
+                vArcEndY = vArc;
+            }
+            else
+            {
+                vArc = vArcEndY - 1 * (DecLength - MoveLength) / DecLength * vArcEndY;
+
+                if (vArc < 0)
+                {
+
+                    count_offsetY = target.count;
+                    MoveDirectionChange = true;
+                    CountY = CountY + 1;
+                }
+            }
+         */
+
+        if (MoveDirection)
+        {
+
+                aris::plan::moveAbsolute(target.count - count_offsetY + 1, 0, 0.14, vArcMax / 1000, 0.02 / 1000 / 1000, 0.02 / 1000 / 1000, pArc, vArc, aArc, t_count);
+                vArc = vArc * 1000;
+
+             if(target.count - count_offsetY + 1==t_count)
+             {
+                    count_offsetY = target.count;
+                    MoveDirectionChange = true;
+                    CountY = CountY + 1;
+             }
+
+         }
+
+        if (!MoveDirection)
+        {
+
+                aris::plan::moveAbsolute(target.count - count_offsetY + 1, 0, 0.14, vArcMax / 1000, 0.02 / 1000 / 1000, 0.02 / 1000 / 1000, pArc, vArc, aArc, t_count);
+                vArc = vArc * 1000;
+
+                if (target.count - count_offsetY + 1==t_count)
+                {
+
+                    count_offsetY = target.count;
+                    MoveDirectionChange = true;
+                    CountY = CountY + 1;
+                }
+           }
+
+    }
+
+
+
+
+//vArc=0;
+//   for(int i=0;i<6;i++)
+ //       dX[i]=0;
+
+    if (MoveDirection)
+    {
+        dX[0] = dX[0] - vArc * TangentArc[0] / 1000;
+        dX[1] = dX[1] - vArc * TangentArc[1] / 1000;
+        dX[2] = dX[2] - vArc * TangentArc[2] / 1000;
+
+    }
+    else
+    {
+        dX[0] = dX[0] - vArc * TangentArc[0] / 1000;
+        dX[1] = dX[1] - vArc * TangentArc[1] / 1000;
+        dX[2] = dX[2] - vArc * TangentArc[2] / 1000;
+
+    }
+    if (target.count > StartCount)
+        if (MoveDirection)
+            MoveLength = MoveLength + sqrt(dX[1] * dX[1] + dX[2] * dX[2]);
+        else
+            MoveLength = MoveLength - sqrt(dX[1] * dX[1] + dX[2] * dX[2]);
+
+
+    for (int j = 0; j < 6; j++)
+    {
+        if (dX[j] > 0.00025)
+            dX[j] = 0.00025;
+        if (dX[j] < -0.00025)
+            dX[j] = -0.00025;
+    }
+
+
+    // log 电流 //
+    auto &lout = controller->lout();
+
+    // lout << target.model->motionPool()[0].mp() << ",";
+     //lout << target.model->motionPool()[1].mp() << ",";
+     //lout << target.model->motionPool()[2].mp() << ",";
+     //lout << target.model->motionPool()[3].mp() << ",";
+     //lout << target.model->motionPool()[4].mp() << ",";
+     //lout << target.model->motionPool()[5].mp() << ",";
+    //lout << vArc << endl;
+    //lout << FTnum << ",";
+    //lout << FT[2] << ",";lout << dX[2] << ",";
+    //lout << FmInWorld[2] << ",";lout << FT0[2] << ",";
+
+    //lout << stateTor1[0][0] << ",";lout << stateTor1[1][0] << ",";
+    //lout << stateTor1[2][0] << ",";lout << stateTor1[3][0] << ",";
    // lout << stateTor1[4][0] << ",";lout << stateTor1[5][0] << ",";
-	lout << FT_KAI[0] << ",";lout << FT_KAI[1] << ",";
-	lout << FT_KAI[2] << ",";lout << FT_KAI[3] << ",";
-	lout << FT_KAI[4] << ",";lout << FT_KAI[5] << ",";
-
-
-	lout << FT[0] << ",";lout << FT[1] << ",";
-	lout << FT[2] << ",";lout << FT[3] << ",";
-	lout << FT[4] << ",";lout << FT[5] << ",";
-	lout << std::endl;
 
 
 
-	dX2dTheta(target, dX, dTheta);
-
-	for (int i = 0; i < 6; i++)
-	{
-		if (dTheta[i] > 0.003)
-			dTheta[i] = 0.003;
-		if (dTheta[i] < -0.003)
-			dTheta[i] = -0.003;
-		//lout << dTheta[i] << ",";
-	}
-
-
-	//lout << std::endl;
-	for (int i = 0; i < 6; i++)
-	{
-		dTheta[i] = dTheta[i] * DirectionFlag[i];
-
-	}
-
-	for (int i = 0; i < 6; i++)
-	{
-		step_pjs[i] = step_pjs[i] + dTheta[i];
-		target.model->motionPool().at(i).setMp(step_pjs[i]);
-	}
-
-
-	if (target.count % 300 == 0)
-	{
-
-		cout << FmInWorld[0] << "*" << FmInWorld[1] << "*" << FmInWorld[2] << "*" << step_pjs[3] << "*" << step_pjs[4] << "*" << FT_KAI[2] << std::endl;
-
-		//cout << FT_KAI[2] << "*" << NormalAng << "*" << TransVector[0] << "*" << TransVector[1] << "*" << TransVector[2] << "*" << FT0[2] << endl;
-		//cout << FT_KAI[2] << "*" << NormalAng << "*" << TransVector[4] << "*" << TransVector[5] << "*" << TransVector[6] << "*" << FT0[2] << endl;
-		//cout << FT_KAI[2] << "*" << NormalAng << "*" << TransVector[8] << "*" << TransVector[9] << "*" << TransVector[10] << "*" << FT0[2] << endl;
-
-				//cout <<  FT_KAI[0]<<"***"<<FmInWorld[2]<<endl;
-
-		cout << std::endl;
-
-	}
+    lout << FT[0] << ",";lout << FT[1] << ",";
+    lout << FT[2] << ",";lout << FT[3] << ",";
+    lout << FT[4] << ",";lout << FT[5] << ",";
+    lout << std::endl;
 
 
 
-	for (int i = 0; i < 6; i++)
-	{
+    dX2dTheta(target, dX, dTheta);
 
-		stateTor0[i][0] = stateTor1[i][0];
-		stateTor0[i][1] = stateTor1[i][1];
-		stateTor0[i][2] = stateTor1[i][2];
-
-		sT0[i][0] = sT1[i][0];
-		sT0[i][1] = sT1[i][1];
-		sT0[i][2] = sT1[i][2];
-
-	}
+    for (int i = 0; i < 6; i++)
+    {
+        if (dTheta[i] > 0.003)
+            dTheta[i] = 0.003;
+        if (dTheta[i] < -0.003)
+            dTheta[i] = -0.003;
+        //lout << dTheta[i] << ",";
+    }
 
 
-	for (int j = 0; j < 3; j++)
-	{
-		TangentArc0[j] = TangentArc[j];
-	}
+    //lout << std::endl;
+    for (int i = 0; i < 6; i++)
+    {
+        dTheta[i] = dTheta[i] * DirectionFlag[i];
 
-	return 150000000 - target.count;
+    }
+
+    for (int i = 0; i < 6; i++)
+    {
+        step_pjs[i] = step_pjs[i] + dTheta[i];
+        target.model->motionPool().at(i).setMp(step_pjs[i]);
+    }
+
+
+    if (target.count % 300 == 0)
+    {
+
+        //cout << FmInWorld[0] << "*" << FmInWorld[1] << "*" << FmInWorld[2] << "*" << step_pjs[3] << "*" << step_pjs[4] << "*" << FT_KAI[2] << std::endl;
+
+        cout << FT_KAI[2] << "*" << target_force[3] << "*" << target_force[4]<<
+       FT_KAI[0] << "*" <<FT_KAI[1] << "*" << FT[5]
+                            << std::endl;
+        //cout << FT_KAI[2] << "*" << NormalAng << "*" << TransVector[4] << "*" << TransVector[5] << "*" << TransVector[6] << "*" << FT0[2] << endl;
+       // cout << FT_KAI[0] << "*" << FT_KAI[1] << "*"<< FT_KAI[2] << "*" << target.count << "*" << status_code<< "*"
+             //<< FT_KAI[3] << "*" << FT_KAI[4] << "*"<< FT_KAI[5]
+
+                          //<< std::endl;
+
+                //cout <<  FT_KAI[0]<<"***"<<FmInWorld[2]<<endl;
+
+        cout << std::endl;
+
+    }
+
+
+
+    for (int i = 0; i < 6; i++)
+    {
+
+        stateTor0[i][0] = stateTor1[i][0];
+        stateTor0[i][1] = stateTor1[i][1];
+        stateTor0[i][2] = stateTor1[i][2];
+
+        sT0[i][0] = sT1[i][0];
+        sT0[i][1] = sT1[i][1];
+        sT0[i][2] = sT1[i][2];
+
+    }
+
+
+    for (int j = 0; j < 3; j++)
+    {
+        TangentArc0[j] = TangentArc[j];
+    }
+
+    return 1000000- target.count;
 
 }
 
 auto MovePressureToolYLine::collectNrt(aris::plan::PlanTarget &target)->void
 {
 
-	ReSetLimit(target);
+    ReSetLimit(target);
 
 }
 
 MovePressureToolYLine::MovePressureToolYLine(const std::string &name) :Plan(name)
 {
 
-	command().loadXmlStr(
-		"<Command name=\"mvPreTYLine\">"
-		"	<GroupParam>"
-		"       <Param name=\"PressF\" default=\"0\"/>"
-		"		<Param name=\"SensorType\"default=\"-20.0\"/>"
-		"   </GroupParam>"
-		"</Command>");
+    command().loadXmlStr(
+        "<Command name=\"FCPressS\">"
+        "	<GroupParam>"
+        "       <Param name=\"PressF\" default=\"0\"/>"
+        "		<Param name=\"SensorType\"default=\"20.0\"/>"
+        "   </GroupParam>"
+        "</Command>");
 
 }
 
+
+auto GetForce::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+{
+
+	double FT[2] = { 0,0 };
+
+	std::any cur_a = double(0);
+    /*target.server->getRtData([&](aris::server::ControlServer& cs, std::any &data)->void
+
+	{
+		FT[0] = TimeToMeng;
+		FT[1] = ForceToMeng;
+		//std::any_cast<double&>(data) = cs.controller().motionPool().at(i).actualCur();
+    }, cur_a);*/
+
+
+	std::string ret(reinterpret_cast<char*>(&FT), 2 * sizeof(double));
+	target.ret = ret;
+	target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_PRINT_CMD_INFO | NOT_PRINT_CMD_INFO;
+}
+auto GetForce::collectNrt(PlanTarget &target)->void {}
+GetForce::GetForce(const std::string &name) : Plan(name)
+{
+	command().loadXmlStr(
+		"<Command name=\"GetForce\">"
+		"</Command>");
+}
 
 
 
@@ -4368,9 +4475,9 @@ auto ForceDirect::executeRT(PlanTarget &target)->int
     target.model->generalMotionPool().at(0).getMpq(PqEnd);
 
 	// 获取当前起始点位置 //
-    double FT[6],FTemp[6];
+    double FT[6],FTemp[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FT);
+        GetATI(target,FT,status_code);
     else
         GetYuLi(target,FT);
 
@@ -4435,7 +4542,8 @@ auto ForceDirect::executeRT(PlanTarget &target)->int
 	}	
 
 
-    RepeatTrapezoidal(target,begin_pjs,step_pjs);
+    double vArc[6];
+    RepeatTrapezoidal(target,begin_pjs,step_pjs,vArc);
 
 
 
@@ -4656,7 +4764,7 @@ ForceDirect::ForceDirect(const std::string &name) :Plan(name)
 {
 
 	command().loadXmlStr(
-        "<Command name=\"FCPressL\">"
+        "<Command name=\"ForceDir\">"
 		"	<GroupParam>"
 		"       <Param name=\"PressF\" default=\"0\"/>"
         "		<Param name=\"SensorType\"default=\"-20.0\"/>"
@@ -4743,9 +4851,9 @@ auto MoveJoint::executeRT(PlanTarget &target)->int
 
     double dTheta[6] = { 0 };
 
-    double FT[6],FTemp[6];
+    double FT[6],FTemp[6]; int32_t status_code;
     if(param.SensorType>0)
-        GetATI(target,FT);
+        GetATI(target,FT,status_code);
     else
         GetYuLi(target,FT);
 
@@ -4985,11 +5093,11 @@ auto MovePressureToolXSine::executeRT(PlanTarget &target)->int
 	double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
 	double dTheta[6] = { 0 };
 
-	double FT[6];
-	if (param.SensorType > 0)
-		GetATI(target, FT);
-	else
-		GetYuLi(target, FT);
+    double FT[6]; int32_t status_code;
+    if(param.SensorType>0)
+        GetATI(target,FT,status_code);
+    else
+        GetYuLi(target,FT);
 
 
 
@@ -5219,7 +5327,7 @@ auto MoveForceXSine::executeRT(PlanTarget &target)->int
 {
 	auto &param = std::any_cast<MoveForceXSineParam&>(target.param);
 
-	static double step_pjs[6];
+    static double step_pjs[6],begin_pjs[6],next_pjs[6];
 	static double stateTor0[6][3], stateTor1[6][3], EndP0[3];
 	static double sT0[6][3], sT1[6][3];
 	static float FT0[6];
@@ -5250,11 +5358,11 @@ auto MoveForceXSine::executeRT(PlanTarget &target)->int
 	double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
 	double dTheta[6] = { 0 };
 
-	double FT[6];
-	if (param.SensorType > 0)
-		GetATI(target, FT);
-	else
-		GetYuLi(target, FT);
+    double FT[6]; int32_t status_code;
+    if(param.SensorType>0)
+        GetATI(target,FT,status_code);
+    else
+        GetYuLi(target,FT);
 
 
 
@@ -5268,6 +5376,16 @@ auto MoveForceXSine::executeRT(PlanTarget &target)->int
 		}
 		for (int i = 0;i < 3;i++)
 			EndP0[i] = PqEnd[i];
+
+        for (int i = 0; i < 6; ++i)
+        {
+            begin_pjs[i] = 0;
+            next_pjs[i]=0;
+
+        }
+        int32_t controlcodes=0x1050;
+         dynamic_cast<aris::control::EthercatController*>(target.controller)->slavePool().at(6).writePdo(0x7010, 0x01, &controlcodes, 32);
+
 	}
 
 
@@ -5277,7 +5395,7 @@ auto MoveForceXSine::executeRT(PlanTarget &target)->int
 	double FT_KAI[6];
 	for (int i = 0; i < 6; i++)
 	{
-		FT_KAI[i] = stateTor1[i][0] - FT0[i];//In KAI Coordinate
+        FT_KAI[i] = FT[i] - FT0[i];//In KAI Coordinate
 	}
 
 	double zero_check[6] = { 1,1,1,0.05,0.05,0.05 };
@@ -5294,22 +5412,51 @@ auto MoveForceXSine::executeRT(PlanTarget &target)->int
 	FT2World(target, FT_KAI, FmInWorld);
 
 	double dXpid[6] = { 0,0,0,0,0,0 };
-    const int motion = 1;
-    dXpid[motion] = 1 * (FmInWorld[motion] - (-5)) / 420000;
+    const int motion = 2;
+
+    double vArc[6];
+    RepeatTrapezoidal(target,begin_pjs,next_pjs,vArc);
+    if(vArc[1]<=0)
+        dXpid[2] = 1 * (FmInWorld[2] - (20)) / 820000;
+    else
+        dXpid[2] = 1 * (FmInWorld[2] - (20)) / 1020000;
+
 	dXpid[3] = 0 * (FmInWorld[3]) / 2000;
 	dXpid[4] = 0 * (FmInWorld[4]) / 2000;
 	dXpid[5] = 0 * (FmInWorld[5]) / 2000;
 
-
+    /* Sine
 	static double amp = 0;
 	if (target.count < 10000)
 		amp = amp + 0.000003;
 
+
+
 	dX[0] = amp*sin(2 * aris::PI / 4 * target.count / 1000.0) / 1000.0;
-    dX[1] = dXpid[1];
+    dX[1] = 0;
     dX[2] = dXpid[2];
 
-	dX[3] = 0; dX[4] = 0; dX[5] = 0;
+    dX[3] = 0; dX[4] = 0; dX[5] = 0;*/
+
+
+
+
+    dX[0] = vArc[1];
+    dX[1] = 0;
+    dX[2] = dXpid[2];
+
+    double alpha=30*aris::PI/180.0;
+    target.model->generalMotionPool().at(0).getMpq(PqEnd);
+
+    if(FmInWorld[0]>=1&&PqEnd[2]<0.35873582)
+        dX[2] = dXpid[2]-tan(alpha)*dX[0];
+    if(FmInWorld[0]<-1&&PqEnd[2]<0.35873582)
+        dX[2] = dXpid[2]+tan(alpha)*dX[0];
+
+//dX[2] = dXpid[2];
+    dX[3] = 0; dX[4] = 0; dX[5] = 0;
+
+
 
 
 
@@ -5367,7 +5514,7 @@ auto MoveForceXSine::executeRT(PlanTarget &target)->int
 	if (target.count % 300 == 0)
 	{
 
-        cout << FmInWorld[0] << "*" << FmInWorld[1] << "*" << FmInWorld[2] << "*" << step_pjs[3] << "*" << step_pjs[4] << "*" << FmInWorld[motion] << std::endl;
+        cout <<FmInWorld[2] << "*"<< "*" << dX[0] << std::endl;
 		cout << std::endl;
 
 	}
@@ -5396,10 +5543,10 @@ MoveForceXSine::MoveForceXSine(const std::string &name) :Plan(name)
 {
 
 	command().loadXmlStr(
-		"<Command name=\"mvForXSine\">"
+        "<Command name=\"FCPressL\">"
 		"	<GroupParam>"
 		"       <Param name=\"PressF\" default=\"0\"/>"
-		"		<Param name=\"SensorType\"default=\"-20.0\"/>"
+        "		<Param name=\"SensorType\"default=\"20.0\"/>"
 		"   </GroupParam>"
 		"</Command>");
 
@@ -5475,11 +5622,11 @@ auto MoveForceCircle::executeRT(PlanTarget &target)->int
 	double dX[6] = { 0.00000, -0.0000, -0.0000, -0.0000, -0.0000, -0.0000 };
 	double dTheta[6] = { 0 };
 
-	double FT[6];
-	if (param.SensorType > 0)
-		GetATI(target, FT);
-	else
-		GetYuLi(target, FT);
+    double FT[6]; int32_t status_code;
+    if(param.SensorType>0)
+        GetATI(target,FT,status_code);
+    else
+        GetYuLi(target,FT);
 
 
 
@@ -5756,11 +5903,11 @@ auto MoveForceCurve::executeRT(PlanTarget &target)->int
 	double dTheta[6] = { 0 };
 
 //////////////////////////////////////////////////Get FT in World Framework, Filter////////////////////////////////////////////
-	double FT[6];
-	if (param.SensorType > 0)
-		GetATI(target, FT);
-	else
-		GetYuLi(target, FT);
+    double FT[6]; int32_t status_code;
+    if(param.SensorType>0)
+        GetATI(target,FT,status_code);
+    else
+        GetYuLi(target,FT);
 
 
 	// 获取当前起始点位置 //
