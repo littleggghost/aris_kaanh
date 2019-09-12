@@ -271,12 +271,12 @@ namespace kaanh
 #ifdef UNIX
             double pos_offset[6]
             {
-                0.0345045068966465,   0.151295566371175,   -0.181133422007823,   0.00569660673541914,   0.0119907348546894,   0.0908806917782888
+                0.095599000000000003,   0.48397899999999999,   -0.525254,   0.152251,   -1.4785729999999999,   -0.0854009965843822
             };
 #endif
             double pos_factor[6]
             {
-                131072.0 * 129.6 / 2 / PI, -131072.0 * 100 / 2 / PI, 131072.0 * 101 / 2 / PI, 131072.0 * 81.6 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 51 / 2 / PI
+                131072.0 * 129.6 / 2 / PI, -131072.0 * 120 / 2 / PI, 131072.0 * 101 / 2 / PI, 131072.0 * 81.6 / 2 / PI, 131072.0 * 81 / 2 / PI, 131072.0 * 51 / 2 / PI
             };
             double max_pos[6]
             {
@@ -6095,6 +6095,7 @@ double p, v, a;
         std::int32_t Fx,Fy,Fz,Mx,My,Mz,status_code,sample_counter,controlcodes;
         std::int32_t forceindex, torqueindex;
         std::uint8_t forceunit, torqueunit;
+
     };
     auto ATIFS::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
         {
@@ -6108,7 +6109,7 @@ double p, v, a;
             param.Mz = 0;
             param.status_code = 0;
             param.sample_counter = 0;
-            param.controlcodes = 4096;
+            //param.controlcodes = 4096;
             //param.controlcodes = 4352;//little range
 
             for (auto &p : params)
@@ -6122,6 +6123,7 @@ double p, v, a;
                     param.controlcodes = std::stoi(p.second);
                 }
             }
+            param.controlcodes = 0x1000;
 
             /*
             controller->slavePool().at(6).readSdo(0x2021, 0x2f, &param.forceunit, 8);
@@ -6190,8 +6192,9 @@ double p, v, a;
 
         //print//
         auto &cout = controller->mout();
-        if (target.count % 100 == 0)
+        //if (target.count % 100 == 0)
         {
+            cout << std::setw(6) << target.count << "  ";
             cout << std::setw(6) << Fx << "  ";
             cout << std::setw(6) << Fy << "  ";
             cout << std::setw(6) << Fz << "  ";
@@ -6227,7 +6230,7 @@ double p, v, a;
         command().loadXmlStr(
             "<Command name=\"atifs\">"
             "	<GroupParam>"
-            "		<Param name=\"time\" default=\"100000\"/>"
+            "		<Param name=\"time\" default=\"10000\"/>"
             "		<Param name=\"controlcodes\" default=\"4096\"/>"
             "	</GroupParam>"
             "</Command>");
