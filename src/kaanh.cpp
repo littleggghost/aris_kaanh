@@ -316,7 +316,7 @@ namespace kaanh
 		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
 		dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x00);
 #endif
-		
+/*
 		double pos_offset = 0.0 / 8388608.0 * 250;	//在零位时，为500count
 		double pos_factor = 8388608.0 * 250;	//运行1m需要转250转
 		double max_pos = 10.0;
@@ -361,7 +361,7 @@ namespace kaanh
 			"</EthercatMotion>";
 
 		controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
-		
+*/
 		return controller;
 	};
 	auto createModelRokae()->std::unique_ptr<aris::dynamic::Model>
@@ -2205,8 +2205,9 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
 		// 梯形轨迹规划 //
@@ -2360,7 +2361,8 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2515,7 +2517,8 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2670,7 +2673,8 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2825,7 +2829,8 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2980,7 +2985,8 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
 		// 梯形轨迹规划 //
@@ -3128,7 +3134,8 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
 		// 梯形轨迹规划 //
@@ -3217,6 +3224,7 @@ namespace kaanh
 		int moving_type;
 		int increase_status[6]{0,0,0,0,0,0};
 		static std::atomic_int32_t jx_count, jy_count, jz_count, jrx_count, jry_count, jrz_count;
+		aris::dynamic::Marker *tool, *wobj;
 	};
 	std::atomic_int32_t JCParam::jx_count = 0;
 	auto JX::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
@@ -3230,6 +3238,9 @@ namespace kaanh
 
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
+
+		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
+		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
 
 		for (auto &p : params)
 		{
@@ -3302,7 +3313,9 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
+			
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -3413,6 +3426,8 @@ namespace kaanh
 			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -3433,6 +3448,9 @@ namespace kaanh
 
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
+
+		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
+		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
 
 		for (auto &p : params)
 		{
@@ -3505,7 +3523,8 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -3616,6 +3635,8 @@ namespace kaanh
 			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -3636,6 +3657,9 @@ namespace kaanh
 
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
+
+		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
+		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
 
 		for (auto &p : params)
 		{
@@ -3708,7 +3732,8 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -3819,6 +3844,8 @@ namespace kaanh
 			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -3839,6 +3866,9 @@ namespace kaanh
 
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
+
+		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
+		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
 
 		for (auto &p : params)
 		{
@@ -3911,7 +3941,8 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -4022,6 +4053,8 @@ namespace kaanh
 			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -4043,12 +4076,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		for (aris::Size i = 0; i < 6; i++)
-		{
-			param.vel[i] = c->motionPool().at(i).maxVel();
-			param.acc[i] = c->motionPool().at(i).maxAcc();
-			param.dec[i] = c->motionPool().at(i).maxAcc();
-		}
+		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
+		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
 
 		for (auto &p : params)
 		{
@@ -4121,7 +4150,8 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -4232,6 +4262,8 @@ namespace kaanh
 			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -4252,6 +4284,9 @@ namespace kaanh
 
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
+
+		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
+		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
 
 		for (auto &p : params)
 		{
@@ -4324,7 +4359,8 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -4435,6 +4471,8 @@ namespace kaanh
 			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
 			"		<Param name=\"cor\" default=\"0\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"		<Param name=\"vel_percent\" default=\"20\"/>"
 			"		<Param name=\"direction\" default=\"1\"/>"
 			"	</GroupParam>"
@@ -5157,6 +5195,7 @@ namespace kaanh
 		plan_root->planPool().add<kaanh::SetUI>();
 		plan_root->planPool().add<kaanh::SetDriver>();
 		plan_root->planPool().add<kaanh::SaveConfig>();
+		plan_root->planPool().add<kaanh::SetVel>();
 		plan_root->planPool().add<kaanh::SetCT>();
 
 		return plan_root;
