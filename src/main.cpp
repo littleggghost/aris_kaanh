@@ -9,6 +9,10 @@
 std::atomic_bool is_automatic = false;
 using namespace aris::dynamic;
 
+//global vel//
+kaanh::Speed g_vel;
+std::atomic_int g_vel_percent = 0;
+//global vel//
 
 auto xmlpath = std::filesystem::absolute(".");//获取当前工程所在的路径
 auto uixmlpath = std::filesystem::absolute(".");
@@ -63,6 +67,13 @@ int main(int argc, char *argv[])
 	cs.loadXmlFile(xmlpath.string().c_str());
 	
 	cs.start();
+
+	//加载v100的速度值//
+	auto &getspeed = dynamic_cast<aris::dynamic::MatrixVariable &>(*cs.model().variablePool().findByName("v100"));
+	kaanh::SpeedParam speed;
+	std::copy(getspeed.data().begin(), getspeed.data().end(), &speed.w_percent);
+	speed.w_tcp = speed.w_tcp * speed.w_percent;
+	g_vel.setspeed(speed);
 
 	//Start Web Socket//
     cs.open();

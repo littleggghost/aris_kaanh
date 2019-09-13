@@ -7,6 +7,12 @@
 using namespace aris::dynamic;
 using namespace aris::plan;
 
+//global vel//
+extern kaanh::Speed g_vel;
+extern std::atomic_int g_vel_percent;
+//global vel//
+
+kaanh::CmdListParam cmdparam;
 
 namespace kaanh
 {
@@ -422,6 +428,7 @@ namespace kaanh
 		aris::control::EthercatController::MasterLinkState mls{};
 		std::vector<int> motion_state;
 		std::string currentplan;
+		int vel_percent;
 	};
 	auto Get::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
@@ -439,7 +446,6 @@ namespace kaanh
 		std::any param = par;
 		//std::any param = std::make_any<GetParam>();
 
-		
 		target.server->getRtData([&](aris::server::ControlServer& cs, const aris::plan::PlanTarget *target, std::any& data)->void
 		{
 			for (aris::Size i(-1); ++i < cs.model().partPool().size();)
@@ -450,12 +456,21 @@ namespace kaanh
 			cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
 			cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
 
-			for (aris::Size i = 0; i < cs.model().motionPool().size(); i++)
+			for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
 			{
+#ifdef WIN32
+				std::any_cast<GetParam &>(data).motion_pos[i] = cs.model().motionPool()[i].mp();
+				std::any_cast<GetParam &>(data).motion_vel[i] = cs.model().motionPool()[i].mv();
+				std::any_cast<GetParam &>(data).motion_acc[i] = cs.model().motionPool()[i].ma();
+				std::any_cast<GetParam &>(data).motion_toq[i] = cs.model().motionPool()[i].ma();
+#endif // WIN32
+
+#ifdef UNIX
 				std::any_cast<GetParam &>(data).motion_pos[i] = cs.controller().motionPool()[i].actualPos();
 				std::any_cast<GetParam &>(data).motion_vel[i] = cs.controller().motionPool()[i].actualVel();
 				std::any_cast<GetParam &>(data).motion_acc[i] = cs.model().motionPool()[i].ma();
 				std::any_cast<GetParam &>(data).motion_toq[i] = cs.controller().motionPool()[i].actualToq();
+#endif // UNIX
 			}
 			for (aris::Size i = 0; i < 100; i++)
 			{
@@ -463,7 +478,7 @@ namespace kaanh
 				std::any_cast<GetParam &>(data).di[i] = false;
 			}
 			std::any_cast<GetParam &>(data).state_code = 0;
-			
+
 			auto ec = dynamic_cast<aris::control::EthercatController*>(&cs.controller());
 			ec->getLinkState(&std::any_cast<GetParam &>(data).mls, std::any_cast<GetParam &>(data).sls);
 
@@ -480,7 +495,6 @@ namespace kaanh
 					std::any_cast<GetParam &>(data).motion_state[i] = 1;
 				}
 			}
-
 			if (target == nullptr)
 			{
 				std::any_cast<GetParam &>(data).currentplan = "none";
@@ -516,6 +530,7 @@ namespace kaanh
 		out_param.push_back(std::make_pair<std::string, std::any>("slave_al_state", slave_al_state));
 		out_param.push_back(std::make_pair<std::string, std::any>("motion_state", out_data.motion_state));
 		out_param.push_back(std::make_pair<std::string, std::any>("current_plan", out_data.currentplan));
+		out_param.push_back(std::make_pair<std::string, std::any>("current_plan_id", cmdparam.current_plan_id));
 
 		target.ret = out_param;
 		target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_PRINT_CMD_INFO | NOT_PRINT_CMD_INFO;
@@ -5017,6 +5032,38 @@ namespace kaanh
 	}
 
 	
+	//设置全局速度//
+	struct SetVelParam
+	{
+		int vel_percent;
+	};
+	auto SetVel::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
+		SetVelParam param;
+		for (auto &p : params)
+		{
+			if (p.first == "vel_percent")
+			{
+				param.vel_percent = std::stoi(p.second);
+			}
+		}
+		g_vel_percent.store(param.vel_percent);
+
+		std::vector<std::pair<std::string, std::any>> ret;
+		target.ret = ret;
+		target.option = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+	}
+	SetVel::SetVel(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"setvel\">"
+			"	<GroupParam>"
+			"		<Param name=\"vel_percent\" abbreviation=\"p\" default=\"0\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
 	// set cycle_time for driver with SDO //
 	struct SetCTParam
 	{

@@ -19,6 +19,15 @@ namespace kaanh
 	using Size = std::size_t;
 	constexpr double PI = 3.141592653589793;
 
+	struct SpeedParam
+	{
+		double w_percent;	//关节速度百分比
+		double v_tcp;	//TCP线速度mm/s
+		double w_tcp;	//空间旋转速度°/s
+		double w_ext;	//外部轴角速度°/s
+		double v_ext;	//外部轴线速度mm/s
+	};
+
 	auto createControllerQifan()->std::unique_ptr<aris::control::Controller>;
 	auto createModelQifan()->std::unique_ptr<aris::dynamic::Model>;
 
@@ -27,6 +36,32 @@ namespace kaanh
 
 	auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>;
 
+	struct CmdListParam
+	{
+		std::vector<std::pair<std::string, std::string>> cmd_vec;
+		int current_cmd_id = 0;
+		int current_plan_id = -1;
+	};
+
+	class Speed
+	{
+	public:
+		auto setspeed(SpeedParam speed)->void
+		{
+			s = speed;
+		};
+		auto getspeed()->SpeedParam
+		{
+			return s;
+		};
+		Speed(SpeedParam speed = { 0.0,0.0,0.0,0.0,0.0 })
+		{
+			s = speed;
+		};
+
+	private:
+		SpeedParam s;
+	};
 
 	class Get : public aris::plan::Plan
 	{
@@ -59,7 +94,6 @@ namespace kaanh
 		explicit MoveAbJ(const std::string &name = "MoveAbJ_plan");
 		ARIS_REGISTER_TYPE(MoveAbJ);
 	};
-
 
 	class MoveJM : public aris::plan::Plan
 	{
@@ -343,6 +377,14 @@ namespace kaanh
 		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
 		explicit SaveConfig(const std::string &name = "SaveConfig_plan");
 		ARIS_REGISTER_TYPE(SaveConfig);
+	};
+
+	class SetVel : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+		explicit SetVel(const std::string &name = "SetVel_plan");
+		ARIS_REGISTER_TYPE(SetVel);
 	};
 
 	class SetCT : public aris::plan::Plan
