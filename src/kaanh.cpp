@@ -2122,8 +2122,20 @@ namespace kaanh
 	JogJ& JogJ::operator=(JogJ &&other) = default;
 
 
+#define JOGJ_PARAM_STRING \
+		"	<UniqueParam>"\
+		"		<GroupParam>"\
+		"			<Param name=\"increase_count\" default=\"500\"/>"\
+		"			<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"\
+		"			<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"\
+		"			<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"\
+		"			<Param name=\"vel_percent\" default=\"10\"/>"\
+		"			<Param name=\"direction\" default=\"1\"/>"\
+		"		</GroupParam>"\
+		"		<Param name=\"stop\"/>"\
+		"	</UniqueParam>"
 	// 示教运动--关节1点动 //
-	struct JogJParam 
+	struct JogJParam
 	{
 		int motion_id;
 		double vel, acc, dec;
@@ -2133,17 +2145,11 @@ namespace kaanh
 		int vel_percent;
 		static std::atomic_int32_t j1_count, j2_count, j3_count, j4_count, j5_count, j6_count, j7_count;
 	};
-	std::atomic_int32_t JogJParam::j1_count = 0;
-	auto JogJ1::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	template<typename JogType>
+	auto set_jogj_input_param(JogType* this_p, const std::map<std::string, std::string> &cmd_params, PlanTarget &target, JogJParam &param, std::atomic_int32_t& j_count)->void
 	{
 		auto&cs = aris::server::ControlServer::instance();
 		auto c = target.controller;
-		JogJParam param;
-		
-		std::vector<std::pair<std::string, std::any>> ret;
-		target.ret = ret;
-		
-		param.motion_id = 0;
 		param.p_now = 0.0;
 		param.v_now = 0.0;
 		param.a_now = 0.0;
@@ -2152,34 +2158,53 @@ namespace kaanh
 		param.increase_status = 0;
 		param.vel_percent = 0;
 
-		for (auto &p : params)
+		for (auto &p : cmd_params)
 		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-					
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+			if (p.first == "increase_count")
+			{
+				param.increase_count = std::stoi(cmd_params.at("increase_count"));
+				if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
+				param.vel = std::min(std::max(std::stod(cmd_params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+				param.acc = std::min(std::max(std::stod(cmd_params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+				param.dec = std::min(std::max(std::stod(cmd_params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				auto velocity = std::stoi(cmd_params.at("vel_percent"));
+				velocity = std::max(std::min(100, velocity), 0);
+				param.vel_percent = velocity;
+				param.increase_status = std::max(std::min(1, std::stoi(cmd_params.at("direction"))), -1);
 
-		if (param.j1_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+				std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
+				//当前有指令在执行//
+				if (planptr && planptr->plan != this_p)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (j_count.exchange(param.increase_count))
+				{
+					target.option |= aris::plan::Plan::Option::NOT_RUN_EXECUTE_FUNCTION | aris::plan::Plan::Option::NOT_RUN_COLLECT_FUNCTION;
+				}
+				else
+				{
+					std::fill(target.mot_options.begin(), target.mot_options.end(), aris::plan::Plan::MotionOption::NOT_CHECK_POS_FOLLOWING_ERROR | aris::plan::Plan::MotionOption::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | aris::plan::Plan::MotionOption::USE_TARGET_POS | aris::plan::Plan::MotionOption::NOT_CHECK_ENABLE);
+					target.mot_options[param.motion_id] = aris::plan::Plan::MotionOption::NOT_CHECK_POS_FOLLOWING_ERROR | aris::plan::Plan::MotionOption::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | aris::plan::Plan::MotionOption::USE_TARGET_POS;
+				}
+			}
+			else if (p.first == "stop")
+			{
+				j_count.exchange(0);
+				target.option |= aris::plan::Plan::Option::NOT_RUN_EXECUTE_FUNCTION | aris::plan::Plan::Option::NOT_RUN_COLLECT_FUNCTION;
+			}
 		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
-		}
+	}
+	std::atomic_int32_t JogJParam::j1_count = 0;
+	auto JogJ1::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
+		JogJParam param;
+		std::vector<std::pair<std::string, std::any>> ret;
+		target.ret = ret;
+
+		param.motion_id = 0;
+
+		set_jogj_input_param(this, params, target, param, param.j1_count);
+
 		target.param = param;
 	}
 	auto JogJ1::executeRT(PlanTarget &target)->int
@@ -2205,8 +2230,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2234,7 +2258,7 @@ namespace kaanh
 		param.v_now = v_next;
 		param.a_now = a_next;
 
-		// 运动学反解//
+		// 运动学正解//
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
@@ -2263,7 +2287,7 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ1::collectNrt(PlanTarget &target)->void 
+	auto JogJ1::collectNrt(PlanTarget &target)->void
 	{
 		JogJParam::j1_count = 0;
 		if (target.ret_code < 0)
@@ -2276,14 +2300,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"j1\">"
-			"	<GroupParam>"
-            "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGJ_PARAM_STRING
 			"</Command>");
 	}
 
@@ -2292,50 +2309,14 @@ namespace kaanh
 	std::atomic_int32_t JogJParam::j2_count = 0;
 	auto JogJ2::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JogJParam param;
-
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
 		param.motion_id = 1;
-		param.p_now = 0.0;
-		param.v_now = 0.0;
-		param.a_now = 0.0;
-		param.target_pos = 0.0;
-		param.max_vel = 0.0;
-		param.increase_status = 0;
-		param.vel_percent = 0;
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
+		set_jogj_input_param(this, params, target, param, param.j2_count);
 
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.j2_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
-		}
 		target.param = param;
 	}
 	auto JogJ2::executeRT(PlanTarget &target)->int
@@ -2361,8 +2342,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2390,7 +2370,7 @@ namespace kaanh
 		param.v_now = v_next;
 		param.a_now = a_next;
 
-		// 运动学反解//
+		// 运动学正解//
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
@@ -2419,7 +2399,7 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ2::collectNrt(PlanTarget &target)->void 
+	auto JogJ2::collectNrt(PlanTarget &target)->void
 	{
 		JogJParam::j2_count = 0;
 		if (target.ret_code < 0)
@@ -2432,14 +2412,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"j2\">"
-			"	<GroupParam>"
-            "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGJ_PARAM_STRING
 			"</Command>");
 	}
 
@@ -2448,50 +2421,13 @@ namespace kaanh
 	std::atomic_int32_t JogJParam::j3_count = 0;
 	auto JogJ3::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JogJParam param;
-
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
 		param.motion_id = 2;
-		param.p_now = 0.0;
-		param.v_now = 0.0;
-		param.a_now = 0.0;
-		param.target_pos = 0.0;
-		param.max_vel = 0.0;
-		param.increase_status = 0;
-		param.vel_percent = 0;
+		set_jogj_input_param(this, params, target, param, param.j3_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.j3_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
-		}
 		target.param = param;
 	}
 	auto JogJ3::executeRT(PlanTarget &target)->int
@@ -2517,8 +2453,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2546,7 +2481,7 @@ namespace kaanh
 		param.v_now = v_next;
 		param.a_now = a_next;
 
-		// 运动学反解//
+		// 运动学正解//
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
@@ -2575,7 +2510,7 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ3::collectNrt(PlanTarget &target)->void 
+	auto JogJ3::collectNrt(PlanTarget &target)->void
 	{
 		JogJParam::j3_count = 0;
 		if (target.ret_code < 0)
@@ -2588,14 +2523,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"j3\">"
-			"	<GroupParam>"
-            "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGJ_PARAM_STRING
 			"</Command>");
 	}
 
@@ -2604,50 +2532,13 @@ namespace kaanh
 	std::atomic_int32_t JogJParam::j4_count = 0;
 	auto JogJ4::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JogJParam param;
-
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
 		param.motion_id = 3;
-		param.p_now = 0.0;
-		param.v_now = 0.0;
-		param.a_now = 0.0;
-		param.target_pos = 0.0;
-		param.max_vel = 0.0;
-		param.increase_status = 0;
-		param.vel_percent = 0;
+		set_jogj_input_param(this, params, target, param, param.j4_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.j4_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
-		}
 		target.param = param;
 	}
 	auto JogJ4::executeRT(PlanTarget &target)->int
@@ -2673,8 +2564,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2702,7 +2592,7 @@ namespace kaanh
 		param.v_now = v_next;
 		param.a_now = a_next;
 
-		// 运动学反解//
+		// 运动学正解//
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
@@ -2731,7 +2621,7 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ4::collectNrt(PlanTarget &target)->void 
+	auto JogJ4::collectNrt(PlanTarget &target)->void
 	{
 		JogJParam::j4_count = 0;
 		if (target.ret_code < 0)
@@ -2744,14 +2634,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"j4\">"
-			"	<GroupParam>"
-            "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGJ_PARAM_STRING
 			"</Command>");
 	}
 
@@ -2760,50 +2643,13 @@ namespace kaanh
 	std::atomic_int32_t JogJParam::j5_count = 0;
 	auto JogJ5::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JogJParam param;
-
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
 		param.motion_id = 4;
-		param.p_now = 0.0;
-		param.v_now = 0.0;
-		param.a_now = 0.0;
-		param.target_pos = 0.0;
-		param.max_vel = 0.0;
-		param.increase_status = 0;
-		param.vel_percent = 0;
+		set_jogj_input_param(this, params, target, param, param.j5_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.j5_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
-		}
 		target.param = param;
 	}
 	auto JogJ5::executeRT(PlanTarget &target)->int
@@ -2829,8 +2675,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
@@ -2858,7 +2703,7 @@ namespace kaanh
 		param.v_now = v_next;
 		param.a_now = a_next;
 
-		// 运动学反解//
+		// 运动学正解//
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
@@ -2887,7 +2732,7 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ5::collectNrt(PlanTarget &target)->void 
+	auto JogJ5::collectNrt(PlanTarget &target)->void
 	{
 		JogJParam::j5_count = 0;
 		if (target.ret_code < 0)
@@ -2900,14 +2745,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"j5\">"
-			"	<GroupParam>"
-            "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGJ_PARAM_STRING
 			"</Command>");
 	}
 
@@ -2916,50 +2754,13 @@ namespace kaanh
 	std::atomic_int32_t JogJParam::j6_count = 0;
 	auto JogJ6::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JogJParam param;
-
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
 		param.motion_id = 5;
-		param.p_now = 0.0;
-		param.v_now = 0.0;
-		param.a_now = 0.0;
-		param.target_pos = 0.0;
-		param.max_vel = 0.0;
-		param.increase_status = 0;
-		param.vel_percent = 0;
+		set_jogj_input_param(this, params, target, param, param.j6_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.j6_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS | NOT_CHECK_ENABLE);
-            target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS;
-		}
 		target.param = param;
 	}
 	auto JogJ6::executeRT(PlanTarget &target)->int
@@ -2985,8 +2786,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
 		// 梯形轨迹规划 //
@@ -3014,7 +2814,7 @@ namespace kaanh
 		param.v_now = v_next;
 		param.a_now = a_next;
 
-		// 运动学反解//
+		// 运动学正解//
 		if (target.model->solverPool().at(1).kinPos())return -1;
 
 		// 打印 //
@@ -3043,7 +2843,7 @@ namespace kaanh
 
 		return finished;
 	}
-	auto JogJ6::collectNrt(PlanTarget &target)->void 
+	auto JogJ6::collectNrt(PlanTarget &target)->void
 	{
 		JogJParam::j6_count = 0;
 		if (target.ret_code < 0)
@@ -3056,19 +2856,12 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"j6\">"
-			"	<GroupParam>"
-            "		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGJ_PARAM_STRING
 			"</Command>");
 	}
 
 
-	// 示教运动--关节6点动 //
+	// 示教运动--外部轴点动 //
 	std::atomic_int32_t JogJParam::j7_count = 0;
 	auto JogJ7::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
@@ -3090,32 +2883,41 @@ namespace kaanh
 
 		for (auto &p : params)
 		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
+			if (p.first == "increase_count")
+			{
+				param.increase_count = std::stoi(params.at("increase_count"));
+				if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
 
-			param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
-			param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
-			param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+				param.vel = std::min(std::max(std::stod(params.at("vel")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxVel();
+				param.acc = std::min(std::max(std::stod(params.at("acc")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
+				param.dec = std::min(std::max(std::stod(params.at("dec")), 0.0), 1.0)*c->motionPool().at(param.motion_id).maxAcc();
 
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-			param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
+				auto velocity = std::stoi(params.at("vel_percent"));
+				velocity = std::max(std::min(100, velocity), 0);
+				param.vel_percent = velocity;
+				param.increase_status = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
+
+				std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
+				//当前有指令在执行//
+				if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+
+				if (param.j7_count.exchange(param.increase_count))
+				{
+					target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+				}
+				else
+				{
+					std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | NOT_CHECK_ENABLE);
+					target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
+				}
+			}
+			else if (p.first == "stop")
+			{
+				param.j7_count.exchange(0);
+				target.option |= aris::plan::Plan::Option::NOT_RUN_EXECUTE_FUNCTION | aris::plan::Plan::Option::NOT_RUN_COLLECT_FUNCTION;
+			}
 		}
 
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		//当前有指令在执行//
-		if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.j7_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-			std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | NOT_CHECK_ENABLE);
-			target.mot_options[param.motion_id] = NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER;
-		}
 		target.param = param;
 	}
 	auto JogJ7::executeRT(PlanTarget &target)->int
@@ -3134,8 +2936,7 @@ namespace kaanh
 		}
 
 		// init status and calculate target pos and max vel //
-		//param.max_vel = param.vel*1.0*param.vel_percent / 100.0;
-		param.max_vel = param.vel*1.0*g_vel_percent * param.vel_percent / 100.0 / 100.0;
+		param.max_vel = param.vel*1.0*g_vel_percent.load()/100.0;
 		param.target_pos += aris::dynamic::s_sgn(param.increase_status)*param.max_vel * 1e-3;
 
 		// 梯形轨迹规划 //
@@ -3202,19 +3003,39 @@ namespace kaanh
 		command().loadXmlStr(
 			"<Command name=\"j7\">"
 			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
-			"		<Param name=\"acc\" default=\"0.5\" abbreviation=\"a\"/>"
-			"		<Param name=\"dec\" default=\"0.5\" abbreviation=\"d\"/>"
-			"		<Param name=\"vel_percent\" default=\"10\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
+			"		<UniqueParam>"
+			"			<GroupParam>"
+			"				<Param name=\"increase_count\" default=\"500\"/>"
+			"				<Param name=\"vel\" default=\"1\" abbreviation=\"v\"/>"
+			"				<Param name=\"acc\" default=\"5\" abbreviation=\"a\"/>"
+			"				<Param name=\"dec\" default=\"5\" abbreviation=\"d\"/>"
+			"				<Param name=\"vel_percent\" default=\"10\"/>"
+			"				<Param name=\"direction\" default=\"1\"/>"
+			"			</GroupParam>"
+			"			<Param name=\"stop\"/>"
+			"		</UniqueParam>"
 			"	</GroupParam>"
 			"</Command>");
 	}
 
 
+#define JOGC_PARAM_STRING \
+		"	<UniqueParam>"\
+		"		<GroupParam>"\
+		"			<Param name=\"increase_count\" default=\"500\"/>"\
+		"			<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"\
+		"			<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"\
+		"			<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"\
+		"			<Param name=\"cor\" default=\"0\"/>"\
+		"			<Param name=\"tool\" default=\"tool0\"/>"\
+		"			<Param name=\"wobj\" default=\"wobj0\"/>"\
+		"			<Param name=\"vel_percent\" default=\"20\"/>"\
+		"			<Param name=\"direction\" default=\"1\"/>"\
+		"		</GroupParam>"\
+		"		<Param name=\"stop\"/>"\
+		"	</UniqueParam>"
 	// 示教运动--jogx //
-	struct JCParam 
+	struct JCParam
 	{
 		std::vector<double> pm_target;
 		double vel[6], acc[6], dec[6];
@@ -3222,15 +3043,72 @@ namespace kaanh
 		int cor_system;
 		int vel_percent;
 		int moving_type;
-		int increase_status[6]{0,0,0,0,0,0};
+		int increase_status[6]{ 0,0,0,0,0,0 };
 		static std::atomic_int32_t jx_count, jy_count, jz_count, jrx_count, jry_count, jrz_count;
 		aris::dynamic::Marker *tool, *wobj;
 	};
-	std::atomic_int32_t JCParam::jx_count = 0;
-	auto JX::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	template<typename JogType>
+	auto set_jogc_input_param(JogType* this_p, const std::map<std::string, std::string> &cmd_params, PlanTarget &target, JCParam &param, std::atomic_int32_t& j_count)->void
 	{
 		auto&cs = aris::server::ControlServer::instance();
 		auto c = target.controller;
+
+		for (auto &p : cmd_params)
+		{
+			if (p.first == "increase_count")
+			{
+				auto tool_is_string = cmd_params.at("tool");
+				auto wobj_is_string = cmd_params.at("wobj");
+
+				param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(cmd_params.at("tool"));
+				param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(cmd_params.at("wobj"));
+
+				param.increase_count = std::stoi(cmd_params.at("increase_count"));
+				if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
+
+				param.cor_system = std::stoi(cmd_params.at("cor"));
+				auto velocity = std::stoi(cmd_params.at("vel_percent"));
+				velocity = std::max(std::min(100, velocity), 0);
+				param.vel_percent = velocity;
+
+				auto mat = target.model->calculator().calculateExpression(cmd_params.at("vel"));
+				if (mat.size() != 6)THROW_FILE_LINE("");
+				std::copy(mat.begin(), mat.end(), param.vel);
+
+				mat = target.model->calculator().calculateExpression(cmd_params.at("acc"));
+				if (mat.size() != 6)THROW_FILE_LINE("");
+				std::copy(mat.begin(), mat.end(), param.acc);
+
+				mat = target.model->calculator().calculateExpression(cmd_params.at("dec"));
+				if (mat.size() != 6)THROW_FILE_LINE("");
+				std::copy(mat.begin(), mat.end(), param.dec);
+
+				param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(cmd_params.at("direction"))), -1);
+
+				std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
+
+				//当前有指令在执行//
+				if (planptr && planptr->plan != this_p)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+
+				if (j_count.exchange(param.increase_count))
+				{
+					target.option |= aris::plan::Plan::Option::NOT_RUN_EXECUTE_FUNCTION | aris::plan::Plan::Option::NOT_RUN_COLLECT_FUNCTION;
+				}
+				else
+				{
+					std::fill(target.mot_options.begin(), target.mot_options.end(), aris::plan::Plan::MotionOption::NOT_CHECK_POS_FOLLOWING_ERROR | aris::plan::Plan::MotionOption::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | aris::plan::Plan::MotionOption::USE_TARGET_POS);
+				}
+			}
+			else if (p.first == "stop")
+			{
+				j_count.exchange(0);
+				target.option |= aris::plan::Plan::Option::NOT_RUN_EXECUTE_FUNCTION | aris::plan::Plan::Option::NOT_RUN_COLLECT_FUNCTION;
+			}
+		}
+	}
+	std::atomic_int32_t JCParam::jx_count = 0;
+	auto JX::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
 		JCParam param;
 
 		param.pm_target.resize(16, 0.0);
@@ -3239,47 +3117,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
-		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
+		set_jogc_input_param(this, params, target, param, param.jx_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			param.cor_system = std::stoi(params.at("cor"));
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.vel);
-
-			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.acc);
-
-			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.dec);
-
-			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-		
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.jx_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS);
-		}
 		target.param = param;
 
 	}
@@ -3313,14 +3152,12 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
-			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
-			
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent.load()/100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
 		double p_next[6]{ 0,0,0,0,0,0 }, v_next[6]{ 0,0,0,0,0,0 }, a_next[6]{ 0,0,0,0,0,0 };
-		int finished[6]{0,0,0,0,0,0};
+		int finished[6]{ 0,0,0,0,0,0 };
 		for (int i = 0; i < 6; i++)
 		{
 			aris::Size t;
@@ -3351,7 +3188,8 @@ namespace kaanh
 
 		// 获取当前位姿矩阵 //
 		double pm_now[16];
-		target.model->generalMotionPool()[0].getMpm(pm_now);
+		//target.model->generalMotionPool()[0].getMpm(pm_now);
+		param.tool->getPm(*param.wobj, pm_now);
 
 		// 保存下个周期的copy //
 		s_vc(6, p_next, p_now);
@@ -3369,14 +3207,16 @@ namespace kaanh
 			s_pm_dot_pm(pm_now, pm, param.pm_target.data());
 		}
 
-		target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		//target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		param.tool->setPm(*param.wobj, param.pm_target.data());
+		target.model->generalMotionPool().at(0).updMpm();
 
 		// 运动学反解 //
 		if (target.model->solverPool().at(0).kinPos())return -1;
 
 		// 打印 //
 		auto &cout = controller->mout();
-		if (target.count % 10 == 0)
+		if (target.count % 100 == 0)
 		{
 			cout << "jx_count:" << std::endl;
 			cout << param.jx_count << "  ";
@@ -3407,7 +3247,7 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JX::collectNrt(PlanTarget &target)->void 
+	auto JX::collectNrt(PlanTarget &target)->void
 	{
 		JCParam::jx_count = 0;
 		if (target.ret_code < 0)
@@ -3420,27 +3260,15 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"jx\">"
-			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"cor\" default=\"0\"/>"
-			"		<Param name=\"tool\" default=\"tool0\"/>"
-			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"vel_percent\" default=\"20\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGC_PARAM_STRING
 			"</Command>");
 	}
-	
+
 
 	// 示教运动--jogy //
 	std::atomic_int32_t JCParam::jy_count = 0;
 	auto JY::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JCParam param;
 
 		param.pm_target.resize(16, 0.0);
@@ -3449,47 +3277,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
-		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
+		set_jogc_input_param(this, params, target, param, param.jy_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			param.cor_system = std::stoi(params.at("cor"));
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.vel);
-
-			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.acc);
-
-			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.dec);
-
-			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.jy_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS);
-		}
 		target.param = param;
 
 	}
@@ -3523,8 +3312,7 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
-			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent.load()/100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -3560,7 +3348,7 @@ namespace kaanh
 
 		// 获取当前位姿矩阵 //
 		double pm_now[16];
-		target.model->generalMotionPool()[0].getMpm(pm_now);
+		param.tool->getPm(*param.wobj, pm_now);
 
 		// 保存下个周期的copy //
 		s_vc(6, p_next, p_now);
@@ -3578,7 +3366,8 @@ namespace kaanh
 			s_pm_dot_pm(pm_now, pm, param.pm_target.data());
 		}
 
-		target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		param.tool->setPm(*param.wobj, param.pm_target.data());
+		target.model->generalMotionPool().at(0).updMpm();
 
 		// 运动学反解 //
 		if (target.model->solverPool().at(0).kinPos())return -1;
@@ -3616,7 +3405,7 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JY::collectNrt(PlanTarget &target)->void 
+	auto JY::collectNrt(PlanTarget &target)->void
 	{
 		JCParam::jy_count = 0;
 		if (target.ret_code < 0)
@@ -3629,17 +3418,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"jy\">"
-			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"cor\" default=\"0\"/>"
-			"		<Param name=\"tool\" default=\"tool0\"/>"
-			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"vel_percent\" default=\"20\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGC_PARAM_STRING
 			"</Command>");
 	}
 
@@ -3648,8 +3427,6 @@ namespace kaanh
 	std::atomic_int32_t JCParam::jz_count = 0;
 	auto JZ::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JCParam param;
 
 		param.pm_target.resize(16, 0.0);
@@ -3658,47 +3435,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
-		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
+		set_jogc_input_param(this, params, target, param, param.jz_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			param.cor_system = std::stoi(params.at("cor"));
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.vel);
-
-			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.acc);
-
-			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.dec);
-
-			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.jz_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS);
-		}
 		target.param = param;
 
 	}
@@ -3732,8 +3470,7 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
-			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent.load()/100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -3769,7 +3506,7 @@ namespace kaanh
 
 		// 获取当前位姿矩阵 //
 		double pm_now[16];
-		target.model->generalMotionPool()[0].getMpm(pm_now);
+		param.tool->getPm(*param.wobj, pm_now);
 
 		// 保存下个周期的copy //
 		s_vc(6, p_next, p_now);
@@ -3787,7 +3524,8 @@ namespace kaanh
 			s_pm_dot_pm(pm_now, pm, param.pm_target.data());
 		}
 
-		target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		param.tool->setPm(*param.wobj, param.pm_target.data());
+		target.model->generalMotionPool().at(0).updMpm();
 
 		// 运动学反解 //
 		if (target.model->solverPool().at(0).kinPos())return -1;
@@ -3825,7 +3563,7 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JZ::collectNrt(PlanTarget &target)->void 
+	auto JZ::collectNrt(PlanTarget &target)->void
 	{
 		JCParam::jz_count = 0;
 		if (target.ret_code < 0)
@@ -3838,17 +3576,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"jz\">"
-			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"cor\" default=\"0\"/>"
-			"		<Param name=\"tool\" default=\"tool0\"/>"
-			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"vel_percent\" default=\"20\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGC_PARAM_STRING
 			"</Command>");
 	}
 
@@ -3857,8 +3585,6 @@ namespace kaanh
 	std::atomic_int32_t JCParam::jrx_count = 0;
 	auto JRX::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JCParam param;
 
 		param.pm_target.resize(16, 0.0);
@@ -3867,47 +3593,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
-		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
+		set_jogc_input_param(this, params, target, param, param.jrx_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			param.cor_system = std::stoi(params.at("cor"));
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.vel);
-
-			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.acc);
-
-			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.dec);
-
-			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.jrx_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS);
-		}
 		target.param = param;
 
 	}
@@ -3941,8 +3628,7 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
-			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent.load()/100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -3978,7 +3664,7 @@ namespace kaanh
 
 		// 获取当前位姿矩阵 //
 		double pm_now[16];
-		target.model->generalMotionPool()[0].getMpm(pm_now);
+		param.tool->getPm(*param.wobj, pm_now);
 
 		// 保存下个周期的copy //
 		s_vc(6, p_next, p_now);
@@ -3996,7 +3682,8 @@ namespace kaanh
 			s_pm_dot_pm(pm_now, pm, param.pm_target.data());
 		}
 
-		target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		param.tool->setPm(*param.wobj, param.pm_target.data());
+		target.model->generalMotionPool().at(0).updMpm();
 
 		// 运动学反解 //
 		if (target.model->solverPool().at(0).kinPos())return -1;
@@ -4034,7 +3721,7 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JRX::collectNrt(PlanTarget &target)->void 
+	auto JRX::collectNrt(PlanTarget &target)->void
 	{
 		JCParam::jrx_count = 0;
 		if (target.ret_code < 0)
@@ -4047,17 +3734,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"jrx\">"
-			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"cor\" default=\"0\"/>"
-			"		<Param name=\"tool\" default=\"tool0\"/>"
-			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"vel_percent\" default=\"20\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGC_PARAM_STRING
 			"</Command>");
 	}
 
@@ -4066,8 +3743,6 @@ namespace kaanh
 	std::atomic_int32_t JCParam::jry_count = 0;
 	auto JRY::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JCParam param;
 
 		param.pm_target.resize(16, 0.0);
@@ -4076,47 +3751,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
-		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
+		set_jogc_input_param(this, params, target, param, param.jry_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			param.cor_system = std::stoi(params.at("cor"));
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.vel);
-
-			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.acc);
-
-			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.dec);
-
-			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.jry_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS);
-		}
 		target.param = param;
 
 	}
@@ -4150,8 +3786,7 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
-			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent.load()/100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -4187,7 +3822,7 @@ namespace kaanh
 
 		// 获取当前位姿矩阵 //
 		double pm_now[16];
-		target.model->generalMotionPool()[0].getMpm(pm_now);
+		param.tool->getPm(*param.wobj, pm_now);
 
 		// 保存下个周期的copy //
 		s_vc(6, p_next, p_now);
@@ -4205,7 +3840,8 @@ namespace kaanh
 			s_pm_dot_pm(pm_now, pm, param.pm_target.data());
 		}
 
-		target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		param.tool->setPm(*param.wobj, param.pm_target.data());
+		target.model->generalMotionPool().at(0).updMpm();
 
 		// 运动学反解 //
 		if (target.model->solverPool().at(0).kinPos())return -1;
@@ -4243,7 +3879,7 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JRY::collectNrt(PlanTarget &target)->void 
+	auto JRY::collectNrt(PlanTarget &target)->void
 	{
 		JCParam::jry_count = 0;
 		if (target.ret_code < 0)
@@ -4256,17 +3892,7 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"jry\">"
-			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"cor\" default=\"0\"/>"
-			"		<Param name=\"tool\" default=\"tool0\"/>"
-			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"vel_percent\" default=\"20\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGC_PARAM_STRING
 			"</Command>");
 	}
 
@@ -4275,8 +3901,6 @@ namespace kaanh
 	std::atomic_int32_t JCParam::jrz_count = 0;
 	auto JRZ::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		auto c = target.controller;
 		JCParam param;
 
 		param.pm_target.resize(16, 0.0);
@@ -4285,47 +3909,8 @@ namespace kaanh
 		std::vector<std::pair<std::string, std::any>> ret;
 		target.ret = ret;
 
-		param.tool = &*target.model->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(params.at("tool"));
-		param.wobj = &*target.model->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(params.at("wobj"));
+		set_jogc_input_param(this, params, target, param, param.jrz_count);
 
-		for (auto &p : params)
-		{
-			param.increase_count = std::stoi(params.at("increase_count"));
-			param.cor_system = std::stoi(params.at("cor"));
-			auto velocity = std::stoi(params.at("vel_percent"));
-			velocity = std::max(std::min(100, velocity), 0);
-			param.vel_percent = velocity;
-
-			if (param.increase_count < 0 || param.increase_count>1e5)THROW_FILE_LINE("");
-
-			auto mat = target.model->calculator().calculateExpression(params.at("vel"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.vel);
-
-			mat = target.model->calculator().calculateExpression(params.at("acc"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.acc);
-
-			mat = target.model->calculator().calculateExpression(params.at("dec"));
-			if (mat.size() != 6)THROW_FILE_LINE("");
-			std::copy(mat.begin(), mat.end(), param.dec);
-
-			param.increase_status[param.moving_type] = std::max(std::min(1, std::stoi(params.at("direction"))), -1);
-		}
-
-		std::shared_ptr<aris::plan::PlanTarget> planptr = cs.currentExecuteTarget();
-
-		//当前有指令在执行//
-        if (planptr && planptr->plan != this)throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
-
-		if (param.jrz_count.exchange(param.increase_count))
-		{
-			target.option |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
-		}
-		else
-		{
-            std::fill(target.mot_options.begin(), target.mot_options.end(), NOT_CHECK_POS_FOLLOWING_ERROR | NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | USE_TARGET_POS);
-		}
 		target.param = param;
 
 	}
@@ -4359,8 +3944,7 @@ namespace kaanh
 		// calculate target pos and max vel //
 		for (int i = 0; i < 6; i++)
 		{
-			//max_vel[i] = param.vel[i] * 1.0 * param.vel_percent / 100.0;
-			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent * param.vel_percent / 100.0 / 100.0;
+			max_vel[i] = param.vel[i] * 1.0 * g_vel_percent.load()/100.0;
 			target_p[i] += aris::dynamic::s_sgn(param.increase_status[i]) * max_vel[i] * 1e-3;
 		}
 		// 梯形轨迹规划 calculate real value //
@@ -4396,7 +3980,7 @@ namespace kaanh
 
 		// 获取当前位姿矩阵 //
 		double pm_now[16];
-		target.model->generalMotionPool()[0].getMpm(pm_now);
+		param.tool->getPm(*param.wobj, pm_now);
 
 		// 保存下个周期的copy //
 		s_vc(6, p_next, p_now);
@@ -4414,7 +3998,8 @@ namespace kaanh
 			s_pm_dot_pm(pm_now, pm, param.pm_target.data());
 		}
 
-		target.model->generalMotionPool().at(0).setMpm(param.pm_target.data());
+		param.tool->setPm(*param.wobj, param.pm_target.data());
+		target.model->generalMotionPool().at(0).updMpm();
 
 		// 运动学反解 //
 		if (target.model->solverPool().at(0).kinPos())return -1;
@@ -4452,7 +4037,7 @@ namespace kaanh
 
 		return finished[param.moving_type];
 	}
-	auto JRZ::collectNrt(PlanTarget &target)->void 
+	auto JRZ::collectNrt(PlanTarget &target)->void
 	{
 		JCParam::jrz_count = 0;
 		if (target.ret_code < 0)
@@ -4465,20 +4050,9 @@ namespace kaanh
 	{
 		command().loadXmlStr(
 			"<Command name=\"jrz\">"
-			"	<GroupParam>"
-			"		<Param name=\"increase_count\" default=\"100\"/>"
-			"		<Param name=\"vel\" default=\"{0.2,0.2,0.2,0.25,0.25,0.25}\"/>"
-			"		<Param name=\"acc\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"dec\" default=\"{1,1,1,1,1,1}\"/>"
-			"		<Param name=\"cor\" default=\"0\"/>"
-			"		<Param name=\"tool\" default=\"tool0\"/>"
-			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"vel_percent\" default=\"20\"/>"
-			"		<Param name=\"direction\" default=\"1\"/>"
-			"	</GroupParam>"
+			JOGC_PARAM_STRING
 			"</Command>");
 	}
-
 
 	
 	// 力传感器信号测试 //
@@ -5084,6 +4658,8 @@ namespace kaanh
 			{
 				param.vel_percent = std::stoi(p.second);
 			}
+			//限制vel_percent在0~100之间//
+			param.vel_percent = std::max(std::min(param.vel_percent, 100), 0);
 		}
 		g_vel_percent.store(param.vel_percent);
 
@@ -5097,6 +4673,52 @@ namespace kaanh
 			"<Command name=\"setvel\">"
 			"	<GroupParam>"
 			"		<Param name=\"vel_percent\" abbreviation=\"p\" default=\"0\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
+	//调速//
+	struct UDVelParam
+	{
+		int up, down;
+	};
+	auto UDVel::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+	{
+		UDVelParam param;
+		for (auto &p : params)
+		{
+			if (p.first == "up")
+			{
+				param.up = std::stoi(p.second);
+				//限制up在0~50之间//
+				param.up = std::max(std::min(param.up, 50), 0);
+				auto temp = g_vel_percent.load() + param.up;
+				g_vel_percent.store(temp);
+			}
+			else if (p.first == "down")
+			{
+				param.down = std::stoi(p.second);
+				//限制down在0~50之间//
+				param.down = std::max(std::min(param.down, 50), 0);
+				auto temp = g_vel_percent.load() + param.down;
+				g_vel_percent.store(temp);
+			}	
+		}
+
+		std::vector<std::pair<std::string, std::any>> ret;
+		target.ret = ret;
+		target.option = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+	}
+	UDVel::UDVel(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"udvel\">"
+			"	<GroupParam>"
+			"		<UniqueParam>"
+			"			<Param name=\"up\" default=\"1\"/>"
+			"			<Param name=\"down\" default=\"1\"/>"
+			"		</UniqueParam>"
 			"	</GroupParam>"
 			"</Command>");
 	}
@@ -5196,9 +4818,9 @@ namespace kaanh
 		plan_root->planPool().add<kaanh::SetDriver>();
 		plan_root->planPool().add<kaanh::SaveConfig>();
 		plan_root->planPool().add<kaanh::SetVel>();
+		plan_root->planPool().add<kaanh::UDVel>();
 		plan_root->planPool().add<kaanh::SetCT>();
 
 		return plan_root;
 	}
-
 }

@@ -387,6 +387,14 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(SetVel);
 	};
 
+	class UDVel : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
+		explicit UDVel(const std::string &name = "UDVel_plan");
+		ARIS_REGISTER_TYPE(UDVel);
+	};
+
 	class SetCT : public aris::plan::Plan
 	{
 	public:
