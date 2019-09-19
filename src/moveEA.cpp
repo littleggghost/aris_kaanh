@@ -19,8 +19,8 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 		"	<SyncManagerPoolObject>"
         "       <SyncManager is_tx=\"false\"/>"
         "       <SyncManager is_tx=\"true\"/>"
-        "       <SyncManager is_tx=\"false\"/>"
-        "           <Pdo index=\"0x1600\">"
+        "       <SyncManager is_tx=\"false\">"
+        "           <Pdo index=\"0x1600\" is_tx=\"false\">"
         "               <PdoEntry name=\"entry\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
         "               <PdoEntry name=\"entry\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
         "               <PdoEntry name=\"entry\" index=\"0x607a\" subindex=\"0x00\" size=\"32\"/>"
@@ -30,7 +30,7 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
         "           </Pdo>"
         "       </SyncManager>"
         "       <SyncManager is_tx=\"true\">"
-        "           <Pdo name=\"pdo\" index=\"0x1a00\">"
+        "           <Pdo index=\"0x1a00\" is_tx=\"true\">"
         "               <PdoEntry name=\"entry\" index=\"0x603f\" subindex=\"0x00\" size=\"16\"/>"
         "               <PdoEntry name=\"entry\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
         "               <PdoEntry name=\"entry\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
@@ -44,7 +44,7 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
         "           </Pdo>"
         "       </SyncManager>"
 		"	</SyncManagerPoolObject>"
-		"</EthercatMotion>";
+        "</EthercatMotion>";
 
     controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
 	return controller;
@@ -90,10 +90,8 @@ auto MoveJS::prepairNrt(const std::map<std::string, std::string> &params, PlanTa
 		}
 	}
 	target.param = param;
-
-	std::fill(target.mot_options.begin(), target.mot_options.end(),
-		Plan::USE_TARGET_POS);
-
+    std::string ret = "ok";
+    target.ret = ret;
 }
 auto MoveJS::executeRT(PlanTarget &target)->int
 {
@@ -102,17 +100,22 @@ auto MoveJS::executeRT(PlanTarget &target)->int
 	auto totaltime = static_cast<int32_t>(param.timenum * time);
 	static double begin_pjs;
 	static double step_pjs;
+    // 访问主站 //
+    auto controller = target.controller;
+    auto &cout = controller->mout();
 
 	if ((1 <= target.count) && (target.count <= time / 2))
 	{
 		// 获取当前起始点位置 //
 		if (target.count == 1)
 		{
+            cout <<"1"<< std::endl;
 			begin_pjs = target.controller->motionPool()[0].actualPos();
 			step_pjs = target.controller->motionPool()[0].actualPos();
 		}
 		step_pjs = begin_pjs + param.j1 * (1 - std::cos(2 * PI*target.count / time)) / 2;
 		target.controller->motionPool().at(0).setTargetPos(step_pjs);
+        cout <<"2"<< std::endl;
 	}
 	else if ((time / 2 < target.count) && (target.count <= totaltime - time / 2))
 	{
@@ -138,13 +141,8 @@ auto MoveJS::executeRT(PlanTarget &target)->int
 		target.controller->motionPool().at(0).setTargetPos(step_pjs);
 	}
 
-	if (target.model->solverPool().at(1).kinPos())return -1;
-
-	// 访问主站 //
-	auto controller = target.controller;
 
 	// 打印电流 //
-	auto &cout = controller->mout();
 	if (target.count % 100 == 0)
 	{
 		cout << "pos"  << ":" << controller->motionAtAbs(0).actualPos() << "  ";
@@ -319,9 +317,11 @@ int main(int argc, char *argv[])
 
 	//cs代表成员函数的引用，aris是头文件，server是命名空间，ControlServer是结构体
     auto&cs = aris::server::ControlServer::instance();
+    std::cout<<"1"<<std::endl;
     cs.resetController(createControllerRokaeXB4().release());
+    std::cout<<"2"<<std::endl;
     cs.resetPlanRoot(createPlanRootRokaeXB4().release());
-
+    std::cout<<"3"<<std::endl;
     std::cout<<"start controller server"<<std::endl;
 	//启动线程
 	cs.start();
