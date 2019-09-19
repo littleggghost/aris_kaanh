@@ -11,37 +11,42 @@ auto createControllerRokaeXB4()->std::unique_ptr<aris::control::Controller>
 {
 	std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);
 	std::string xml_str =
-		"<EthercatMotion phy_id=\"0\" product_code=\"0x60380007\""
-		" vendor_id=\"0x0000066F\" revision_num=\"0x00010000\" dc_assign_activate=\"0x0300\""
-		" min_pos=\"0.01\" max_pos=\"0.26\" max_vel=\"0.125\" min_vel=\"-0.125\""
-		" max_acc=\"2.0\" min_acc=\"-2.0\" max_pos_following_error=\"0.005\" max_vel_following_error=\"0.005\""
-		" home_pos=\"0\" pos_factor=\"-3355443200\" pos_offset=\"0.0\">"
+        "<EthercatMotion phy_id=\"0\" product_code=\"0x20181302\""
+        " vendor_id=\"0x66668888\" revision_num=\"0x20181011\" dc_assign_activate=\"0x0300\""
+        " min_pos=\"-536870\" max_pos=\"536870\" max_vel=\"6.28\" min_vel=\"-6.28\""
+        " max_acc=\"31.4\" min_acc=\"-31.4\" max_pos_following_error=\"0.1\" max_vel_following_error=\"0.01\""
+        " home_pos=\"0\" pos_factor=\"4000\" pos_offset=\"0.0\">"
 		"	<SyncManagerPoolObject>"
-		"		<SyncManager is_tx=\"false\"/>"
-		"		<SyncManager is_tx=\"true\"/>"
-		"		<SyncManager is_tx=\"false\">"
-		"			<Pdo index=\"0x1600\" is_tx=\"false\">"
-		"				<PdoEntry name=\"control_word\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
-		"				<PdoEntry name=\"mode_of_operation\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
-		"				<PdoEntry name=\"target_pos\" index=\"0x607A\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"target_vel\" index=\"0x60FF\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"offset_vel\" index=\"0x60B1\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"targer_tor\" index=\"0x6071\" subindex=\"0x00\" size=\"16\"/>"
-		"				<PdoEntry name=\"offset_tor\" index=\"0x60B2\" subindex=\"0x00\" size=\"16\"/>"
-		"			</Pdo>"
-		"		</SyncManager>"
-		"		<SyncManager is_tx=\"true\">"
-		"			<Pdo index=\"0x1A00\" is_tx=\"true\">"
-		"				<PdoEntry name=\"status_word\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
-		"				<PdoEntry name=\"mode_of_display\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
-		"				<PdoEntry name=\"pos_actual_value\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"vel_actual_value\" index=\"0x606c\" subindex=\"0x00\" size=\"32\"/>"
-		"				<PdoEntry name=\"cur_actual_value\" index=\"0x6078\" subindex=\"0x00\" size=\"16\"/>"
-		"			</Pdo>"
-		"		</SyncManager>"
+        "       <SyncManager is_tx=\"false\"/>"
+        "       <SyncManager is_tx=\"true\"/>"
+        "       <SyncManager is_tx=\"false\"/>"
+        "           <Pdo index=\"0x1600\">"
+        "               <PdoEntry name=\"entry\" index=\"0x6040\" subindex=\"0x00\" size=\"16\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x6060\" subindex=\"0x00\" size=\"8\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x607a\" subindex=\"0x00\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60b8\" subindex=\"0x00\" size=\"16\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60fe\" subindex=\"0x01\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60fe\" subindex=\"0x02\" size=\"32\"/>"
+        "           </Pdo>"
+        "       </SyncManager>"
+        "       <SyncManager is_tx=\"true\">"
+        "           <Pdo name=\"pdo\" index=\"0x1a00\">"
+        "               <PdoEntry name=\"entry\" index=\"0x603f\" subindex=\"0x00\" size=\"16\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x6041\" subindex=\"0x00\" size=\"16\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x6061\" subindex=\"0x00\" size=\"8\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x6064\" subindex=\"0x00\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60b9\" subindex=\"0x00\" size=\"16\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60ba\" subindex=\"0x00\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60bb\" subindex=\"0x00\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60bc\" subindex=\"0x00\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60bd\" subindex=\"0x00\" size=\"32\"/>"
+        "               <PdoEntry name=\"entry\" index=\"0x60fd\" subindex=\"0x00\" size=\"32\"/>"
+        "           </Pdo>"
+        "       </SyncManager>"
 		"	</SyncManagerPoolObject>"
 		"</EthercatMotion>";
-	controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
+
+    controller->slavePool().add<aris::control::EthercatMotion>().loadXmlStr(xml_str);
 	return controller;
 };
 
@@ -285,243 +290,6 @@ MoveEAP::MoveEAP(const std::string &name) :Plan(name)
 }
 
 
-// 电缸电流控制 //
-struct MoveEACParam
-{
-	double begin_pos, pos, static_vel, kp_p, kp_v, ki_v;
-	bool ab;
-};
-static std::atomic_bool enable_moveEAC = true;
-auto MoveEAC::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
-{
-	MoveEACParam param;
-	for (auto &p : params)
-	{
-		if (p.first == "pos")
-		{
-			param.pos = std::stod(p.second);
-		}
-		else if (p.first == "static_vel")
-		{
-			param.static_vel = std::stod(p.second);
-		}
-		else if (p.first == "ab")
-		{
-			param.ab = std::stod(p.second);
-		}
-		else if (p.first == "kp_p")
-		{
-			param.kp_p = std::stod(p.second);
-		}
-		else if (p.first == "kp_v")
-		{
-			param.kp_v = std::stod(p.second);
-		}
-		else if (p.first == "ki_v")
-		{
-			param.ki_v = std::stod(p.second);
-		}
-	}
-	target.param = param;
-	//std::fill(target.mot_options.begin(), target.mot_options.end(), Plan::USE_TARGET_POS);
-
-}
-auto MoveEAC::executeRT(PlanTarget &target)->int
-{
-	auto &param = std::any_cast<MoveEACParam&>(target.param);
-	// 访问主站 //
-	auto controller = target.controller;
-	bool is_running{ true };
-	bool ds_is_all_finished{ true };
-	bool md_is_all_finished{ true };
-
-	//第一个周期，将目标电机的控制模式切换到电流控制模式
-	if (target.count == 1)
-	{
-		is_running = true;
-		controller->motionPool().at(0).setModeOfOperation(10);	//切换到电流控制
-	}
-
-	//最后一个周期将目标电机去使能
-	if (!enable_moveEAC)
-	{
-		is_running = false;
-	}
-	if (!is_running)
-	{
-		auto ret = controller->motionPool().at(0).disable();
-		if (ret)
-		{
-			ds_is_all_finished = false;
-		}
-	}
-
-	//将目标电机由电流模式切换到位置模式
-	if (!is_running&&ds_is_all_finished)
-	{
-		auto &cm = controller->motionPool().at(0);
-		controller->motionPool().at(0).setModeOfOperation(8);
-		auto ret = cm.mode(8);
-		cm.setTargetPos(cm.actualPos());
-		if (ret)
-		{
-			md_is_all_finished = false;
-		}
-	}
-
-	//标记采用那一段公式计算压力值//
-	int phase;
-	double fore_cur = 0, force = 0, ft_pid;
-
-	//力控算法//
-	if (is_running)
-	{
-		//参数定义//		
-		double pt, pa, vt, va, voff, ft, foff;
-		static double v_integral = 0.0;
-		pa = controller->motionAtAbs(0).actualPos();
-		va = controller->motionAtAbs(0).actualVel();
-		pt = param.pos;
-		vt = 0.0;
-		voff = vt * 1000;
-		foff = 0.0;
-
-		//位置环//
-		{
-			vt = param.kp_p*(pt - pa) + voff;
-			//限制速度的范围在-0.01~0.01之间
-			vt = std::max(-0.01, vt);
-			vt = std::min(0.01, vt);
-		}
-
-		//速度环//
-		{
-			v_integral = v_integral + vt - va;
-			ft = param.kp_v*(vt - va) + param.ki_v * v_integral + foff;
-			//限制电流的范围在-100~100(千分数：额定电流是1000)之间
-			ft = std::max(-100.0, ft);
-			ft = std::min(100.0, ft);
-			ft_pid = ft;
-		}
-
-		//根据电流值换算压力值//
-		{
-			double ff = 0, fc, fg, fs;
-			fc = controller->motionAtAbs(0).actualCur() * ea_index;
-			fg = ea_gra;
-			fs = std::abs(ea_c * ea_index);
-			if (std::abs(controller->motionAtAbs(0).actualVel()) > param.static_vel)
-			{
-				if (controller->motionAtAbs(0).actualVel() > 0)
-				{
-					ff = (-ea_a * controller->motionAtAbs(0).actualVel()*controller->motionAtAbs(0).actualVel() + ea_b * controller->motionAtAbs(0).actualVel() + ea_c) * ea_index;
-					force = ff + fg + fc;
-					phase = 1;
-					fore_cur = (-ff - fg) / ea_index;
-					//fore_cur = (1810 * a * 1000 * 1000 - ff - fg) / ea_index;
-				}
-				else
-				{
-					ff = (ea_a * controller->motionAtAbs(0).actualVel()*controller->motionAtAbs(0).actualVel() + ea_b * controller->motionAtAbs(0).actualVel() - ea_c) * ea_index;
-					force = ff + fg + fc;
-					phase = 2;
-					fore_cur = (-ff - fg) / ea_index;
-				}
-			}
-			else
-			{
-				if (std::abs(fc + fg) <= fs)
-				{
-					force = 0;
-					phase = 3;
-					fore_cur = 0.0;
-				}
-				else
-				{
-					if (fc + fg < -fs)
-					{
-						force = fc + fg + fs;
-						phase = 4;
-						fore_cur = (-fg - fs) / ea_index;
-					}
-					else
-					{
-						force = fc + fg - fs;;
-						phase = 5;
-						fore_cur = (-fg + fs) / ea_index;;
-					}
-				}
-			}
-			fore_cur = std::max(-100.0, fore_cur);
-			fore_cur = std::min(100.0, fore_cur);
-
-		}
-
-		double weight = 1;
-		controller->motionAtAbs(0).setTargetCur(ft_pid + weight * fore_cur);
-	}
-
-	// print //
-	auto &cout = controller->mout();
-	if (target.count % 100 == 0)
-	{
-		cout << phase << "  "
-			<< force << "  "
-			<< fore_cur << "  "
-			<< ft_pid << "  "
-			<< controller->motionAtAbs(0).actualPos() << "  "
-			<< controller->motionAtAbs(0).actualVel() << "  "
-			<< controller->motionAtAbs(0).actualCur() << "  "
-			<< std::endl;
-	}
-
-	// log //
-	auto &lout = controller->lout();
-	{
-		lout << phase << "  "
-			<< force << "  "
-			<< fore_cur << "  "
-			<< ft_pid << "  "
-			<< controller->motionAtAbs(0).actualPos() << "  "
-			<< controller->motionAtAbs(0).actualVel() << "  "
-			<< controller->motionAtAbs(0).actualCur() << "  "
-			<< std::endl;
-	}
-
-	return (!is_running&&ds_is_all_finished&&md_is_all_finished) ? 0 : 1;
-}
-auto MoveEAC::collectNrt(PlanTarget &target)->void {}
-MoveEAC::MoveEAC(const std::string &name) :Plan(name)
-{
-	command().loadXmlStr(
-		"<Command name=\"moveEAC\">"
-		"	<GroupParam>"
-		"		<Param name=\"pos\" default=\"0.01\"/>"
-		"		<Param name=\"static_vel\" default=\"0.001\"/>"
-		"		<Param name=\"ab\" default=\"0\"/>"
-		"		<Param name=\"kp_p\" default=\"0.1\"/>"
-		"		<Param name=\"kp_v\" default=\"5\"/>"
-		"		<Param name=\"ki_v\" default=\"0.1\"/>"
-		"	</GroupParam>"
-		"</Command>");
-}
-
-
-// moveStop，切出电流控制 //
-auto MoveStop::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
-{
-	enable_moveEAC = false;
-	target.option = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
-
-}
-MoveStop::MoveStop(const std::string &name) :Plan(name)
-{
-	command().loadXmlStr(
-		"<Command name=\"moveStop\">"
-		"</Command>");
-}
-
-
 // 将创建的轨迹添加到轨迹规划池planPool中 //
 auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>
 {
@@ -536,8 +304,6 @@ auto createPlanRootRokaeXB4()->std::unique_ptr<aris::plan::PlanRoot>
 	rs.command().findParam("pos")->setDefaultValue("{0.01}");
 	plan_root->planPool().add<MoveJS>();
 	plan_root->planPool().add<MoveEAP>();
-	plan_root->planPool().add<MoveEAC>();
-	plan_root->planPool().add<MoveStop>();
 	return plan_root;
 }
 
