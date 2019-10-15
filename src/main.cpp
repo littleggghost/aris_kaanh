@@ -18,10 +18,11 @@ int main(int argc, char *argv[])
     /*
     aris::control::EthercatMaster mst;
     mst.scan();
-    std::cout << mst.xmlString() << std::endl;
+    std::cout << mst.slavePool().size() << std::endl;
     */
 
     cs.resetController(kaanh::createController().release());
+    cs.resetPlanRoot(kaanh::createPlanRoot().release());
 	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
 	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
 	cs.resetSensorRoot(new aris::sensor::SensorRoot);

@@ -17,6 +17,7 @@ namespace kaanh
 	constexpr double PI = 3.141592653589793;
 
     auto createController()->std::unique_ptr<aris::control::Controller>;
+    auto createPlanRoot()->std::unique_ptr<aris::plan::PlanRoot>;
 
     class FSSignal : public aris::plan::Plan
     {

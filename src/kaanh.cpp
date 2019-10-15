@@ -14,13 +14,12 @@ namespace kaanh
 {
     auto createController()->std::unique_ptr<aris::control::Controller>	/*函数返回的是一个类指针，指针指向Controller,controller的类型是智能指针std::unique_ptr*/
     {
-        std::unique_ptr<aris::control::Controller> controller(aris::robot::createControllerRokaeXB4());/*创建std::unique_ptr实例*/
-        controller->slavePool().clear();	//清除slavePool中的元素，后面重新添加
+        std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);/*创建std::unique_ptr实例*/
 
-        //ATI force sensor//
+        //force sensor//
         std::string xml_str =
             "<EthercatSlave phy_id=\"0\" product_code=\"0x000c7011\""
-            " vendor_id=\"0x000fffff\" revision_num=\"0x00000001\" dc_assign_activate=\"0x00\">"
+            " vendor_id=\"0x000fffff\" revision_num=\"0x00000001\" dc_assign_activate=\"0x300\">"
             "	<SyncManagerPoolObject>"
             "		<SyncManager is_tx=\"false\"/>"
             "		<SyncManager is_tx=\"true\"/>"
@@ -67,6 +66,7 @@ namespace kaanh
             "		</SyncManager>"
             "	</SyncManagerPoolObject>"
             "</EthercatSlave>";
+
         controller->slavePool().add<aris::control::EthercatSlave>().loadXmlStr(xml_str);
 
         /*
@@ -74,8 +74,9 @@ namespace kaanh
         controller->slavePool().back().setPhyId(0);
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanInfoForCurrentSlave();
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
-        dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x300);
+        dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x00);
         */
+
         return controller;
     }
 
@@ -88,82 +89,66 @@ namespace kaanh
           float Fx,Fy,Fz,Mx,My,Mz;
       };
       auto FSSignal::prepairNrt(const std::map<std::string, std::string> &params, PlanTarget &target)->void
+      {
+          FSParam param;
+          for (auto &p : params)
           {
-              FSParam param;
-              for (auto &p : params)
+              if (p.first == "real_data")
               {
-                  if (p.first == "real_data")
-                  {
-                      param.real_data = std::stod(p.second);
-                  }
-                  else if (p.first == "time")
-                  {
-                      param.time = std::stoi(p.second);
-                  }
+                  param.real_data = std::stod(p.second);
               }
-
-              param.Fx = 0.0;
-              param.Fy = 0.0;
-              param.Fz = 0.0;
-              param.Mx = 0.0;
-              param.My = 0.0;
-              param.Mz = 0.0;
-              target.param = param;
-
-  #ifdef WIN32
-              target.option |=
-
-                  Plan::NOT_CHECK_POS_MIN |
-                  Plan::NOT_CHECK_POS_MAX |
-                  Plan::NOT_CHECK_POS_CONTINUOUS |
-                  Plan::NOT_CHECK_POS_CONTINUOUS_AT_START |
-                  Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER |
-                  Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER_AT_START |
-                  Plan::NOT_CHECK_POS_FOLLOWING_ERROR |
-                  Plan::NOT_CHECK_VEL_MIN |
-                  Plan::NOT_CHECK_VEL_MAX |
-                  Plan::NOT_CHECK_VEL_CONTINUOUS |
-                  Plan::NOT_CHECK_VEL_CONTINUOUS_AT_START |
-                  Plan::NOT_CHECK_VEL_FOLLOWING_ERROR;
-  #endif
+              else if (p.first == "time")
+              {
+                  param.time = std::stoi(p.second);
+              }
           }
+
+          param.Fx = 0.0;
+          param.Fy = 0.0;
+          param.Fz = 0.0;
+          param.Mx = 0.0;
+          param.My = 0.0;
+          param.Mz = 0.0;
+
+          target.param = param;
+          std::vector<std::pair<std::string, std::any>> ret;
+          target.ret = ret;
+
+      }
       auto FSSignal::executeRT(PlanTarget &target)->int
           {
               auto &param = std::any_cast<FSParam&>(target.param);
               // 访问主站 //
               auto controller = dynamic_cast<aris::control::EthercatController*>(target.controller);
-              if (param.real_data)
-              {
-                  controller->slavePool().at(6).readPdo(0x6030, 0x00, &param.datanum ,16);
-                  controller->slavePool().at(6).readPdo(0x6030, 0x01, &param.Fx ,32);
-                  controller->slavePool().at(6).readPdo(0x6030, 0x02, &param.Fy, 32);
-                  controller->slavePool().at(6).readPdo(0x6030, 0x03, &param.Fz, 32);
-                  controller->slavePool().at(6).readPdo(0x6030, 0x04, &param.Mx, 32);
-                  controller->slavePool().at(6).readPdo(0x6030, 0x05, &param.My, 32);
-                  controller->slavePool().at(6).readPdo(0x6030, 0x06, &param.Mz, 32);
-              }
-              else
-              {
-                  controller->slavePool().at(6).readPdo(0x6030, 0x00, &param.datanum ,16);
-                  controller->slavePool().at(6).readPdo(0x6020, 0x01, &param.Fx, 32);
-                  controller->slavePool().at(6).readPdo(0x6020, 0x02, &param.Fy, 32);
-                  controller->slavePool().at(6).readPdo(0x6020, 0x03, &param.Fz, 32);
-                  controller->slavePool().at(6).readPdo(0x6020, 0x04, &param.Mx, 32);
-                  controller->slavePool().at(6).readPdo(0x6020, 0x05, &param.My, 32);
-                  controller->slavePool().at(6).readPdo(0x6020, 0x06, &param.Mz, 32);
-              }
+              int fx, fy, fz, mx, my, mz;
+
+
+              controller->slavePool().at(0).readPdo(0x6020, 0x11, &fx ,32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x12, &fy, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x13, &fz, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x14, &mx, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x15, &my, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x16, &mz, 32);
+
 
               //print//
               auto &cout = controller->mout();
               if (target.count % 100 == 0)
               {
-                  cout << std::setw(6) << param.datanum << "  ";
+                  cout << std::setw(6) << fx << "  ";
+                  cout << std::setw(6) << fy << "  ";
+                  cout << std::setw(6) << fz << "  ";
+                  cout << std::setw(6) << mx << "  ";
+                  cout << std::setw(6) << my << "  ";
+                  cout << std::setw(6) << mz << "  ";
+                  /*
                   cout << std::setw(6) << param.Fx << "  ";
                   cout << std::setw(6) << param.Fy << "  ";
                   cout << std::setw(6) << param.Fz << "  ";
                   cout << std::setw(6) << param.Mx << "  ";
                   cout << std::setw(6) << param.My << "  ";
                   cout << std::setw(6) << param.Mz << "  ";
+                  */
                   cout << std::endl;
                   cout << "----------------------------------------------------" << std::endl;
               }
