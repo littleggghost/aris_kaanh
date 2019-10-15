@@ -121,34 +121,57 @@ namespace kaanh
               // 访问主站 //
               auto controller = dynamic_cast<aris::control::EthercatController*>(target.controller);
               int fx, fy, fz, mx, my, mz;
+              bool is_true = true;
+              bool is_false = false;
 
 
+              if(target.count == 1)
+              {
+                  controller->slavePool().at(0).writePdo(0x7010, 0x01, &is_true, 1);
+                  controller->slavePool().at(0).writePdo(0x7010, 0x02, &is_false, 1);
+                  //controller->slavePool().at(0).writePdo(0x7010, 0x03, &is_false, 1);
+                  //controller->slavePool().at(0).writePdo(0x7010, 0x04, &is_false, 1);
+                  //controller->slavePool().at(0).writePdo(0x7010, 0x05, &is_false, 1);
+                  //controller->slavePool().at(0).writePdo(0x7010, 0x06, &is_false, 1);
+                  //controller->slavePool().at(0).writePdo(0x7010, 0x07, &is_false, 1);
+                  //controller->slavePool().at(0).writePdo(0x7010, 0x08, &is_false, 1);
+              }
+
+              /*
               controller->slavePool().at(0).readPdo(0x6020, 0x11, &fx ,32);
               controller->slavePool().at(0).readPdo(0x6020, 0x12, &fy, 32);
               controller->slavePool().at(0).readPdo(0x6020, 0x13, &fz, 32);
               controller->slavePool().at(0).readPdo(0x6020, 0x14, &mx, 32);
               controller->slavePool().at(0).readPdo(0x6020, 0x15, &my, 32);
               controller->slavePool().at(0).readPdo(0x6020, 0x16, &mz, 32);
-
+              */
+              controller->slavePool().at(0).readPdo(0x6020, 0x11, &param.Fx ,32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x12, &param.Fy, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x13, &param.Fz, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x14, &param.Mx, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x15, &param.My, 32);
+              controller->slavePool().at(0).readPdo(0x6020, 0x16, &param.Mz, 32);
 
               //print//
               auto &cout = controller->mout();
               if (target.count % 100 == 0)
               {
+                  /*
                   cout << std::setw(6) << fx << "  ";
                   cout << std::setw(6) << fy << "  ";
                   cout << std::setw(6) << fz << "  ";
                   cout << std::setw(6) << mx << "  ";
                   cout << std::setw(6) << my << "  ";
                   cout << std::setw(6) << mz << "  ";
-                  /*
+                  */
+
                   cout << std::setw(6) << param.Fx << "  ";
                   cout << std::setw(6) << param.Fy << "  ";
                   cout << std::setw(6) << param.Fz << "  ";
                   cout << std::setw(6) << param.Mx << "  ";
                   cout << std::setw(6) << param.My << "  ";
                   cout << std::setw(6) << param.Mz << "  ";
-                  */
+
                   cout << std::endl;
                   cout << "----------------------------------------------------" << std::endl;
               }
