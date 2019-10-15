@@ -15,6 +15,12 @@ int main(int argc, char *argv[])
 	auto&cs = aris::server::ControlServer::instance();
 	auto port = argc < 2 ? 5866 : std::stoi(argv[1]);
 
+    /*
+    aris::control::EthercatMaster mst;
+    mst.scan();
+    std::cout << mst.xmlString() << std::endl;
+    */
+
     cs.resetController(kaanh::createController().release());
 	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
 	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);

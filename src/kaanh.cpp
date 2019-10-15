@@ -20,39 +20,62 @@ namespace kaanh
         //ATI force sensor//
         std::string xml_str =
             "<EthercatSlave phy_id=\"0\" product_code=\"0x000c7011\""
-            " vendor_id=\"1048575\" revision_num=\"0x00000001\" dc_assign_activate=\"0x00\">"
+            " vendor_id=\"0x000fffff\" revision_num=\"0x00000001\" dc_assign_activate=\"0x00\">"
             "	<SyncManagerPoolObject>"
             "		<SyncManager is_tx=\"false\"/>"
             "		<SyncManager is_tx=\"true\"/>"
             "		<SyncManager is_tx=\"false\">"
             "			<Pdo index=\"0x1601\" is_tx=\"false\">"
-            "				<PdoEntry name=\"Control_1\" index=\"0x7010\" subindex=\"0x01\" size=\"32\"/>"
-            "				<PdoEntry name=\"Control_2\" index=\"0x7010\" subindex=\"0x02\" size=\"32\"/>"
+            "				<PdoEntry name=\"led_1\" index=\"0x7010\" subindex=\"0x01\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_2\" index=\"0x7010\" subindex=\"0x02\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_3\" index=\"0x7010\" subindex=\"0x03\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_4\" index=\"0x7010\" subindex=\"0x04\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_5\" index=\"0x7010\" subindex=\"0x05\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_6\" index=\"0x7010\" subindex=\"0x06\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_7\" index=\"0x7010\" subindex=\"0x07\" size=\"1\"/>"
+            "				<PdoEntry name=\"led_8\" index=\"0x7010\" subindex=\"0x08\" size=\"1\"/>"
+            "				<PdoEntry name=\"entryname\" index=\"0x0000\" subindex=\"0x00\" size=\"8\"/>"
             "			</Pdo>"
             "		</SyncManager>"
             "		<SyncManager is_tx=\"true\">"
             "			<Pdo index=\"0x1A00\" is_tx=\"true\">"
-            "				<PdoEntry name=\"Int_Input_Fx\" index=\"0x6000\" subindex=\"0x01\" size=\"32\"/>"
-            "				<PdoEntry name=\"Int_Input_Fy\" index=\"0x6000\" subindex=\"0x02\" size=\"32\"/>"
-            "				<PdoEntry name=\"Int_Input_Fz\" index=\"0x6000\" subindex=\"0x03\" size=\"32\"/>"
-            "				<PdoEntry name=\"Int_Input_Mx\" index=\"0x6000\" subindex=\"0x04\" size=\"32\"/>"
-            "				<PdoEntry name=\"Int_Input_My\" index=\"0x6000\" subindex=\"0x05\" size=\"32\"/>"
-            "				<PdoEntry name=\"Int_Input_Mz\" index=\"0x6000\" subindex=\"0x06\" size=\"32\"/>"
-            "				<PdoEntry name=\"Status_Code\" index=\"0x6010\" subindex=\"0x00\" size=\"32\"/>"
-            "				<PdoEntry name=\"Sample_Counter\" index=\"0x6020\" subindex=\"0x00\" size=\"32\"/>"
+            "				<PdoEntry name=\"switch_1\" index=\"0x6000\" subindex=\"0x01\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_2\" index=\"0x6000\" subindex=\"0x02\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_3\" index=\"0x6000\" subindex=\"0x03\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_4\" index=\"0x6000\" subindex=\"0x04\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_5\" index=\"0x6000\" subindex=\"0x05\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_6\" index=\"0x6000\" subindex=\"0x06\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_7\" index=\"0x6000\" subindex=\"0x07\" size=\"1\"/>"
+            "				<PdoEntry name=\"switch_8\" index=\"0x6000\" subindex=\"0x08\" size=\"1\"/>"
+            "				<PdoEntry name=\"entryname\" index=\"0x0000\" subindex=\"0x00\" size=\"8\"/>"
+            "			</Pdo>"
+            "			<Pdo index=\"0x1A02\" is_tx=\"true\">"
+            "				<PdoEntry name=\"underrange\" index=\"0x6020\" subindex=\"0x01\" size=\"1\"/>"
+            "				<PdoEntry name=\"overrange\" index=\"0x6020\" subindex=\"0x02\" size=\"1\"/>"
+            "				<PdoEntry name=\"limit_1\" index=\"0x6020\" subindex=\"0x03\" size=\"2\"/>"
+            "				<PdoEntry name=\"limit_2\" index=\"0x6020\" subindex=\"0x05\" size=\"2\"/>"
+            "				<PdoEntry name=\"entryname\" index=\"0x0000\" subindex=\"0x00\" size=\"8\"/>"
+            "				<PdoEntry name=\"txpdo_state\" index=\"0x1802\" subindex=\"0x07\" size=\"1\"/>"
+            "				<PdoEntry name=\"txpdo_toggle\" index=\"0x1802\" subindex=\"0x09\" size=\"1\"/>"
+            "				<PdoEntry name=\"fx\" index=\"0x6020\" subindex=\"0x11\" size=\"32\"/>"
+            "				<PdoEntry name=\"fy\" index=\"0x6020\" subindex=\"0x12\" size=\"32\"/>"
+            "				<PdoEntry name=\"fz\" index=\"0x6020\" subindex=\"0x13\" size=\"32\"/>"
+            "				<PdoEntry name=\"mx\" index=\"0x6020\" subindex=\"0x14\" size=\"32\"/>"
+            "				<PdoEntry name=\"my\" index=\"0x6020\" subindex=\"0x15\" size=\"32\"/>"
+            "				<PdoEntry name=\"mz\" index=\"0x6020\" subindex=\"0x16\" size=\"32\"/>"
             "			</Pdo>"
             "		</SyncManager>"
             "	</SyncManagerPoolObject>"
             "</EthercatSlave>";
         controller->slavePool().add<aris::control::EthercatSlave>().loadXmlStr(xml_str);
 
-/*
+        /*
         controller->slavePool().add<aris::control::EthercatSlave>();
         controller->slavePool().back().setPhyId(0);
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanInfoForCurrentSlave();
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x300);
-*/
+        */
         return controller;
     }
 
