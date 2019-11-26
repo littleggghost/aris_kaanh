@@ -26,37 +26,4 @@ public:
 };
 
 
-class MoveEAP : public aris::plan::Plan
-{
-public:
-	auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-	auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-	auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-	explicit MoveEAP(const std::string &name = "MoveEAP_plan");
-	ARIS_REGISTER_TYPE(MoveEAP);
-};
-
-
-class MoveEAC : public aris::plan::Plan
-{
-public:
-	double tempforce;
-	auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-	auto virtual executeRT(aris::plan::PlanTarget &target)->int;
-	auto virtual collectNrt(aris::plan::PlanTarget &target)->void;
-
-	explicit MoveEAC(const std::string &name = "MoveEAC_plan");
-	ARIS_REGISTER_TYPE(MoveEAC);
-};
-
-class MoveStop : public aris::plan::Plan
-{
-public:
-	auto virtual prepairNrt(const std::map<std::string, std::string> &params, aris::plan::PlanTarget &target)->void;
-	explicit MoveStop(const std::string &name = "MoveStop_plan");
-	ARIS_REGISTER_TYPE(MoveStop);
-};
-
-
 #endif
