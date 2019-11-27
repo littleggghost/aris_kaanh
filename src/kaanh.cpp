@@ -94,7 +94,7 @@ namespace kaanh
         dynamic_cast<aris::control::Motor&>(controller->slavePool()[3]).setPosOffset(0.65575523199999997);
         dynamic_cast<aris::control::Motor&>(controller->slavePool()[4]).setPosOffset(-1.49538803280913);
         dynamic_cast<aris::control::Motor&>(controller->slavePool()[5]).setPosOffset(-1.76544794265974);
-		
+/*
         for(int i=0; i<6; i++)
         {
              dynamic_cast<aris::control::EthercatMotor&>(controller->slavePool()[i]).setDcAssignActivate(0x300);
@@ -116,6 +116,7 @@ namespace kaanh
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanInfoForCurrentSlave();
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).scanPdoForCurrentSlave();
         dynamic_cast<aris::control::EthercatSlave&>(controller->slavePool().back()).setDcAssignActivate(0x00);
+*/
 #endif
 
 		return controller;
