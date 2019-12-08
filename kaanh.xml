@@ -1,8 +1,8 @@
 <ControlServer>
     <InterfacePoolObject name="object_pool">
-        <WebInterface>
+        <ProInterface>
             <Socket name="socket" connect_type="WEB" port="5866"/>
-        </WebInterface>
+        </ProInterface>
         <WebInterface>
             <Socket name="socket" connect_type="TCP" port="5867"/>
         </WebInterface>
@@ -574,9 +574,9 @@
             </Layout>
         </Page>
     </InterfaceRoot>
-    <EthercatController name="ethercat_controller" esi_dirs="">
+    <EthercatController name="ethercat_controller" sample_period_ns="1000000" esi_dirs="">
         <SlavePoolObject name="slave_pool">
-            <EthercatMotion phy_id="0" vendor_id="0x00000000" product_code="0x00000000" revision_num="0x00000000" dc_assign_activate="0x00000300" max_pos="2.96706" min_pos="-2.96706" max_vel="5.4105210000000001" min_vel="-5.4105210000000001" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="0" home_pos="0">
+            <EthercatMotor phy_id="0" vendor_id="0x000002e1" product_code="0x00000000" revision_num="0x00029001" dc_assign_activate="0x00000000" sync0_shift_ns="650000" max_pos="2.96706" min_pos="-2.96706" max_vel="5.4105210000000001" min_vel="-5.4105210000000001" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="0.083326167813560906" home_pos="0">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -600,8 +600,8 @@
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
-            </EthercatMotion>
-            <EthercatMotion phy_id="1" vendor_id="0x00000000" product_code="0x00000000" revision_num="0x00000000" dc_assign_activate="0x00000300" max_pos="2.2689279999999998" min_pos="-1.4660770000000001" max_vel="4.18879" min_vel="-4.18879" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="0" home_pos="0">
+            </EthercatMotor>
+            <EthercatMotor phy_id="1" vendor_id="0x000002e1" product_code="0x00000000" revision_num="0x00029001" dc_assign_activate="0x00000000" sync0_shift_ns="650000" max_pos="2.2689279999999998" min_pos="-1.4660770000000001" max_vel="4.18879" min_vel="-4.18879" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="0.40688722035956698" home_pos="0">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -625,8 +625,8 @@
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
-            </EthercatMotion>
-            <EthercatMotion phy_id="2" vendor_id="0x00000000" product_code="0x00000000" revision_num="0x00000000" dc_assign_activate="0x00000300" max_pos="0.87266500000000002" min_pos="-3.2812190000000001" max_vel="5.4105210000000001" min_vel="-5.4105210000000001" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="0" home_pos="0">
+            </EthercatMotor>
+            <EthercatMotor phy_id="2" vendor_id="0x000002e1" product_code="0x00000000" revision_num="0x00029001" dc_assign_activate="0x00000000" sync0_shift_ns="650000" max_pos="0.87266500000000002" min_pos="-3.2812190000000001" max_vel="5.4105210000000001" min_vel="-5.4105210000000001" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="-0.063596878644675794" home_pos="0">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -650,8 +650,8 @@
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
-            </EthercatMotion>
-            <EthercatMotion phy_id="3" vendor_id="0x00000000" product_code="0x00000000" revision_num="0x00000000" dc_assign_activate="0x00000300" max_pos="2.96706" min_pos="-2.96706" max_vel="4.3633230000000003" min_vel="-4.3633230000000003" max_acc="30.543261999999999" min_acc="-30.543261999999999" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1519852.15096" pos_offset="0" home_pos="0">
+            </EthercatMotor>
+            <EthercatMotor phy_id="3" vendor_id="0x000002e1" product_code="0x00000000" revision_num="0x00029001" dc_assign_activate="0x00000000" sync0_shift_ns="650000" max_pos="2.96706" min_pos="-2.96706" max_vel="4.3633230000000003" min_vel="-4.3633230000000003" max_acc="30.543261999999999" min_acc="-30.543261999999999" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1519852.15096" pos_offset="0.65575523199999997" home_pos="0">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -675,8 +675,8 @@
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
-            </EthercatMotion>
-            <EthercatMotion phy_id="4" vendor_id="0x00000000" product_code="0x00000000" revision_num="0x00000000" dc_assign_activate="0x00000300" max_pos="2.0420349999999998" min_pos="-2.0420349999999998" max_vel="5.1487210000000001" min_vel="-5.1487210000000001" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="0" home_pos="0">
+            </EthercatMotor>
+            <EthercatMotor phy_id="4" vendor_id="0x000002e1" product_code="0x00000000" revision_num="0x00029001" dc_assign_activate="0x00000000" sync0_shift_ns="650000" max_pos="2.0420349999999998" min_pos="-2.0420349999999998" max_vel="5.1487210000000001" min_vel="-5.1487210000000001" max_acc="26.179939000000001" min_acc="-26.179939000000001" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689721.292776" pos_offset="-1.49538803280913" home_pos="0">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -700,8 +700,8 @@
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
-            </EthercatMotion>
-            <EthercatMotion phy_id="5" vendor_id="0x00000000" product_code="0x00000000" revision_num="0x00000000" dc_assign_activate="0x00000300" max_pos="6.2831849999999996" min_pos="-6.2831849999999996" max_vel="8.7266460000000006" min_vel="-8.7266460000000006" max_acc="43.633231000000002" min_acc="-43.633231000000002" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1043037.835047" pos_offset="0" home_pos="0">
+            </EthercatMotor>
+            <EthercatMotor phy_id="5" vendor_id="0x000002e1" product_code="0x00000000" revision_num="0x00029001" dc_assign_activate="0x00000000" sync0_shift_ns="650000" max_pos="6.2831849999999996" min_pos="-6.2831849999999996" max_vel="8.7266460000000006" min_vel="-8.7266460000000006" max_acc="43.633231000000002" min_acc="-43.633231000000002" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1043037.835047" pos_offset="-1.76544794265974" home_pos="0">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -725,7 +725,7 @@
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
-            </EthercatMotion>
+            </EthercatMotor>
         </SlavePoolObject>
         <Pipe name="mout_pipe"/>
         <Pipe name="lout_pipe"/>
@@ -733,6 +733,39 @@
     <Model name="model" time="0">
         <Environment name="environment" gravity="{0,0,-9.8,0,0,0}"/>
         <VariablePoolElement name="variable_pool">
+            <MatrixVariable name="tool0_axis_home">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool1_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool1_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool2_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool2_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool3_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool3_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool4_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool4_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool5_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool5_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool6_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool6_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool7_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool7_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool8_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool8_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool9_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool9_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool10_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool10_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool11_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool11_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool12_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool12_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool13_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool13_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool14_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool14_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool15_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool15_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool16_axis_offset">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="tool16_inertia">{0,0,0,0,0,0,0,0,0,0}</MatrixVariable>
             <MatrixVariable name="v5">{0.01,0.005,3.49065850398866,0,0}</MatrixVariable>
             <MatrixVariable name="v10">{0.03,0.01,3.49065850398866,0,0}</MatrixVariable>
             <MatrixVariable name="v25">{0.05,0.025,3.49065850398866,0,0}</MatrixVariable>
@@ -784,54 +817,42 @@
                     <Marker name="wobj31" active="true" pe="{0,0,0,-0,0,-0}"/>
                     <Marker name="wobj32" active="true" pe="{0,0,0,-0,0,-0}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l0.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L1" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0,0,0,0,0,0.59026333537827,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_0_i" active="true" pe="{0,0,0.3295,0.785398163397448,0,0.785398163397448}"/>
                     <Marker name="joint_1_j" active="true" pe="{0.04,0,0.3295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l1.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L2" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,-0.02551872200978,0,3.05660683326413,2.85905166943306,0,0,-0.00855352993039,-0.09946674483372,-0.00712210734359}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_1_i" active="true" pe="{0.04,0,0.3295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_2_j" active="true" pe="{0.04,0,0.6045,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l2.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L3" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0,0,0.02733022277747,0,0.37382629693302,0,0.00312006493276,-0.00578410451516,0.0057060612854}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_2_i" active="true" pe="{0.04,0,0.6045,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_3_j" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l3.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L4" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,1.06223330086669,0,0.0031174824296,0,0.24420385558544,0.24970286555981,0.00305759215246,-0.66644096559686,0.00228253380852}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_3_i" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                     <Marker name="joint_4_j" active="true" pe="{0.32,0,0.6295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l4.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L5" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0.0536228689791,0.00528925153464,-0.00842588023014,0.00128498153337,-0.00389810210572,0,-0.00223677867576,-0.03365036368035,-0.00415647085627}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_4_i" active="true" pe="{0.32,0,0.6295,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_5_j" active="true" pe="{0.32,0,0.6295,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l5.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
             <Part name="L6" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{0,0,0.00066049870832,0.00012563800445,-0.00085124094833,0.04209529937135,0.04102481443654,-0.00067596644891,0.00017482449876,-0.00041025776053}">
                 <MarkerPoolElement name="marker_pool">
@@ -854,9 +875,7 @@
                     <Marker name="tool15" active="true" pe="{0.398,0,0.6295,1.5707963267949,1.5707963267949,4.71238898038469}"/>
                     <Marker name="tool16" active="true" pe="{0.398,0,0.6295,1.5707963267949,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
-                <GeometryPoolElement name="geometry_pool">
-                    <FileGeometry name="test" pe="{0,0,0,-0,0,-0}" graphic_file_path="/RobotGallery/Rokae/XB4/l6.data"/>
-                </GeometryPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
             </Part>
         </PartPoolElement>
         <JointPoolElement name="joint_pool">
@@ -1181,24 +1200,22 @@
                     </GroupParam>
                 </Command>
             </Mode>
-            <Show name="show">
-                <Command name="sh"/>
-            </Show>
             <Sleep name="sleep_plan">
                 <Command name="sl">
                     <Param name="count" abbreviation="c" default="1000"/>
                 </Command>
             </Sleep>
-            <Recover name="recover_plan">
+            <kaanh::Recover name="recover_plan">
                 <Command name="rc"/>
-            </Recover>
-            <Reset name="reset_plan">
+            </kaanh::Recover>
+            <kaanh::Reset name="reset_plan">
                 <Command name="rs">
                     <GroupParam>
                         <Param name="pos" default="{0.5,0.3925,0.7899,0.5,0.5,0.5}"/>
                         <Param name="acc" default="0.1"/>
                         <Param name="vel" default="0.1"/>
                         <Param name="dec" default="0.1"/>
+                        <Param name="jerk" default="0.1"/>
                         <UniqueParam default="all">
                             <Param name="all" abbreviation="a"/>
                             <Param name="motion_id" abbreviation="m" default="0"/>
@@ -1265,14 +1282,15 @@
                         </UniqueParam>
                     </GroupParam>
                 </Command>
-            </Reset>
-            <MoveAbsJ name="move_abs_j">
+            </kaanh::Reset>
+            <kaanh::MoveAbsJ name="MoveAbsJ">
                 <Command name="mvaj">
                     <GroupParam>
                         <Param name="pos" default="0.0"/>
                         <Param name="vel" default="1.0"/>
                         <Param name="acc" default="1.0"/>
                         <Param name="dec" default="1.0"/>
+                        <Param name="jerk" default="10.0"/>
                         <UniqueParam default="all">
                             <Param name="all" abbreviation="a"/>
                             <Param name="motion_id" abbreviation="m" default="0"/>
@@ -1339,8 +1357,8 @@
                         </UniqueParam>
                     </GroupParam>
                 </Command>
-            </MoveAbsJ>
-            <MoveL name="move_l">
+            </kaanh::MoveAbsJ>
+            <kaanh::MoveL name="move_l">
                 <Command name="mvl">
                     <GroupParam>
                         <Param name="pos_unit" default="m"/>
@@ -1356,9 +1374,13 @@
                         <Param name="acc" default="0.1"/>
                         <Param name="vel" default="0.1"/>
                         <Param name="dec" default="0.1"/>
+                        <Param name="jerk" default="10.0"/>
                         <Param name="angular_acc" default="0.1"/>
                         <Param name="angular_vel" default="0.1"/>
                         <Param name="angular_dec" default="0.1"/>
+                        <Param name="angular_jerk" default="10.0"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
                         <UniqueParam default="check_all">
                             <Param name="check_all"/>
                             <Param name="check_none"/>
@@ -1419,8 +1441,8 @@
                         </UniqueParam>
                     </GroupParam>
                 </Command>
-            </MoveL>
-            <MoveJ name="move_j">
+            </kaanh::MoveL>
+            <kaanh::MoveJ name="move_j">
                 <Command name="mvj">
                     <GroupParam>
                         <Param name="pos_unit" default="m"/>
@@ -1436,6 +1458,9 @@
                         <Param name="joint_acc" default="0.1"/>
                         <Param name="joint_vel" default="0.1"/>
                         <Param name="joint_dec" default="0.1"/>
+                        <Param name="joint_jerk" default="10.0"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
                         <UniqueParam default="check_all">
                             <Param name="check_all"/>
                             <Param name="check_none"/>
@@ -1496,234 +1521,13 @@
                         </UniqueParam>
                     </GroupParam>
                 </Command>
-            </MoveJ>
-            <GetXml name="get_xml">
-                <Command name="get_xml"/>
-            </GetXml>
-            <SetXml name="set_xml">
-                <Command name="set_xml">
-                    <Param name="xml"/>
-                </Command>
-            </SetXml>
-            <Start name="start">
-                <Command name="cs_start"/>
-            </Start>
-            <Stop name="stop">
-                <Command name="cs_stop"/>
-            </Stop>
+            </kaanh::MoveJ>
+            <MoveSt name="MoveSt_plan">
+                <Command name="mvstop"/>
+            </MoveSt>
             <Get name="Get_plan">
                 <Command name="get"/>
             </Get>
-            <MoveX name="MoveX_plan">
-                <Command name="moveX">
-                    <GroupParam>
-                        <UniqueParam default="x">
-                            <Param name="x" default="0.1"/>
-                            <Param name="y" default="0.1"/>
-                            <Param name="z" default="0.1"/>
-                        </UniqueParam>
-                        <Param name="time" default="1.0"/>
-                    </GroupParam>
-                </Command>
-            </MoveX>
-            <MoveJS name="MoveJS_plan">
-                <Command name="moveJS">
-                    <GroupParam>
-                        <Param name="j1" default="current_pos"/>
-                        <Param name="j2" default="current_pos"/>
-                        <Param name="j3" default="current_pos"/>
-                        <Param name="j4" default="current_pos"/>
-                        <Param name="j5" default="current_pos"/>
-                        <Param name="j6" default="current_pos"/>
-                        <Param name="time" abbreviation="t" default="1.0"/>
-                        <Param name="timenum" abbreviation="n" default="2"/>
-                    </GroupParam>
-                </Command>
-            </MoveJS>
-            <MoveJSN name="MoveJSN_plan">
-                <Command name="moveJSN">
-                    <GroupParam>
-                        <Param name="pos" abbreviation="p" default="{0.1,0.2,0.2,0.2,0.2,0.2}"/>
-                        <Param name="time" abbreviation="t" default="{1.0,1.0,1.0,1.0,1.0,1.0}"/>
-                        <Param name="timenum" abbreviation="n" default="2"/>
-                    </GroupParam>
-                </Command>
-            </MoveJSN>
-            <MoveJR name="MoveJR_plan">
-                <Command name="moveJR">
-                    <GroupParam>
-                        <UniqueParam default="all">
-                            <Param name="all" abbreviation="a"/>
-                            <Param name="motion_id" abbreviation="m" default="0"/>
-                            <Param name="physical_id" abbreviation="p" default="0"/>
-                            <Param name="slave_id" abbreviation="s" default="0"/>
-                        </UniqueParam>
-                        <Param name="pos" default="0"/>
-                        <Param name="vel" default="0.3"/>
-                        <Param name="acc" default="0.6"/>
-                        <Param name="dec" default="0.6"/>
-                    </GroupParam>
-                </Command>
-            </MoveJR>
-            <MoveTTT name="MoveTTT_plan">
-                <Command name="moveTTT">
-                    <GroupParam>
-                        <UniqueParam default="all">
-                            <Param name="all" abbreviation="a"/>
-                            <Param name="motion_id" abbreviation="m" default="0"/>
-                            <Param name="physical_id" abbreviation="p" default="0"/>
-                            <Param name="slave_id" abbreviation="s" default="0"/>
-                        </UniqueParam>
-                        <Param name="pos" default="0"/>
-                        <Param name="vel" default="0.04"/>
-                        <Param name="acc" default="0.1"/>
-                        <Param name="dec" default="0.1"/>
-                    </GroupParam>
-                </Command>
-            </MoveTTT>
-            <MoveJRC name="MoveJRC_plan">
-                <Command name="moveJRC">
-                    <GroupParam>
-                        <Param name="limit_time" default="5000"/>
-                        <UniqueParam default="all">
-                            <Param name="all" abbreviation="a"/>
-                            <Param name="motion_id" abbreviation="m" default="0"/>
-                            <Param name="physical_id" abbreviation="p" default="0"/>
-                            <Param name="slave_id" abbreviation="s" default="0"/>
-                        </UniqueParam>
-                        <Param name="pos" default="0"/>
-                        <Param name="vel" default="0.5"/>
-                        <Param name="acc" default="1"/>
-                        <Param name="dec" default="1"/>
-                        <Param name="kp_p" default="1"/>
-                        <Param name="kp_v" default="100"/>
-                        <Param name="ki_v" default="0.1"/>
-                    </GroupParam>
-                </Command>
-            </MoveJRC>
-            <MovePQCrash name="MovePQCrash_plan">
-                <Command name="movePQCrash">
-                    <GroupParam>
-                        <Param name="pqt" abbreviation="p" default="{0.42,0.0,0.55,0.0,0.0,0.0,1.0}"/>
-                        <Param name="kp_p" default="{1,1,1,1,1,1,1}"/>
-                        <Param name="ki_p" default="{1,1,1,1,1,1,1}"/>
-                        <Param name="kp_v" default="{4,4,4,1,1,1}"/>
-                        <Param name="ki_v" default="{1,1,1,0.1,0.1,0.1}"/>
-                    </GroupParam>
-                </Command>
-            </MovePQCrash>
-            <MovePQB name="MovePQB_plan">
-                <Command name="movePQB">
-                    <GroupParam>
-                        <Param name="pqt" abbreviation="p" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                        <Param name="kp_p" default="{4,4,6,3,3,2}"/>
-                        <Param name="kp_v" default="{140,180,60,50,30,14}"/>
-                        <Param name="ki_v" default="{2,8,5,0.18,0.2,0.18}"/>
-                        <Param name="which_fca" default="1"/>
-                    </GroupParam>
-                </Command>
-            </MovePQB>
-            <MoveJCrash name="MoveJCrash_plan">
-                <Command name="moveJCrash">
-                    <GroupParam>
-                        <UniqueParam default="pqt">
-                            <Param name="pqt" abbreviation="p" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                            <Param name="xyz" default="{0.01,0.0,0.0}"/>
-                        </UniqueParam>
-                        <Param name="vel" default="0.05"/>
-                        <Param name="acc" default="0.1"/>
-                        <Param name="dec" default="0.1"/>
-                        <Param name="kp_p" default="{10,12,70,4,6,3}"/>
-                        <Param name="kp_v" default="{200,360,120,100,60,20}"/>
-                        <Param name="ki_v" default="{2,18,20,0.6,0.5,0.4}"/>
-                    </GroupParam>
-                </Command>
-            </MoveJCrash>
-            <MoveJF name="MoveJF_plan">
-                <Command name="moveJF">
-                    <GroupParam>
-                        <Param name="pqt" abbreviation="p" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                        <Param name="kp_p" default="{10,12,20,3,4,3}"/>
-                        <Param name="kp_v" default="{200,360,120,80,40,20}"/>
-                        <Param name="ki_v" default="{2,18,20,0.4,0.3,0.4}"/>
-                    </GroupParam>
-                </Command>
-            </MoveJF>
-            <MoveJFB name="MoveJFB_plan">
-                <Command name="moveJFB">
-                    <GroupParam>
-                        <Param name="pqt" abbreviation="p" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                        <Param name="kp_p" default="{8,12,20,3,3,2}"/>
-                        <Param name="kp_v" default="{170,360,120,60,35,16}"/>
-                        <Param name="ki_v" default="{2,18,20,0.2,0.2,0.18}"/>
-                    </GroupParam>
-                </Command>
-            </MoveJFB>
-            <MoveJPID name="MoveJPID_plan">
-                <Command name="moveJPID">
-                    <GroupParam>
-                        <UniqueParam default="all">
-                            <Param name="all" abbreviation="a"/>
-                            <Param name="motion_id" abbreviation="m" default="0"/>
-                            <Param name="physical_id" abbreviation="p" default="0"/>
-                            <Param name="slave_id" abbreviation="s" default="0"/>
-                        </UniqueParam>
-                        <Param name="pos" default="0.0"/>
-                        <Param name="kp_p" default="{10,12,70,5,6,3}"/>
-                        <Param name="kp_v" default="{270,360,120,120,60,25}"/>
-                        <Param name="ki_v" default="{2,18,20.0,0.6,0.5,0.5}"/>
-                        <Param name="kd_v" default="0"/>
-                    </GroupParam>
-                </Command>
-            </MoveJPID>
-            <MoveEAC name="MoveEAC_plan">
-                <Command name="moveEAC">
-                    <GroupParam>
-                        <Param name="pos" default="0.01"/>
-                        <Param name="static_vel" default="0.001"/>
-                        <Param name="ab" default="0"/>
-                        <Param name="kp_p" default="0.1"/>
-                        <Param name="kp_v" default="5"/>
-                        <Param name="ki_v" default="0.1"/>
-                    </GroupParam>
-                </Command>
-            </MoveEAC>
-            <MoveStop name="MoveStop_plan">
-                <Command name="moveStop"/>
-            </MoveStop>
-            <MoveSPQ name="MoveSPQ_plan">
-                <Command name="moveSPQ">
-                    <GroupParam>
-                        <UniqueParam default="setpqJFB">
-                            <Param name="setpqJF" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                            <Param name="setpqJFB" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                            <Param name="setpqPQB" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                            <Param name="which_func" default="1"/>
-                        </UniqueParam>
-                    </GroupParam>
-                </Command>
-            </MoveSPQ>
-            <MoveJM name="MoveJM_plan">
-                <Command name="moveJM">
-                    <GroupParam>
-                        <Param name="pos" default="current_pos"/>
-                        <Param name="vel" abbreviation="v" default="{0.2,0.2,0.2,0.2,0.2,0.2}"/>
-                        <Param name="acc" abbreviation="a" default="{0.1,0.1,0.1,0.1,0.1,0.1}"/>
-                        <Param name="dec" abbreviation="d" default="{0.1,0.1,0.1,0.1,0.1,0.1}"/>
-                        <Param name="ab" default="1"/>
-                    </GroupParam>
-                </Command>
-            </MoveJM>
-            <MoveJI name="MoveJI_plan">
-                <Command name="moveJI">
-                    <GroupParam>
-                        <Param name="pq" default="current_pos"/>
-                        <Param name="vel" abbreviation="v" default="{0.05,0.05,0.05,0.05,0.05,0.05}"/>
-                        <Param name="acc" abbreviation="a" default="{0.1,0.1,0.1,0.1,0.1,0.1}"/>
-                        <Param name="dec" abbreviation="d" default="{0.1,0.1,0.1,0.1,0.1,0.1}"/>
-                    </GroupParam>
-                </Command>
-            </MoveJI>
             <MoveC name="MoveC_plan">
                 <Command name="mvc">
                     <GroupParam>
@@ -1749,9 +1553,13 @@
                         <Param name="acc" default="0.1"/>
                         <Param name="vel" default="0.1"/>
                         <Param name="dec" default="0.1"/>
+                        <Param name="jerk" default="0.1"/>
                         <Param name="angular_acc" default="0.1"/>
                         <Param name="angular_vel" default="0.1"/>
                         <Param name="angular_dec" default="0.1"/>
+                        <Param name="angular_jerk" default="0.1"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
                     </GroupParam>
                 </Command>
             </MoveC>
@@ -1804,200 +1612,219 @@
             </JogJ>
             <JogJ1 name="JogJ1_plan">
                 <Command name="j1">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" abbreviation="v" default="1"/>
-                        <Param name="acc" abbreviation="a" default="5"/>
-                        <Param name="dec" abbreviation="d" default="5"/>
-                        <Param name="vel_percent" default="10"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" abbreviation="v" default="1"/>
+                            <Param name="acc" abbreviation="a" default="5"/>
+                            <Param name="dec" abbreviation="d" default="5"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JogJ1>
             <JogJ2 name="JogJ2_plan">
                 <Command name="j2">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" abbreviation="v" default="1"/>
-                        <Param name="acc" abbreviation="a" default="5"/>
-                        <Param name="dec" abbreviation="d" default="5"/>
-                        <Param name="vel_percent" default="10"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" abbreviation="v" default="1"/>
+                            <Param name="acc" abbreviation="a" default="5"/>
+                            <Param name="dec" abbreviation="d" default="5"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JogJ2>
             <JogJ3 name="JogJ3_plan">
                 <Command name="j3">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" abbreviation="v" default="1"/>
-                        <Param name="acc" abbreviation="a" default="5"/>
-                        <Param name="dec" abbreviation="d" default="5"/>
-                        <Param name="vel_percent" default="10"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" abbreviation="v" default="1"/>
+                            <Param name="acc" abbreviation="a" default="5"/>
+                            <Param name="dec" abbreviation="d" default="5"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JogJ3>
             <JogJ4 name="JogJ4_plan">
                 <Command name="j4">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" abbreviation="v" default="1"/>
-                        <Param name="acc" abbreviation="a" default="5"/>
-                        <Param name="dec" abbreviation="d" default="5"/>
-                        <Param name="vel_percent" default="10"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" abbreviation="v" default="1"/>
+                            <Param name="acc" abbreviation="a" default="5"/>
+                            <Param name="dec" abbreviation="d" default="5"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JogJ4>
             <JogJ5 name="JogJ5_plan">
                 <Command name="j5">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" abbreviation="v" default="1"/>
-                        <Param name="acc" abbreviation="a" default="5"/>
-                        <Param name="dec" abbreviation="d" default="5"/>
-                        <Param name="vel_percent" default="10"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" abbreviation="v" default="1"/>
+                            <Param name="acc" abbreviation="a" default="5"/>
+                            <Param name="dec" abbreviation="d" default="5"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JogJ5>
             <JogJ6 name="JogJ6_plan">
                 <Command name="j6">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" abbreviation="v" default="1"/>
-                        <Param name="acc" abbreviation="a" default="5"/>
-                        <Param name="dec" abbreviation="d" default="5"/>
-                        <Param name="vel_percent" default="10"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" abbreviation="v" default="1"/>
+                            <Param name="acc" abbreviation="a" default="5"/>
+                            <Param name="dec" abbreviation="d" default="5"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JogJ6>
+            <JogJ7 name="JogJ7_plan">
+                <Command name="j7">
+                    <GroupParam>
+                        <UniqueParam>
+                            <GroupParam>
+                                <Param name="increase_count" default="500"/>
+                                <Param name="vel" abbreviation="v" default="1"/>
+                                <Param name="acc" abbreviation="a" default="5"/>
+                                <Param name="dec" abbreviation="d" default="5"/>
+                                <Param name="vel_percent" default="10"/>
+                                <Param name="direction" default="1"/>
+                            </GroupParam>
+                            <Param name="stop"/>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </JogJ7>
             <JX name="JX_plan">
                 <Command name="jx">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
-                        <Param name="acc" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="dec" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="cor" default="0"/>
-                        <Param name="vel_percent" default="20"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JX>
             <JY name="JY_plan">
                 <Command name="jy">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
-                        <Param name="acc" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="dec" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="cor" default="0"/>
-                        <Param name="vel_percent" default="20"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JY>
             <JZ name="JZ_plan">
                 <Command name="jz">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
-                        <Param name="acc" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="dec" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="cor" default="0"/>
-                        <Param name="vel_percent" default="20"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JZ>
             <JRX name="JRX_plan">
                 <Command name="jrx">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
-                        <Param name="acc" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="dec" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="cor" default="0"/>
-                        <Param name="vel_percent" default="20"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JRX>
             <JRY name="JRY_plan">
                 <Command name="jry">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
-                        <Param name="acc" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="dec" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="cor" default="0"/>
-                        <Param name="vel_percent" default="20"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JRY>
             <JRZ name="JRZ_plan">
                 <Command name="jrz">
-                    <GroupParam>
-                        <Param name="increase_count" default="100"/>
-                        <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
-                        <Param name="acc" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="dec" default="{0.2,0.2,0.2,3,3,3}"/>
-                        <Param name="cor" default="0"/>
-                        <Param name="vel_percent" default="20"/>
-                        <Param name="direction" default="1"/>
-                    </GroupParam>
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="500"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.25,0.25,0.25}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
                 </Command>
             </JRZ>
-            <Grasp name="Grasp_plan">
-                <Command name="grasp">
-                    <GroupParam>
-                        <Param name="status" default="1"/>
-                    </GroupParam>
-                </Command>
-            </Grasp>
-            <ListenDI name="ListenDI_plan">
-                <Command name="listenDI"/>
-            </ListenDI>
-            <MoveEA name="MoveEA_plan">
-                <Command name="moveEA">
-                    <GroupParam>
-                        <Param name="s" default="0.1"/>
-                        <Param name="time" abbreviation="t" default="1.0"/>
-                    </GroupParam>
-                </Command>
-            </MoveEA>
-            <MoveEAP name="MoveEAP_plan">
-                <Command name="moveEAP">
-                    <GroupParam>
-                        <Param name="begin_pos" abbreviation="b" default="0.1"/>
-                        <Param name="pos" default="0.1"/>
-                        <Param name="vel" default="0.02"/>
-                        <Param name="acc" default="0.3"/>
-                        <Param name="dec" default="-0.3"/>
-                        <Param name="ab" default="0"/>
-                    </GroupParam>
-                </Command>
-            </MoveEAP>
-            <FSSignal name="FSSignal_plan">
-                <Command name="fssignal">
-                    <GroupParam>
-                        <Param name="real_data" default="1"/>
-                        <Param name="time" default="100000"/>
-                    </GroupParam>
-                </Command>
-            </FSSignal>
-            <ATIFS name="ATIFS_plan">
-                <Command name="atifs">
-                    <GroupParam>
-                        <Param name="time" default="100000"/>
-                        <Param name="controlcodes" default="4096"/>
-                    </GroupParam>
-                </Command>
-            </ATIFS>
             <ClearCon name="ClearCon_plan">
                 <Command name="clearCon"/>
             </ClearCon>
@@ -2106,6 +1933,20 @@
                     </GroupParam>
                 </Command>
             </SetEsiPath>
+            <kaanh::GetXml name="GetXml">
+                <Command name="get_xml"/>
+            </kaanh::GetXml>
+            <kaanh::SetXml name="SetXml">
+                <Command name="set_xml">
+                    <Param name="xml"/>
+                </Command>
+            </kaanh::SetXml>
+            <kaanh::Start name="Start">
+                <Command name="cs_start"/>
+            </kaanh::Start>
+            <kaanh::Stop name="Stop">
+                <Command name="cs_stop"/>
+            </kaanh::Stop>
             <SetCT name="SetCT_plan">
                 <Command name="setCT">
                     <GroupParam>
@@ -2120,292 +1961,34 @@
                     </GroupParam>
                 </Command>
             </SetVel>
-            <MoveXYZ name="MoveXYZ">
-                <Command name="mvXYZ">
+            <Run name="Run_plan">
+                <Command name="run">
                     <GroupParam>
-                        <Param name="damp" default="1.0"/>
+                        <UniqueParam>
+                            <Param name="forward"/>
+                            <Param name="goto" default="2"/>
+                            <Param name="start"/>
+                            <Param name="pause"/>
+                            <Param name="stop"/>
+                        </UniqueParam>
                     </GroupParam>
                 </Command>
-            </MoveXYZ>
-            <MoveJoint name="MoveJoint">
-                <Command name="mvJoint">
+            </Run>
+            <MoveF name="MoveF_plan">
+                <Command name="mvf">
                     <GroupParam>
-                        <Param name="PressF" default="0"/>
-                        <Param name="SensorType" default="20.0"/>
+                        <Param name="path" default="/home/kaanh/Desktop/build-Kaanh-gk-Desktop_Qt_5_11_2_GCC_64bit-Default/log/motion_replay.txt"/>
+                        <Param name="vel" abbreviation="v" default="0.5"/>
+                        <Param name="acc" abbreviation="a" default="0.6"/>
+                        <Param name="dec" abbreviation="d" default="0.6"/>
                     </GroupParam>
                 </Command>
-            </MoveJoint>
-            <MoveDistal name="MoveDistal">
-                <Command name="mvDistal">
-                    <GroupParam>
-                        <Param name="SensorType" default="1.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
+            </MoveF>
+            <Switch name="Switch_plan">
+                <Command name="switch">
+                    <Param name="manual" default="1"/>
                 </Command>
-            </MoveDistal>
-            <DistalTest name="DistalTest">
-                <Command name="DistalTest">
-                    <GroupParam>
-                        <Param name="SensorType" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </DistalTest>
-            <MovePressure name="MovePressure">
-                <Command name="mvPre">
-                    <GroupParam>
-                        <Param name="PressF" default="0"/>
-                    </GroupParam>
-                </Command>
-            </MovePressure>
-            <MoveFeed name="MoveFeed">
-                <Command name="mvFe">
-                    <GroupParam>
-                        <Param name="PressF" default="0"/>
-                    </GroupParam>
-                </Command>
-            </MoveFeed>
-            <MovePressureToolYZ name="MovePressureToolYZ">
-                <Command name="mvPreTYZ">
-                    <GroupParam>
-                        <Param name="PressF" default="0"/>
-                        <Param name="SensorType" default="20.0"/>
-                    </GroupParam>
-                </Command>
-            </MovePressureToolYZ>
-            <MovePressureToolXY name="MovePressureToolXY">
-                <Command name="mvPreTXY">
-                    <GroupParam>
-                        <Param name="PressF" default="0"/>
-                        <Param name="SensorType" default="20.0"/>
-                    </GroupParam>
-                </Command>
-            </MovePressureToolXY>
-            <GetForce name="GetForce">
-                <Command name="GetForce"/>
-            </GetForce>
-            <MoveSeriesGK name="MoveSeriesGK">
-                <Command name="mvs">
-                    <GroupParam>
-                        <Param name="x" abbreviation="x" default="0"/>
-                        <Param name="y" abbreviation="y" default="0"/>
-                        <Param name="scale" default="10"/>
-                    </GroupParam>
-                </Command>
-            </MoveSeriesGK>
-            <ForceDirect name="ForceDirect">
-                <Command name="ForceDir">
-                    <GroupParam>
-                        <Param name="PressF" default="0"/>
-                        <Param name="SensorType" default="20.0"/>
-                    </GroupParam>
-                </Command>
-            </ForceDirect>
-            <JointDyna name="JointDyna">
-                <Command name="JointDyna">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </JointDyna>
-            <JointTest name="JointTest">
-                <Command name="JointTest">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </JointTest>
-            <DragTeach name="DragTeach">
-                <Command name="DragTeach">
-                    <GroupParam>
-                        <Param name="A1c" default="0.5"/>
-                        <Param name="A1v" default="0.2"/>
-                        <Param name="A2c" default="0.5"/>
-                        <Param name="A2v" default="0.2"/>
-                        <Param name="A3c" default="0.5"/>
-                        <Param name="A3v" default="0.2"/>
-                        <Param name="A4c" default="0.5"/>
-                        <Param name="A4v" default="0.2"/>
-                        <Param name="A5c" default="0.5"/>
-                        <Param name="A5v" default="0.2"/>
-                        <Param name="A6c" default="0.5"/>
-                        <Param name="A6v" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </DragTeach>
-            <LoadDyna name="LoadDyna">
-                <Command name="LoadDyna">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </LoadDyna>
-            <SaveYYbase name="SaveYYbase">
-                <Command name="svYYbase"/>
-            </SaveYYbase>
-            <SaveFile name="SaveFile">
-                <Command name="svFi">
-                    <GroupParam>
-                        <Param name="gk_path" default="C:/Users/gk/Desktop/build_kaanh_gk/kaanh.xml"/>
-                    </GroupParam>
-                </Command>
-            </SaveFile>
-            <SevenJointDyna name="SevenJointDyna">
-                <Command name="SevenJointDyna">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </SevenJointDyna>
-            <SevenJointTest name="SevenJointTest">
-                <Command name="SevenJointTest">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </SevenJointTest>
-            <SevenDragTeach name="SevenDragTeach">
-                <Command name="SevenDragTeach">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </SevenDragTeach>
-            <SevenLoadDyna name="SevenLoadDyna">
-                <Command name="SevenLoadDyna">
-                    <GroupParam>
-                        <Param name="period" default="20.0"/>
-                        <Param name="amplitude" default="0.2"/>
-                    </GroupParam>
-                </Command>
-            </SevenLoadDyna>
-            <MoveCircle name="MoveCircle">
-                <Command name="mvEE">
-                    <GroupParam>
-                        <Param name="total_time" default="5000"/>
-                        <Param name="radius" default="0.01"/>
-                        <Param name="detal" default="0.1/5000"/>
-                    </GroupParam>
-                </Command>
-            </MoveCircle>
-            <MoveTroute name="MoveTroute">
-                <Command name="mvTT">
-                    <GroupParam>
-                        <Param name="total_time" default="5000"/>
-                        <Param name="pt" default="0.1"/>
-                        <Param name="vel" default="0.04"/>
-                        <Param name="acc" default="0.08"/>
-                        <Param name="dec" default="0.08"/>
-                    </GroupParam>
-                </Command>
-            </MoveTroute>
-            <MoveFile name="MoveFile">
-                <Command name="mvFi">
-                    <GroupParam>
-                        <Param name="total_time" default="5000"/>
-                        <Param name="vel" default="0.04"/>
-                        <Param name="acc" default="0.08"/>
-                        <Param name="dec" default="0.08"/>
-                        <Param name="choose" default="0"/>
-                        <Param name="pt" default="{0.0,0.0,0.0,0.0,0.0,0.0}"/>
-                        <Param name="file" abbreviation="f" default="1.txt"/>
-                    </GroupParam>
-                </Command>
-            </MoveFile>
-            <RemoveFile name="RemoveFile">
-                <Command name="rmFi">
-                    <GroupParam>
-                        <Param name="filePath" abbreviation="f" default="C:/Users/qianch_kaanh_cn/Desktop/build_qianch/log/"/>
-                        <Param name="memo" abbreviation="m" default="40"/>
-                    </GroupParam>
-                </Command>
-            </RemoveFile>
-            <MoveinModel name="MoveinModel">
-                <Command name="mvinmod">
-                    <GroupParam/>
-                </Command>
-            </MoveinModel>
-            <FMovePath name="FMovePath_plan">
-                <Command name="FMovePath">
-                    <GroupParam>
-                        <Param name="pq" default="{0.42,0.0,0.55,0,0,0,1}"/>
-                        <Param name="runtime" default="5"/>
-                    </GroupParam>
-                </Command>
-            </FMovePath>
-            <OpenFile name="OpenFile">
-                <Command name="opFi">
-                    <GroupParam>
-                        <Param name="vn" default="back"/>
-                        <Param name="updt" default="0"/>
-                    </GroupParam>
-                </Command>
-            </OpenFile>
-            <CalibT4P name="CalibT4P">
-                <Command name="CalibT4P">
-                    <GroupParam>
-                        <Param name="pose" default="{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}"/>
-                    </GroupParam>
-                </Command>
-            </CalibT4P>
-            <CalibT5P name="CalibT5P">
-                <Command name="CalibT5P">
-                    <GroupParam>
-                        <Param name="pose" default="{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}"/>
-                    </GroupParam>
-                </Command>
-            </CalibT5P>
-            <CalibT6P name="CalibT6P">
-                <Command name="CalibT6P">
-                    <GroupParam>
-                        <Param name="pose" default="{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}"/>
-                    </GroupParam>
-                </Command>
-            </CalibT6P>
-            <SetTF name="SetTF">
-                <Command name="SetTF">
-                    <GroupParam>
-                        <Param name="tool_name" default="Tool0"/>
-                        <Param name="tool_pe" default="{0,0,0,0,0,0}"/>
-                    </GroupParam>
-                </Command>
-            </SetTF>
-            <CalibZF name="CalibZF">
-                <Command name="CalibZF">
-                    <GroupParam>
-                        <Param name="axis_id" default="0"/>
-                    </GroupParam>
-                </Command>
-            </CalibZF>
-            <CalibZO name="CalibZO">
-                <Command name="CalibZO">
-                    <GroupParam>
-                        <Param name="axis_id" default="0"/>
-                        <Param name="tool_id" default="0"/>
-                    </GroupParam>
-                </Command>
-            </CalibZO>
-            <CalibZL name="CalibZL">
-                <Command name="CalibZL">
-                    <GroupParam>
-                        <Param name="axis_id" default="0"/>
-                        <Param name="tool_id" default="0"/>
-                    </GroupParam>
-                </Command>
-            </CalibZL>
-            <SaveTeachPt name="SaveTeachPt">
-                <Command name="CalibZL">
-                    <GroupParam>
-                        <Param name="ptName" default="P1"/>
-                    </GroupParam>
-                </Command>
-            </SaveTeachPt>
+            </Switch>
         </PlanPoolObject>
     </PlanRoot>
     <SensorRoot name="sensor_root">
