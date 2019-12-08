@@ -730,10 +730,10 @@ namespace kaanh
 	//更新实时状态：使能、报错//
 	auto update_state(aris::server::ControlServer &cs)->void
 	{
-		static bool motion_state[6] = { false, false, false, false, false, false };
+        static bool motion_state[256] = {false};
 		
 		//获取motion的使能状态，0表示去使能状态，1表示使能状态//
-		for (aris::Size i = 0; i < 6; i++)
+        for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
 		{
 			auto cm = dynamic_cast<aris::control::EthercatMotor*>(&cs.controller().motionPool()[i]);
 			if ((cm->statusWord() & 0x6f) != 0x27)
@@ -753,15 +753,7 @@ namespace kaanh
 			g_is_error.store(target->retCode());
 		}
 		
-		if (motion_state[0] && motion_state[1] && motion_state[2] && motion_state[3] && motion_state[4] && motion_state[5])
-		{
-			g_is_enabled.store(true);
-		}
-		else
-		{
-			g_is_enabled.store(false);
-		}
-		
+        g_is_enabled.store(std::all_of(motion_state, motion_state + cs.controller().motionPool().size(), [](bool i){return i;}));
 	}
 
 	//获取状态字——100:去使能,200:手动,300:准自动,400:自动,500:错误//
@@ -1175,6 +1167,7 @@ namespace kaanh
 
 
 	// 获取part_pq，end_pq，end_pe等 //
+    std::atomic_bool having_model=false;
 	struct GetParam
 	{
 		std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai;
@@ -1188,6 +1181,7 @@ namespace kaanh
 	};
 	auto Get::prepairNrt()->void
 	{		
+        auto is_model = having_model.load();
 		GetParam par;
 		par.part_pq.resize(model()->partPool().size() * 7, 0.0);
 		par.end_pq.resize(7, 0.0);
@@ -1205,28 +1199,42 @@ namespace kaanh
 		controlServer()->getRtData([&](aris::server::ControlServer& cs, const aris::plan::Plan *target, std::any& data)->void
 		{
             update_state(cs);
-			for (aris::Size i(-1); ++i < cs.model().partPool().size();)
-			{
-				cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
-			}
+            if(is_model)
+            {
+                for (aris::Size i(-1); ++i < cs.model().partPool().size();)
+                {
+                    cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
+                }
 
-			cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
-			cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
+                cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
+                cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
+            }
 
-			for (aris::Size i = 0; i < 6; i++)
+            for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
 			{
 #ifdef WIN32
-				std::any_cast<GetParam &>(data).motion_pos[i] = cs.model().motionPool()[i].mp();
-				std::any_cast<GetParam &>(data).motion_vel[i] = cs.model().motionPool()[i].mv();
-				std::any_cast<GetParam &>(data).motion_acc[i] = cs.model().motionPool()[i].ma();
-				std::any_cast<GetParam &>(data).motion_toq[i] = cs.model().motionPool()[i].ma();
+                if(is_model)
+                {
+                    std::any_cast<GetParam &>(data).motion_pos[i] = cs.model().motionPool()[i].mp();
+                    std::any_cast<GetParam &>(data).motion_vel[i] = cs.model().motionPool()[i].mv();
+                    std::any_cast<GetParam &>(data).motion_acc[i] = cs.model().motionPool()[i].ma();
+                    std::any_cast<GetParam &>(data).motion_toq[i] = cs.model().motionPool()[i].ma();
+                }
+
 #endif // WIN32
 
 #ifdef UNIX
 				std::any_cast<GetParam &>(data).motion_pos[i] = cs.controller().motionPool()[i].actualPos();
 				std::any_cast<GetParam &>(data).motion_vel[i] = cs.controller().motionPool()[i].actualVel();
-				std::any_cast<GetParam &>(data).motion_acc[i] = cs.model().motionPool()[i].ma();
-				std::any_cast<GetParam &>(data).motion_toq[i] = cs.controller().motionPool()[i].actualToq();
+                if(is_model)
+                {
+                    std::any_cast<GetParam &>(data).motion_acc[i] = cs.model().motionPool()[i].ma();
+                }
+                else
+                {
+                    std::any_cast<GetParam &>(data).motion_acc[i] = 0.0;
+                }
+                std::any_cast<GetParam &>(data).motion_toq[i] = cs.controller().motionPool()[i].actualToq();
 #endif // UNIX
 			}
 
@@ -1240,7 +1248,7 @@ namespace kaanh
 			ec->getLinkState(&std::any_cast<GetParam &>(data).mls, std::any_cast<GetParam &>(data).sls);
 
 			//获取motion的使能状态，0表示去使能状态，1表示使能状态//
-			for (aris::Size i = 0; i < 6; i++)
+            for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
 			{
 				auto cm = dynamic_cast<aris::control::EthercatMotor*>(&cs.controller().motionPool()[i]);
 				if ((cm->statusWord() & 0x6f) != 0x27)
@@ -1265,8 +1273,8 @@ namespace kaanh
 		}, param);
 
 		auto out_data = std::any_cast<GetParam &>(param);
-		std::vector<int> slave_online(6, 0), slave_al_state(6, 0);
-		for (aris::Size i = 0; i < 6; i++)
+        std::vector<int> slave_online(controller()->motionPool().size(), 0), slave_al_state(controller()->motionPool().size(), 0);
+        for (aris::Size i = 0; i < controller()->motionPool().size(); i++)
 		{
 			slave_online[i] = int(out_data.sls[i].online);
 			slave_al_state[i] = int(out_data.sls[i].al_state);
@@ -1275,9 +1283,10 @@ namespace kaanh
 		out_data.state_code = get_state_code();
 
 		std::vector<std::pair<std::string, std::any>> out_param;
-		out_param.push_back(std::make_pair<std::string, std::any>("part_pq", out_data.part_pq));
-		out_param.push_back(std::make_pair<std::string, std::any>("end_pq", out_data.end_pq));
-		out_param.push_back(std::make_pair<std::string, std::any>("end_pe", out_data.end_pe));
+
+        out_param.push_back(std::make_pair<std::string, std::any>("part_pq", out_data.part_pq));
+        out_param.push_back(std::make_pair<std::string, std::any>("end_pq", out_data.end_pq));
+        out_param.push_back(std::make_pair<std::string, std::any>("end_pe", out_data.end_pe));
 		out_param.push_back(std::make_pair<std::string, std::any>("motion_pos", out_data.motion_pos));
 		out_param.push_back(std::make_pair<std::string, std::any>("motion_vel", out_data.motion_vel));
 		out_param.push_back(std::make_pair<std::string, std::any>("motion_acc", out_data.motion_acc));
@@ -4904,13 +4913,7 @@ std::cout << "3" <<std::endl;
 		};
 		*/
 		
-		/*
-		auto xmlpath = std::filesystem::absolute(".");
-		const std::string xmlfile = "kaanh.xml";
-		xmlpath = xmlpath / xmlfile;
-		cs.saveXmlFile(xmlpath.string().c_str());
-		*/
-
+        having_model.store(true);
 		std::vector<std::pair<std::string, std::any>> ret_value;
 		ret() = ret_value;
 		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
@@ -5490,6 +5493,7 @@ std::cout << "3" <<std::endl;
 
 	auto Start::prepairNrt()->void
 	{
+
 		controlServer()->start();
 		option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
 

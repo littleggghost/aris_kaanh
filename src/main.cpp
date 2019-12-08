@@ -38,29 +38,30 @@ int main(int argc, char *argv[])
 	auto&cs = aris::server::ControlServer::instance();
 	auto port = argc < 2 ? 5866 : std::stoi(argv[1]);
 
-	
+
 	//生成kaanh.xml文档
     //-------for rokae robot begin//
-    cs.resetController(kaanh::createControllerRokaeXB4().release());
+    //cs.resetController(kaanh::createControllerRokaeXB4().release());
     //cs.resetModel(aris::robot::createModelRokaeXB4().release());
-    cs.resetModel(kaanh::createModelRokae().release());
-    cs.resetPlanRoot(kaanh::createPlanRoot().release());
+    //cs.resetModel(kaanh::createModelRokae().release());
+    //cs.resetPlanRoot(kaanh::createPlanRoot().release());
     //cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
-	cs.interfacePool().add<kaanh::ProInterface>("", "5866", aris::core::Socket::WEB);
-	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
-    cs.resetSensorRoot(new aris::sensor::SensorRoot);
-	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
+    //cs.interfacePool().add<kaanh::ProInterface>("", "5866", aris::core::Socket::WEB);
+    //cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
+    //cs.resetSensorRoot(new aris::sensor::SensorRoot);
+    //cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
 	//cs.model().saveXmlFile(modelxmlpath.string().c_str());	//for new model
 	//cs.model().loadXmlFile(modelxmlpath.string().c_str());
-	cs.saveXmlFile(xmlpath.string().c_str());
+    //cs.saveXmlFile(xmlpath.string().c_str());
     //-------for rokae robot end// 
 
 	
+    /*
 	aris::core::Calculator c;
 	c.addVariable("tool.pq", aris::core::Matrix({1.0,2.0}));
 	auto ret_mat = c.calculateExpression("{tool.pq,0.3}*0.5 + 0.1");
 	std::cout << ret_mat.toString() << std::endl;
-	
+    */
 
     /*
     //-------for sanxiang robot begin//
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
     //-------for daye robot end//
 	*/
 
-	/*
+    /*
 	//-------for qifan robot begin//
 	cs.resetController(kaanh::createControllerQifan().release());
 	cs.resetModel(kaanh::createModelQifan().release());
@@ -105,14 +106,15 @@ int main(int argc, char *argv[])
 	cs.model().loadXmlFile(modelxmlpath.string().c_str());
 	cs.saveXmlFile(xmlpath.string().c_str());
 	//-------for qifan robot end// 
-	*/
+    */
 	
-	cs.loadXmlFile(xmlpath.string().c_str());
+    cs.loadXmlFile(xmlpath.string().c_str());
 
-	cs.start();
+    //cs.start();
 
 	//实时回调函数，每个实时周期调用一次//
 	cs.setRtPlanPostCallback(kaanh::update_state);
+
 
 	//加载v100的速度值//
 	auto &getspeed = dynamic_cast<aris::dynamic::MatrixVariable &>(*cs.model().variablePool().findByName("v100"));
