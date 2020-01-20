@@ -45,6 +45,44 @@ namespace kaanh
 	aris::dynamic::Marker tool1;
 
 	//更新实时状态：使能、报错//
+	auto update_staubli(aris::server::ControlServer &cs)->void
+	{
+		static bool motion_state[256] = { false };
+
+		//获取motion的使能状态，0表示去使能状态，1表示使能状态//
+		for (aris::Size i = 0; i < cs.controller().motionPool().size(); i++)
+		{
+			auto cm = dynamic_cast<aris::control::EthercatMotor*>(&cs.controller().motionPool()[i]);
+			if ((cm->statusWord() & 0x6f) != 0x27)
+			{
+				motion_state[i] = 0;
+			}
+			else
+			{
+				motion_state[i] = 1;
+			}
+			//motion_state[i] = 1;
+		}
+
+		//获取ret_code的值，判断是否报错，if条件可以初始化变量，并且取变量进行条件判断//
+		g_is_error.store(cs.errorCode());
+
+		g_is_enabled.store(std::all_of(motion_state, motion_state + cs.controller().motionPool().size(), [](bool i) {return i; }));
+
+		auto &inter = dynamic_cast<aris::server::ProgramWebInterface&>(cs.interfacePool().at(0));
+		if (inter.isAutoMode())
+		{
+			g_is_auto.store(true);
+		}
+		else
+		{
+			g_is_auto.store(false);
+		}
+		g_is_running.store(inter.isAutoRunning());
+
+	}
+
+	//更新实时状态：使能、报错//
 	auto update_state(aris::server::ControlServer &cs)->void
 	{
 		static bool motion_state[256] = { false };
