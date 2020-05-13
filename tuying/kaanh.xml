@@ -1,0 +1,1492 @@
+<ControlServer>
+    <InterfacePoolObject name="object_pool">
+        <ProgramWebInterface>
+            <Socket name="socket" connect_type="WEB" port="5866"/>
+        </ProgramWebInterface>
+        <WebInterface>
+            <Socket name="socket" connect_type="TCP" port="5867"/>
+        </WebInterface>
+        <WebInterface>
+            <Socket name="socket" connect_type="TCP" port="5868"/>
+        </WebInterface>
+        <WebInterface>
+            <Socket name="socket" connect_type="TCP" port="5869"/>
+        </WebInterface>
+    </InterfacePoolObject>
+    <InterfaceRoot/>
+    <EthercatController name="ethercat_controller" sample_period_ns="1000000" esi_dirs="">
+        <SlavePoolObject name="slave_pool">
+            <EthercatMotor phy_id="0" vendor_id="0x0000066f" product_code="0x60380008" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="2.5307270000000002" min_pos="-2.5307270000000002" max_vel="1.2740899999999999" min_vel="-1.2740899999999999" max_acc="6.1086520000000002" min_acc="-6.1086520000000002" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="221624679.19079599" pos_offset="-0.43846000000000002" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+            <EthercatMotor phy_id="1" vendor_id="0x0000066f" product_code="0x60380009" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="1.919862" min_pos="-1.0471980000000001" max_vel="1.2740899999999999" min_vel="-1.2740899999999999" max_acc="6.1086520000000002" min_acc="-6.1086520000000002" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-221624679.19079599" pos_offset="1.0194920000000001" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+            <EthercatMotor phy_id="2" vendor_id="0x0000066f" product_code="0x60380008" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="0.95993099999999998" min_pos="-0.95993099999999998" max_vel="2.3736480000000002" min_vel="-2.3736480000000002" max_acc="12.217305" min_acc="-12.217305" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="117487781.73969901" pos_offset="-0.97082999999999997" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+            <EthercatMotor phy_id="3" vendor_id="0x0000066f" product_code="0x60380006" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="2.129302" min_pos="-2.129302" max_vel="3.9269910000000001" min_vel="-3.9269910000000001" max_acc="19.198622" min_acc="-19.198622" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="106807074.308817" pos_offset="0.079482999999999998" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+            <EthercatMotor phy_id="4" vendor_id="0x0000066f" product_code="0x60380006" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="2.3561939999999999" min_pos="-2.3561939999999999" max_vel="3.9269910000000001" min_vel="-3.9269910000000001" max_acc="19.198622" min_acc="-19.198622" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="106807074.308817" pos_offset="0.106145" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+            <EthercatMotor phy_id="5" vendor_id="0x0000066f" product_code="0x60380006" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="6.2831849999999996" min_pos="-6.2831849999999996" max_vel="3.9269910000000001" min_vel="-3.9269910000000001" max_acc="19.198622" min_acc="-19.198622" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-106807074.308817" pos_offset="5.3479710000000003" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+            <EthercatMotor phy_id="6" vendor_id="0x0000066f" product_code="0x6038000d" revision_num="0x00010000" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="1.51" min_pos="0" max_vel="0.5" min_vel="-0.5" max_acc="1" min_acc="-1" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="134804930.56" pos_offset="-0.33600000000000002" home_pos="0" is_virtual="false">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1600">
+                            <PdoEntry name="control_word" index="0x6040" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_operation" index="0x6060" subindex="0x00" size="8"/>
+                            <PdoEntry name="target_pos" index="0x607a" subindex="0x00" size="32"/>
+                            <PdoEntry name="touch_probe" index="0x60b8" subindex="0x00" size="16"/>
+                            <PdoEntry name="targer_tor" index="0x6071" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_tor" index="0x60b2" subindex="0x00" size="16"/>
+                            <PdoEntry name="offset_vel" index="0x60b1" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a01">
+                            <PdoEntry name="error_code" index="0x603f" subindex="0x00" size="16"/>
+                            <PdoEntry name="status_word" index="0x6041" subindex="0x00" size="16"/>
+                            <PdoEntry name="mode_of_display" index="0x6061" subindex="0x00" size="8"/>
+                            <PdoEntry name="pos_actual_value" index="0x6064" subindex="0x00" size="32"/>
+                            <PdoEntry name="vel_actual_value" index="0x606c" subindex="0x00" size="32"/>
+                            <PdoEntry name="cur_actual_value" index="0x6077" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_status" index="0x60b9" subindex="0x00" size="16"/>
+                            <PdoEntry name="touch_probe_pos1" index="0x60ba" subindex="0x00" size="32"/>
+                            <PdoEntry name="digital_input" index="0x60fd" subindex="0x00" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatMotor>
+        </SlavePoolObject>
+        <Pipe name="mout_pipe"/>
+        <Pipe name="lout_pipe"/>
+    </EthercatController>
+    <Model name="model" time="0">
+        <Environment name="environment" gravity="{0,0,-9.8,0,0,0}"/>
+        <VariablePoolElement name="variable_pool">
+            <MatrixVariable name="tool0_axis_home">{0,0,0,0,0,0}</MatrixVariable>
+        </VariablePoolElement>
+        <PartPoolElement name="part_pool">
+            <Part name="ground" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,1,1,1,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_0_j" active="true" pe="{0,0,0.596,0.785398163397448,0,0.785398163397448}"/>
+                    <Marker name="wobj0" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj1" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj2" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj3" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj4" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj5" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj6" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj7" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj8" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj9" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj10" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj11" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj12" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj13" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj14" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj15" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj16" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj17" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj18" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj19" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj20" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj21" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj22" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj23" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj24" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj25" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj26" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj27" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj28" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj29" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj30" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj31" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj32" active="true" pe="{0,0,0,-0,0,-0}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+            <Part name="L1" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_0_i" active="true" pe="{0,0,0.596,0.785398163397448,0,0.785398163397448}"/>
+                    <Marker name="joint_1_j" active="true" pe="{0.22,0,0.596,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+            <Part name="L2" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_1_i" active="true" pe="{0.22,0,0.596,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_2_j" active="true" pe="{0.22,0,1.616,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+            <Part name="L3" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_2_i" active="true" pe="{0.22,0,1.616,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_3_j" active="true" pe="{1.08,0,1.616,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+            <Part name="L4" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_3_i" active="true" pe="{1.08,0,1.616,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                    <Marker name="joint_4_j" active="true" pe="{1.08,0,1.616,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+            <Part name="L5" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_4_i" active="true" pe="{1.08,0,1.616,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_5_j" active="true" pe="{1.08,0,1.616,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+            <Part name="L6" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+                <MarkerPoolElement name="marker_pool">
+                    <Marker name="joint_5_i" active="true" pe="{1.08,0,1.616,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                    <Marker name="tool0" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool1" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool2" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool3" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool4" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool5" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool6" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool7" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool8" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool9" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool10" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool11" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool12" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool13" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool14" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool15" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool16" active="true" pe="{1.233,0,1.616,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                </MarkerPoolElement>
+                <GeometryPoolElement name="geometry_pool"/>
+            </Part>
+        </PartPoolElement>
+        <JointPoolElement name="joint_pool">
+            <RevoluteJoint name="joint_0" active="true" prt_m="L1" prt_n="ground" mak_i="joint_0_i" mak_j="joint_0_j" cf="{0,0,0,0,0}"/>
+            <RevoluteJoint name="joint_1" active="true" prt_m="L2" prt_n="L1" mak_i="joint_1_i" mak_j="joint_1_j" cf="{0,0,0,0,0}"/>
+            <RevoluteJoint name="joint_2" active="true" prt_m="L3" prt_n="L2" mak_i="joint_2_i" mak_j="joint_2_j" cf="{0,0,0,0,0}"/>
+            <RevoluteJoint name="joint_3" active="true" prt_m="L4" prt_n="L3" mak_i="joint_3_i" mak_j="joint_3_j" cf="{0,0,0,0,0}"/>
+            <RevoluteJoint name="joint_4" active="true" prt_m="L5" prt_n="L4" mak_i="joint_4_i" mak_j="joint_4_j" cf="{0,0,0,0,0}"/>
+            <RevoluteJoint name="joint_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0,0,0,0,0}"/>
+        </JointPoolElement>
+        <MotionPoolElement name="motion_pool">
+            <Motion name="motion_0" active="true" prt_m="L1" prt_n="ground" mak_i="joint_0_i" mak_j="joint_0_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
+            <Motion name="motion_1" active="true" prt_m="L2" prt_n="L1" mak_i="joint_1_i" mak_j="joint_1_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
+            <Motion name="motion_2" active="true" prt_m="L3" prt_n="L2" mak_i="joint_2_i" mak_j="joint_2_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
+            <Motion name="motion_3" active="true" prt_m="L4" prt_n="L3" mak_i="joint_3_i" mak_j="joint_3_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
+            <Motion name="motion_4" active="true" prt_m="L5" prt_n="L4" mak_i="joint_4_i" mak_j="joint_4_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
+            <Motion name="motion_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
+        </MotionPoolElement>
+        <GeneralMotionPoolElement name="general_motion_pool">
+            <GeneralMotion name="ee" active="false" prt_m="L6" prt_n="ground" mak_i="tool0" mak_j="wobj0" cf="{0,0,0,0,0,0}"/>
+        </GeneralMotionPoolElement>
+        <ForcePoolElement name="force_pool"/>
+        <SolverPoolElement name="solver_pool">
+            <PumaInverseKinematicSolver name="puma_inverse_solver" max_iter_count="1" max_error="0" which_root="8"/>
+            <ForwardKinematicSolver name="forward_kinematic_solver" max_iter_count="100" max_error="1e-10"/>
+            <InverseDynamicSolver name="inverse_dynamic_solver" max_iter_count="100" max_error="1e-10"/>
+            <ForwardDynamicSolver name="forward_dynamic_solver" max_iter_count="100" max_error="1e-10"/>
+        </SolverPoolElement>
+        <SimulatorPoolElement name="simulator_pool"/>
+        <SimResultPoolElement name="sim_result_pool"/>
+        <CalibratorPoolElement name="calibrator_pool"/>
+    </Model>
+    <SensorRoot name="sensor_root">
+        <SensorPoolObject name="sensor_pool"/>
+    </SensorRoot>
+    <PlanRoot name="plan_root">
+        <PlanPoolObject name="plan_pool_object">
+            <tuying.Get name="Get_plan">
+                <Command name="get"/>
+            </tuying.Get>
+            <tuying.Enable name="enable_plan">
+                <Command name="en">
+                    <GroupParam>
+                        <Param name="limit_time" default="5000"/>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                            <Param name="physical_id" abbreviation="p" default="0"/>
+                            <Param name="slave_id" abbreviation="s" default="0"/>
+                        </UniqueParam>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </tuying.Enable>
+            <tuying.Disable name="enable_plan">
+                <Command name="ds">
+                    <GroupParam>
+                        <Param name="limit_time" default="5000"/>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                            <Param name="physical_id" abbreviation="p" default="0"/>
+                            <Param name="slave_id" abbreviation="s" default="0"/>
+                        </UniqueParam>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </tuying.Disable>
+            <Getp name="Getp_plan">
+                <Command name="getp"/>
+            </Getp>
+            <MoveAbJ name="MoveAbJ_plan">
+                <Command name="mvabj">
+                    <GroupParam>
+                        <Param name="pos" default="{0.2,0.2,0.2,0.2,0.2,0.2,0.2}"/>
+                        <Param name="vel" abbreviation="v" default="{0.2,0.2,0.2,0.2,0.2,0.2,0.2}"/>
+                        <Param name="acc" abbreviation="a" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                        <Param name="dec" abbreviation="d" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                    </GroupParam>
+                </Command>
+            </MoveAbJ>
+            <MoveT name="MoveT_plan">
+                <Command name="movet">
+                    <GroupParam>
+                        <Param name="col" default="9"/>
+                        <Param name="path" default="C:\Users\kevin\Desktop\tuying\tuying\output.emily"/>
+                    </GroupParam>
+                </Command>
+            </MoveT>
+            <MoveE name="MoveE_plan">
+                <Command name="mve">
+                    <GroupParam>
+                        <Param name="col" default="10"/>
+                        <Param name="file" default="output.emily"/>
+                    </GroupParam>
+                </Command>
+            </MoveE>
+            <MoveE0 name="MoveE0_plan">
+                <Command name="mve0">
+                    <GroupParam>
+                        <Param name="col" default="9"/>
+                        <Param name="file" default="output.emily"/>
+                        <Param name="percent" default="0.1"/>
+                    </GroupParam>
+                </Command>
+            </MoveE0>
+            <MoveJM name="MoveJM_plan">
+                <Command name="moveJM">
+                    <GroupParam>
+                        <Param name="pos" default="current_pos"/>
+                        <Param name="vel" abbreviation="v" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                        <Param name="acc" abbreviation="a" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                        <Param name="dec" abbreviation="d" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                        <Param name="ab" default="1"/>
+                    </GroupParam>
+                </Command>
+            </MoveJM>
+            <Xbox name="Xbox_plan">
+                <Command name="xbox">
+                    <GroupParam>
+                        <Param name="mode" default="0"/>
+                    </GroupParam>
+                </Command>
+            </Xbox>
+            <DMode name="DMode_plan">
+                <Command name="dmode">
+                    <GroupParam>
+                        <GroupParam>
+                            <Param name="mode" default="0"/>
+                        </GroupParam>
+                    </GroupParam>
+                </Command>
+            </DMode>
+            <DEnable name="DEnable_plan">
+                <Command name="denable"/>
+            </DEnable>
+            <DDisable name="DDisable_plan">
+                <Command name="ddisable"/>
+            </DDisable>
+            <DJ1 name="DJ1_plan">
+                <Command name="dj1">
+                    <UniqueParam default="group">
+                        <GroupParam name="group">
+                            <Param name="step" default="0.3"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </DJ1>
+            <DJ2 name="DJ2_plan">
+                <Command name="dj2">
+                    <UniqueParam default="group">
+                        <GroupParam name="group">
+                            <Param name="step" default="0.3"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </DJ2>
+            <DJ3 name="DJ3_plan">
+                <Command name="dj3">
+                    <UniqueParam default="group">
+                        <GroupParam name="group">
+                            <Param name="step" default="0.3"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </DJ3>
+            <DMoveAbsJ name="DMoveAbsJ_plan">
+                <Command name="dmvaj">
+                    <GroupParam>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                        </UniqueParam>
+                        <Param name="pos" default="0"/>
+                    </GroupParam>
+                </Command>
+            </DMoveAbsJ>
+            <DHome name="DHome_plan">
+                <Command name="dhome">
+                    <GroupParam>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </DHome>
+            <SaveHome name="SaveHome_plan">
+                <Command name="savehome"/>
+            </SaveHome>
+            <ToHome name="ToHome_plan">
+                <Command name="tohome">
+                    <GroupParam>
+                        <Param name="pos" default="current_pos"/>
+                        <Param name="vel" abbreviation="v" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                        <Param name="acc" abbreviation="a" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                        <Param name="dec" abbreviation="d" default="{0.1,0.1,0.1,0.1,0.1,0.1,0.1}"/>
+                    </GroupParam>
+                </Command>
+            </ToHome>
+            <SaveP name="SaveP_plan">
+                <Command name="savep">
+                    <GroupParam>
+                        <Param name="nf" default="0"/>
+                    </GroupParam>
+                </Command>
+            </SaveP>
+            <plan.Start name="start">
+                <Command name="cs_start"/>
+            </plan.Start>
+            <Stop name="stop">
+                <Command name="cs_stop"/>
+            </Stop>
+            <Mode name="mode_plan">
+                <Command name="md">
+                    <GroupParam>
+                        <Param name="limit_time" default="5000"/>
+                        <Param name="mode" abbreviation="d" default="8"/>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                            <Param name="physical_id" abbreviation="p" default="0"/>
+                            <Param name="slave_id" abbreviation="s" default="0"/>
+                        </UniqueParam>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </Mode>
+            <Clear name="clear_plan">
+                <Command name="cl"/>
+            </Clear>
+            <kaanh.Recover name="recover_plan">
+                <Command name="rc"/>
+            </kaanh.Recover>
+            <kaanh.Reset name="reset_plan">
+                <Command name="rs">
+                    <GroupParam>
+                        <Param name="pos" default="{0.0,0.0,0.0,0.0,0.0,0.0,0.0}"/>
+                        <Param name="acc" default="0.1"/>
+                        <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
+                        <Param name="dec" default="0.1"/>
+                        <Param name="jerk" default="0.1"/>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                            <Param name="physical_id" abbreviation="p" default="0"/>
+                            <Param name="slave_id" abbreviation="s" default="0"/>
+                        </UniqueParam>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </kaanh.Reset>
+            <GetInfo name="plan">
+                <Command name="get_i"/>
+            </GetInfo>
+            <kaanh.MoveAbsJ name="MoveAbsJ">
+                <Command name="mvaj">
+                    <GroupParam>
+                        <Param name="pos" default="{0.0,0.0,0.0,0.0,0.0,0.0}"/>
+                        <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
+                        <Param name="acc" default="0.5"/>
+                        <Param name="dec" default="0.5"/>
+                        <Param name="jerk" default="10.0"/>
+                        <Param name="zone" default="fine"/>
+                        <Param name="load" default="{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
+                        <UniqueParam default="all">
+                            <Param name="all" abbreviation="a"/>
+                            <Param name="motion_id" abbreviation="m" default="0"/>
+                            <Param name="physical_id" abbreviation="p" default="0"/>
+                            <Param name="slave_id" abbreviation="s" default="0"/>
+                        </UniqueParam>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </kaanh.MoveAbsJ>
+            <kaanh.MoveL name="MoveL">
+                <Command name="mvl">
+                    <GroupParam>
+                        <Param name="pos_unit" default="m"/>
+                        <UniqueParam default="pq">
+                            <Param name="pq" default="{0,0,0,0,0,0,1}"/>
+                            <Param name="pm" default="{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}"/>
+                            <GroupParam>
+                                <Param name="pe" default="{0,0,0,0,0,0}"/>
+                                <Param name="ori_unit" default="rad"/>
+                                <Param name="eul_type" default="321"/>
+                            </GroupParam>
+                        </UniqueParam>
+                        <Param name="acc" default="0.5"/>
+                        <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
+                        <Param name="dec" default="0.5"/>
+                        <Param name="jerk" default="10.0"/>
+                        <Param name="angular_acc" default="0.5"/>
+                        <Param name="angular_vel" default="0.1"/>
+                        <Param name="angular_dec" default="0.5"/>
+                        <Param name="angular_jerk" default="10.0"/>
+                        <Param name="zone" default="fine"/>
+                        <Param name="load" default="{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </kaanh.MoveL>
+            <kaanh.MoveJ name="MoveJ">
+                <Command name="mvj">
+                    <GroupParam>
+                        <Param name="pos_unit" default="m"/>
+                        <UniqueParam default="pq">
+                            <Param name="pq" default="{0,0,0,0,0,0,1}"/>
+                            <Param name="pm" default="{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}"/>
+                            <GroupParam>
+                                <Param name="pe" default="{0,0,0,0,0,0}"/>
+                                <Param name="ori_unit" default="rad"/>
+                                <Param name="eul_type" default="321"/>
+                            </GroupParam>
+                        </UniqueParam>
+                        <Param name="joint_acc" default="0.5"/>
+                        <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
+                        <Param name="joint_dec" default="0.5"/>
+                        <Param name="joint_jerk" default="10.0"/>
+                        <Param name="speed" default="{0.1, 0.1, 3.49, 0.0, 0.0}"/>
+                        <Param name="zone" default="fine"/>
+                        <Param name="load" default="{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
+                        <UniqueParam default="check_all">
+                            <Param name="check_all"/>
+                            <Param name="check_none"/>
+                            <GroupParam>
+                                <UniqueParam default="check_enable">
+                                    <Param name="check_enable"/>
+                                    <Param name="not_check_enable"/>
+                                </UniqueParam>
+                                <UniqueParam default="check_pos">
+                                    <Param name="check_pos"/>
+                                    <Param name="not_check_pos"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_pos_max">
+                                            <Param name="check_pos_max"/>
+                                            <Param name="not_check_pos_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_min">
+                                            <Param name="check_pos_min"/>
+                                            <Param name="not_check_pos_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous">
+                                            <Param name="check_pos_continuous"/>
+                                            <Param name="not_check_pos_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_continuous_second_order">
+                                            <Param name="check_pos_continuous_second_order"/>
+                                            <Param name="not_check_pos_continuous_second_order"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_pos_following_error">
+                                            <Param name="check_pos_following_error"/>
+                                            <Param name="not_check_pos_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                                <UniqueParam default="check_vel">
+                                    <Param name="check_vel"/>
+                                    <Param name="not_check_vel"/>
+                                    <GroupParam>
+                                        <UniqueParam default="check_vel_max">
+                                            <Param name="check_vel_max"/>
+                                            <Param name="not_check_vel_max"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_min">
+                                            <Param name="check_vel_min"/>
+                                            <Param name="not_check_vel_min"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_continuous">
+                                            <Param name="check_vel_continuous"/>
+                                            <Param name="not_check_vel_continuous"/>
+                                        </UniqueParam>
+                                        <UniqueParam default="check_vel_following_error">
+                                            <Param name="check_vel_following_error"/>
+                                            <Param name="not_check_vel_following_error"/>
+                                        </UniqueParam>
+                                    </GroupParam>
+                                </UniqueParam>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </kaanh.MoveJ>
+            <kaanh.MoveC name="MoveC">
+                <Command name="mvc">
+                    <GroupParam>
+                        <Param name="pos_unit" default="m"/>
+                        <UniqueParam default="mid_pq">
+                            <Param name="mid_pq" default="{0,0,0,0,0,0,1}"/>
+                            <Param name="mid_pm" default="{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}"/>
+                            <GroupParam>
+                                <Param name="mid_pe" default="{0,0,0,0,0,0}"/>
+                                <Param name="mid_ori_unit" default="rad"/>
+                                <Param name="mid_eul_type" default="321"/>
+                            </GroupParam>
+                        </UniqueParam>
+                        <UniqueParam default="end_pq">
+                            <Param name="end_pq" default="{0,0,0,0,0,0,1}"/>
+                            <Param name="end_pm" default="{1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1}"/>
+                            <GroupParam>
+                                <Param name="end_pe" default="{0,0,0,0,0,0}"/>
+                                <Param name="end_ori_unit" default="rad"/>
+                                <Param name="end_eul_type" default="321"/>
+                            </GroupParam>
+                        </UniqueParam>
+                        <Param name="acc" default="0.5"/>
+                        <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
+                        <Param name="dec" default="0.5"/>
+                        <Param name="jerk" default="10.0"/>
+                        <Param name="angular_acc" default="0.5"/>
+                        <Param name="angular_vel" default="0.1"/>
+                        <Param name="angular_dec" default="0.5"/>
+                        <Param name="angular_jerk" default="10"/>
+                        <Param name="speed" default="{0.1, 0.1, 3.49, 0.0, 0.0}"/>
+                        <Param name="zone" default="fine"/>
+                        <Param name="load" default="{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
+                    </GroupParam>
+                </Command>
+            </kaanh.MoveC>
+            <Var name="Var_plan">
+                <Command name="var">
+                    <GroupParam>
+                        <UniqueParam>
+                            <GroupParam>
+                                <Param name="name" default="0"/>
+                                <Param name="value" default="0"/>
+                                <Param name="type" default="0"/>
+                            </GroupParam>
+                            <Param name="clear"/>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </Var>
+            <Evaluate name="Evaluate_plan">
+                <Command name="evaluate">
+                    <GroupParam>
+                        <Param name="value" default="0"/>
+                    </GroupParam>
+                </Command>
+            </Evaluate>
+            <tuying.JogJ1 name="JogJ1_plan">
+                <Command name="j1">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" abbreviation="v" default="0.1"/>
+                            <Param name="acc" abbreviation="a" default="0.1"/>
+                            <Param name="dec" abbreviation="d" default="0.1"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </tuying.JogJ1>
+            <tuying.JogJ2 name="JogJ2_plan">
+                <Command name="j2">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" abbreviation="v" default="0.1"/>
+                            <Param name="acc" abbreviation="a" default="0.1"/>
+                            <Param name="dec" abbreviation="d" default="0.1"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </tuying.JogJ2>
+            <tuying.JogJ3 name="JogJ3_plan">
+                <Command name="j3">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" abbreviation="v" default="0.1"/>
+                            <Param name="acc" abbreviation="a" default="0.1"/>
+                            <Param name="dec" abbreviation="d" default="0.1"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </tuying.JogJ3>
+            <tuying.JogJ4 name="JogJ4_plan">
+                <Command name="j4">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" abbreviation="v" default="0.1"/>
+                            <Param name="acc" abbreviation="a" default="0.1"/>
+                            <Param name="dec" abbreviation="d" default="0.1"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </tuying.JogJ4>
+            <tuying.JogJ5 name="JogJ5_plan">
+                <Command name="j5">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" abbreviation="v" default="0.1"/>
+                            <Param name="acc" abbreviation="a" default="0.1"/>
+                            <Param name="dec" abbreviation="d" default="0.1"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </tuying.JogJ5>
+            <tuying.JogJ6 name="JogJ6_plan">
+                <Command name="j6">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" abbreviation="v" default="0.1"/>
+                            <Param name="acc" abbreviation="a" default="0.1"/>
+                            <Param name="dec" abbreviation="d" default="0.1"/>
+                            <Param name="vel_percent" default="10"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </tuying.JogJ6>
+            <tuying.JogJ7 name="JogJ7_plan">
+                <Command name="j7">
+                    <GroupParam>
+                        <UniqueParam>
+                            <GroupParam>
+                                <Param name="increase_count" default="200"/>
+                                <Param name="vel" abbreviation="v" default="0.5"/>
+                                <Param name="acc" abbreviation="a" default="0.5"/>
+                                <Param name="dec" abbreviation="d" default="0.5"/>
+                                <Param name="vel_percent" default="10"/>
+                                <Param name="direction" default="1"/>
+                            </GroupParam>
+                            <Param name="stop"/>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </tuying.JogJ7>
+            <JX name="JX_plan">
+                <Command name="jx">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.15,0.15,0.15}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </JX>
+            <JY name="JY_plan">
+                <Command name="jy">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.15,0.15,0.15}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </JY>
+            <JZ name="JZ_plan">
+                <Command name="jz">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.15,0.15,0.15}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </JZ>
+            <JRX name="JRX_plan">
+                <Command name="jrx">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.15,0.15,0.15}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </JRX>
+            <JRY name="JRY_plan">
+                <Command name="jry">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.15,0.15,0.15}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </JRY>
+            <JRZ name="JRZ_plan">
+                <Command name="jrz">
+                    <UniqueParam>
+                        <GroupParam>
+                            <Param name="increase_count" default="200"/>
+                            <Param name="vel" default="{0.05,0.05,0.05,0.15,0.15,0.15}"/>
+                            <Param name="acc" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="dec" default="{0.2,0.2,0.2,1,1,1}"/>
+                            <Param name="cor" default="0"/>
+                            <Param name="tool" default="tool0"/>
+                            <Param name="wobj" default="wobj0"/>
+                            <Param name="vel_percent" default="20"/>
+                            <Param name="direction" default="1"/>
+                        </GroupParam>
+                        <Param name="stop"/>
+                    </UniqueParam>
+                </Command>
+            </JRZ>
+            <ClearCon name="ClearCon_plan">
+                <Command name="clearCon"/>
+            </ClearCon>
+            <SetCon name="SetCon_plan">
+                <Command name="setCon">
+                    <GroupParam>
+                        <UniqueParam>
+                            <Param name="motion_phyid" default="0"/>
+                            <GroupParam>
+                                <Param name="ecslave_phyid" default="6"/>
+                                <Param name="ecslave_dc" default="768"/>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </SetCon>
+            <SetDH name="SetDH_plan">
+                <Command name="setdh">
+                    <GroupParam>
+                        <UniqueParam>
+                            <GroupParam name="start_group">
+                                <Param name="six_axes"/>
+                                <Param name="d1_six_axes" default="0.3295"/>
+                                <Param name="a1_six_axes" default="0.04"/>
+                                <Param name="a2_six_axes" default="0.275"/>
+                                <Param name="d3_six_axes" default="0.0"/>
+                                <Param name="a3_six_axes" default="0.025"/>
+                                <Param name="d4_six_axes" default="0.28"/>
+                                <Param name="tool0_six_axes" default="0.078"/>
+                            </GroupParam>
+                            <GroupParam>
+                                <Param name="seven_axes"/>
+                                <Param name="d1_seven_axes" default="0.3705"/>
+                                <Param name="d3_seven_axes" default="0.330"/>
+                                <Param name="d5_seven_axes" default="0.320"/>
+                                <Param name="tool0_seven_axes" default="0.2205"/>
+                            </GroupParam>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </SetDH>
+            <SetPG name="SetPG_plan">
+                <Command name="setpgpath">
+                    <GroupParam>
+                        <Param name="name" default="test"/>
+                        <Param name="pe" default="{0, 0, 0, -0, 0, -0}"/>
+                        <Param name="part_id" default="6"/>
+                        <Param name="file_path" default="/RobotGallery/Rokae/XB4/l0.data"/>
+                    </GroupParam>
+                </Command>
+            </SetPG>
+            <SetPPath name="SetPPath_plan">
+                <Command name="setppath">
+                    <GroupParam>
+                        <Param name="name" default="test"/>
+                        <Param name="pe" default="{0.0, 0.0, 0.0, -0.0, 0.0, -0.0}"/>
+                        <Param name="file_path" default="/RobotGallery/Rokae/XB4/l0.data;/RobotGallery/Rokae/XB4/l1.data;/RobotGallery/Rokae/XB4/l2.data;/RobotGallery/Rokae/XB4/l3.data;/RobotGallery/Rokae/XB4/l4.data;/RobotGallery/Rokae/XB4/l5.data;/RobotGallery/Rokae/XB4/l6.data"/>
+                    </GroupParam>
+                </Command>
+            </SetPPath>
+            <SetUI name="SetUI_plan">
+                <Command name="setUI">
+                    <GroupParam>
+                        <Param name="ui_path" default="interface_kaanh.xml"/>
+                    </GroupParam>
+                </Command>
+            </SetUI>
+            <SetDriver name="SetDriver_plan">
+                <Command name="setDriver">
+                    <GroupParam>
+                        <Param name="motion_id" abbreviation="m" default="0"/>
+                        <Param name="pos_factor" default="0.0"/>
+                        <Param name="pos_max" default="0.0"/>
+                        <Param name="pos_min" default="0.0"/>
+                        <Param name="vel_max" default="0.0"/>
+                        <Param name="vel_min" default="0.0"/>
+                        <Param name="acc_max" default="0.0"/>
+                        <Param name="acc_min" default="0.0"/>
+                        <Param name="pos_offset" default="0.0"/>
+                    </GroupParam>
+                </Command>
+            </SetDriver>
+            <SaveXml name="SaveXml_plan">
+                <Command name="savexml">
+                    <GroupParam>
+                        <Param name="path"/>
+                        <Param name="filename"/>
+                    </GroupParam>
+                </Command>
+            </SaveXml>
+            <ScanSlave name="ScanSlave_plan">
+                <Command name="scanslave"/>
+            </ScanSlave>
+            <GetEsiPdoList name="GetEsiPdoList_plan">
+                <Command name="getesipdolist">
+                    <GroupParam>
+                        <Param name="vendor_id" default="0"/>
+                        <Param name="product_code" default="0"/>
+                        <Param name="revision_num" default="0"/>
+                    </GroupParam>
+                </Command>
+            </GetEsiPdoList>
+            <SetEsiPath name="SetEsiPath_plan">
+                <Command name="setesipath">
+                    <GroupParam>
+                        <Param name="path"/>
+                    </GroupParam>
+                </Command>
+            </SetEsiPath>
+            <kaanh.GetXml name="GetXml">
+                <Command name="get_xml"/>
+            </kaanh.GetXml>
+            <kaanh.SetXml name="SetXml">
+                <Command name="set_xml">
+                    <Param name="xml"/>
+                </Command>
+            </kaanh.SetXml>
+            <SetCT name="SetCT_plan">
+                <Command name="setCT">
+                    <GroupParam>
+                        <Param name="ct" abbreviation="t" default="1"/>
+                    </GroupParam>
+                </Command>
+            </SetCT>
+            <SetVel name="SetVel_plan">
+                <Command name="setvel">
+                    <GroupParam>
+                        <Param name="vel_percent" abbreviation="p" default="0"/>
+                    </GroupParam>
+                </Command>
+            </SetVel>
+            <Run name="Run_plan">
+                <Command name="run">
+                    <GroupParam>
+                        <UniqueParam>
+                            <Param name="forward"/>
+                            <Param name="goto" default="2"/>
+                            <Param name="start"/>
+                            <Param name="pause"/>
+                            <Param name="stop"/>
+                        </UniqueParam>
+                    </GroupParam>
+                </Command>
+            </Run>
+        </PlanPoolObject>
+    </PlanRoot>
+</ControlServer>
