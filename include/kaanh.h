@@ -730,6 +730,15 @@ namespace kaanh
         explicit Yuli(const std::string &name = "Yuli_plan");
         ARIS_REGISTER_TYPE(Yuli);
     };
+
+	class Kunwei : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		auto virtual executeRT()->int;
+		explicit Kunwei(const std::string &name = "Kunwei_plan");
+		ARIS_REGISTER_TYPE(Kunwei);
+	};
 	
 }
 

@@ -98,7 +98,7 @@ auto controlboard::send_command(uint16_t *buffer, aris::server::ControlServer &c
 	}
     else if(index == 21)
     {
-		cor = ~cor;
+		cor = !cor;
         cout<<"change coordinate system"<<endl;
         if(cor)
         {

@@ -924,7 +924,7 @@ namespace tuying
 		double y;
 		if (abs(x2 - x1) < 1e-6)
 		{
-			y = x2;
+			y = y2;
 		}
 		else
 		{
@@ -1114,15 +1114,18 @@ namespace tuying
 
 
 	// 执行emily文件 //
+	static std::vector<std::vector<double>> target_pos;
+	static std::atomic_int32_t mve_flag = 0;
+	//mve指令标志位：0:加载emily文件，1:前进，2:后退，3:替换当前数据点，4:保存更新emily文件，5:开始，6:暂停，7:退出，8:执行到指定行
+	static std::atomic_int32_t current_line = 0;
+	static std::atomic_int32_t target_line = 0;
 	struct MoveEParam
 	{
 		std::vector<std::vector<double>> pos;
-		std::vector<std::vector<double>> target_pos;
 		std::vector<std::vector<double>> temp_pos;
+		std::vector<double> vel, acc, dec, p_now, v_now, a_now;
 		std::vector<bool> active;
 		double ratio;
-		static std::atomic_int32_t mve_flag;
-		//mve指令标志位：0:加载emily文件，1:前进，2:后退，3:替换当前emily数据点，4:保存更新emily文件，5:开始，6:暂停，7:退出
 	};
 	bool splitString(std::string spCharacter, const std::string& objString, std::vector<bool>& stringVector)
 	{
@@ -1154,12 +1157,24 @@ namespace tuying
 		}
 		return true;
 	}
-	std::atomic_int32_t MoveEParam::mve_flag = 0;
+
 	auto MoveE::prepareNrt()->void
 	{
 		MoveEParam param;
 		auto&cs = aris::server::ControlServer::instance();
 		std::shared_ptr<aris::plan::Plan> planptr = cs.currentExecutePlan();
+		param.vel.resize(7, 0.0);
+		param.acc.resize(7, 0.0);
+		param.dec.resize(7, 0.0);
+		double percent = 0.1;//最大速度系数，0.2即表示取最大加速度的0.2倍作为规划值
+
+		//设置最大速度、加速度、减速度
+		for (Size i = 0; i < param.vel.size(); ++i)
+		{
+			param.vel[i] = percent * controller()->motionPool()[i].maxVel();
+			param.acc[i] = percent * controller()->motionPool()[i].maxAcc();
+			param.dec[i] = percent * controller()->motionPool()[i].minAcc();
+		}
 
 		for (auto cmd_param : cmdParams())
 		{
@@ -1172,13 +1187,16 @@ namespace tuying
 					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
 					return;
 				}
+				
+				current_line.store(0);//变量初始化，确保不受上一次的数值影响
+				target_line.store(0);
 				param.active.clear();
 				param.pos.clear();
-				param.target_pos.clear();
+				target_pos.clear();
 				param.temp_pos.clear();
-				param.target_pos.resize(7);
+				target_pos.resize(7);
 				std::ifstream infile;
-				param.mve_flag.store(0);//加载emily文件
+				mve_flag.store(0);//加载emily文件
 				std::unique_lock<std::mutex> run_lock(dynamixel_mutex);
 				dxl_pos.clear();
 				dxl_pos.resize(3);
@@ -1317,7 +1335,7 @@ namespace tuying
 							{
 								for (double count = param.temp_pos[0][j]; count < param.temp_pos[0][j + 1] - 0.2*0.001*param.ratio; count = count + 0.001*param.ratio)
 								{
-									param.target_pos[i].push_back(interpolate(param.temp_pos[0][j], param.temp_pos[0][j + 1], param.pos[i][j], param.pos[i][j + 1], count)* PI / 180.0);
+									target_pos[i].push_back(interpolate(param.temp_pos[0][j], param.temp_pos[0][j + 1], param.pos[i][j], param.pos[i][j + 1], count)* PI / 180.0);
 								}
 							}
 						}
@@ -1330,7 +1348,7 @@ namespace tuying
 							{
 								for (double count = param.temp_pos[0][j]; count < param.temp_pos[0][j + 1] - 0.2*0.001*param.ratio; count = count + 0.001*param.ratio)
 								{
-									param.target_pos[i].push_back(interpolate(param.temp_pos[0][j], param.temp_pos[0][j + 1], param.pos[i][j], param.pos[i][j + 1], count));
+									target_pos[i].push_back(interpolate(param.temp_pos[0][j], param.temp_pos[0][j + 1], param.pos[i][j], param.pos[i][j + 1], count));
 								}
 							}
 						}
@@ -1358,75 +1376,168 @@ namespace tuying
 				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
 				if (planptr && planptr->cmdName() == this->cmdName())
 				{
+					//前进
+					if (mve_flag.exchange(1)) {}
+					else
+					{
+						auto line = current_line.load();
+						for (int i = 0; i < controller()->motionPool().size(); i++)
+						{
+							param.p_now[i] = target_pos[i][line];
+						}
+					}
+					int step = g_vel_percent.load() * 10;//步进时间范围为10~1000ms
+					int line = current_line.load();
+					line = line + step;
+					line = std::min(line, int(target_pos[0].size()) - 1);//保证高位不溢出
+					target_line.store(line);
 					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
 					return;
 				}
-				param.mve_flag.store(1);
 			}
 			else if (cmd_param.first == "backward")
 			{
-				param.mve_flag.store(2);
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					//后退
+					if (mve_flag.exchange(2)) {}
+					else
+					{
+						auto line = current_line.load();
+						for (int i = 0; i < controller()->motionPool().size(); i++)
+						{
+							param.p_now[i] = target_pos[i][line];
+						}
+					}
+					int step = g_vel_percent.load() * 10;//步进时间范围为10~1000ms
+					int line = current_line.load();
+					line = line - step;
+					line = std::max(line, 0);//保证低位不溢出
+					target_line.store(line);
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}
 			}
 			else if (cmd_param.first == "replace")
 			{
-				param.mve_flag.store(3);
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					mve_flag.store(3);//替换当前emily数据点
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}
 			}
 			else if (cmd_param.first == "save")
 			{
-				param.mve_flag.store(4);
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					mve_flag.store(4);//保存更新emily文件
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}	
 			}
 			else if (cmd_param.first == "start")
 			{
-				param.mve_flag.store(5);
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					mve_flag.store(5);//开始
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}
+				
 			}
 			else if (cmd_param.first == "pause")
 			{
-				param.mve_flag.store(6);
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					mve_flag.store(6);//暂停
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}	
 			}
 			else if (cmd_param.first == "quit")
 			{
-				param.mve_flag.store(7);
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					mve_flag.store(7);//退出
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}
+			}
+			else if (cmd_param.first == "time")
+			{
+				//当前有指令在执行//
+				if (planptr && planptr->cmdName() != this->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
+				if (planptr && planptr->cmdName() == this->cmdName())
+				{
+					//执行到指定时间time处
+					if (mve_flag.exchange(8)){}
+					else
+					{
+						auto line = current_line.load();
+						for (int i = 0; i < controller()->motionPool().size(); i++)
+						{
+							param.p_now[i] = target_pos[i][line];
+						}
+					}
+					int t = 1000 * doubleParam(cmd_param.first);//时间单位转换，秒转换成毫秒，pos的行间距是1毫秒
+					target_line.store(t);
+					option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+					return;
+				}
 			}
 		}
 		//对机械臂及外部轴数据进行滑动滤波，窗口为11
 		uint16_t window = 11;
-		for (int i = 0; i < param.target_pos.size(); i++)
+		for (int i = 0; i < target_pos.size(); i++)
 		{
-			for (int j = 0; j < param.target_pos[0].size(); j++)
+			for (int j = 0; j < target_pos[0].size(); j++)
 			{
 				if (j < window)
 				{
-					param.target_pos[i][j] = std::accumulate(param.target_pos[i].begin(), param.target_pos[i].begin() + j + 1, 0.0) / (j + 1);
+					target_pos[i][j] = std::accumulate(target_pos[i].begin(), target_pos[i].begin() + j + 1, 0.0) / (j + 1);
 				}
 				else
 				{
-					param.target_pos[i][j] = std::accumulate(param.target_pos[i].begin() + j - 10, param.target_pos[i].begin() + j + 1, 0.0) / window;
+					target_pos[i][j] = std::accumulate(target_pos[i].begin() + j - 10, target_pos[i].begin() + j + 1, 0.0) / window;
 				}
 			}
 		}
 		//对机械臂及外部轴数据进行滑动滤波，窗口为4
 		uint16_t window2 = 4;
-		for (int i = 0; i < param.target_pos.size(); i++)
+		for (int i = 0; i < target_pos.size(); i++)
 		{
-			for (int j = 0; j < param.target_pos[0].size(); j++)
+			for (int j = 0; j < target_pos[0].size(); j++)
 			{
 				if (j < window2)
 				{
-					param.target_pos[i][j] = std::accumulate(param.target_pos[i].begin(), param.target_pos[i].begin() + j + 1, 0.0) / (j + 1);
+					target_pos[i][j] = std::accumulate(target_pos[i].begin(), target_pos[i].begin() + j + 1, 0.0) / (j + 1);
 				}
 				else
 				{
-					param.target_pos[i][j] = std::accumulate(param.target_pos[i].begin() + j - 3, param.target_pos[i].begin() + j + 1, 0.0) / window2;
+					target_pos[i][j] = std::accumulate(target_pos[i].begin() + j - 3, target_pos[i].begin() + j + 1, 0.0) / window2;
 				}
 			}
 		}
 
-		for (int j = 0; j < param.target_pos.size(); j++)
+		for (int j = 0; j < target_pos.size(); j++)
 		{
 			std::cout << "前13行数据：" << std::endl;
 			for (int i = 0; i < 13; i++)
 			{
-				std::cout << param.target_pos[j][i] << "  ";
+				std::cout << target_pos[j][i] << "  ";
 			}
 			std::cout << std::endl;
 		}
@@ -1442,65 +1553,89 @@ namespace tuying
 	{
 		auto &param = std::any_cast<MoveEParam&>(this->param());
 		
+		bool finished128 = false;
 		static aris::Size total_count = 1;
 		if (count() == 1)
 		{
-			syn_clock.store(0);
+			syn_clock.store(0);//舵机同步执行数据flag初始化
 		}
-		if (count() % 10 == 0)
+		
+		switch (mve_flag.load())
 		{
-			syn_clock++;
+		case 1://前进
+		case 2://后退
+		case 8://执行到指定时间
+		{
+			// 梯形轨迹规划 //
+			static double p_next[7], v_next[7], a_next[7];
+			int line = target_line.load();
+			for (int i = 0; i < controller()->motionPool().size(); i++)
+			{
+				aris::Size t;
+				auto finished128 = aris::plan::moveAbsolute2(param.p_now[i], param.v_now[i], param.a_now[i]
+					, target_pos[i][line], 0.0, 0.0
+					, param.vel[i], param.acc[i], param.dec[i]
+					, 1e-3, 1e-10, p_next[i], v_next[i], a_next[i], t);
+
+				if (i < 6)
+				{
+					model()->motionPool().at(i).setMp(p_next[i]);
+				}
+				controller()->motionAtAbs(i).setTargetPos(p_next[i]);
+
+				param.p_now[i] = p_next[i];
+				param.v_now[i] = v_next[i];
+				param.a_now[i] = a_next[i];
+
+				if (finished128)//如果执行结束，case跳转到default，并初始化v_now，a_now
+				{
+					param.p_now[i] = target_pos[i][line];
+					param.v_now[i] = 0.0;
+					param.a_now[i] = 0.0;
+					mve_flag.store(0);
+				}
+			}
+			break;
+		}
+		
+		case 3://替换当前数据点
+
+		case 4://保存更新emily文件
+
+		case 5://开始
+		{
+			if (count() % 10 == 0)
+			{
+				syn_clock++;//舵机同步执行数据flag
+			}
+			//线性插值轨迹//
+			auto cur_line = current_line++;
+			for (int i = 0; i < controller()->motionPool().size(); i++)
+			{
+				if (!target_pos[i].empty())
+				{
+					controller()->motionPool()[i].setTargetPos(target_pos[i][cur_line]);
+					if (i < 6)
+					{
+						model()->motionPool().at(i).setMp(target_pos[i][cur_line]);
+					}
+				}
+				total_count = std::max(target_pos[i].size(), total_count);
+			}
+			break;
+		}
+		
+		case 6://暂停
+
+		case 7://退出
+
+		default:
+			break;
 		}
 
-#ifdef WIN32
-		for (int i = 0; i < model()->motionPool().size(); i++)
-		{
-			if (!param.target_pos[i].empty())
-			{
-				model()->motionPool().at(i).setMp(param.target_pos[i][count()-1]);
-			}
-			total_count = std::max(param.target_pos[i].size(), total_count);
-		}
-		if (model()->solverPool().at(1).kinPos())return -1;
-
-		// 打印 //
-		auto &cout = controller()->mout();
-		if (count() % 1000 == 0)
-		{
-			for (Size i = 0; i < model()->motionPool().size(); i++)
-			{
-				cout << model()->motionPool().at(i).mp() << "  ";
-			}
-			cout << std::endl;
-		}
-		// log //
-		auto &lout = controller()->lout();
-		for (Size i = 0; i < model()->motionPool().size(); ++i)
-		{
-			for (Size i = 0; i < model()->motionPool().size(); i++)
-			{
-				lout << model()->motionPool().at(i).mp() << "  ";
-			}
-			lout << std::endl;
-		}
-
-#endif // WIN32
-
-#ifdef UNIX
-		//线性插值轨迹//
-		for (int i = 0; i < controller()->motionPool().size(); i++)
-		{
-			if (!param.target_pos[i].empty())
-			{
-				controller()->motionPool()[i].setTargetPos(param.target_pos[i][count()-1]);
-                if(i<6)
-                {
-                    model()->motionPool().at(i).setMp(param.target_pos[i][count()-1]);
-                }
-			}
-			total_count = std::max(param.target_pos[i].size(), total_count);
-		}
         if (model()->solverPool().at(1).kinPos())return -1;
+		
+		
 		// 打印 //
 		/*
 		auto &cout = controller()->mout();
@@ -1525,7 +1660,6 @@ namespace tuying
 			lout << std::endl;
 		}
 		*/
-#endif // UNIX
 
 		return total_count - count() - 1;
 	}
@@ -1544,6 +1678,7 @@ namespace tuying
 			"			<Param name=\"start\"/>"	//开始
 			"			<Param name=\"pause\"/>"	//暂停
 			"			<Param name=\"quit\"/>"		//退出
+			"			<Param name=\"time\" default=\"0.000\"/>"	//执行到指定时间0.000秒
 			"		</UniqueParam>"
 			"	</GroupParam>"
 			"</Command>");

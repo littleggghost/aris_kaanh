@@ -16,6 +16,7 @@ const std::string xmlfile = "kaanh.xml";
 const std::string uixmlfile = "interface_kaanh.xml";
 const std::string modelxmlfile = "model_rokae.xml";
 const std::string logfolder = "log";
+std::thread t_forceteaching;
 
 
 int main(int argc, char *argv[])
@@ -36,7 +37,7 @@ int main(int argc, char *argv[])
     std::cout << "path:" << path << std::endl;
 	std::cout << "logfolder:" << logp << std::endl;
 
-    /*
+    
 	//生成kaanh.xml文档
     //-------for rokae robot begin
     cs.resetController(kaanhconfig::createControllerRokaeXB4().release());
@@ -48,10 +49,10 @@ int main(int argc, char *argv[])
     cs.resetSensorRoot(new aris::sensor::SensorRoot);
 	//cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
 	//cs.model().saveXmlFile(modelxmlpath.string().c_str());	//when creat new model
-    cs.model().loadXmlFile(modelxmlpath.string().c_str());
+    //cs.model().loadXmlFile(modelxmlpath.string().c_str());
     cs.saveXmlFile(xmlpath.string().c_str());
     //-------for rokae robot end// 
-    */
+    
     
     /*
 	auto ret_load = cal.calculateExpression("pose({1,2,3,4,5,6,7})");
@@ -170,8 +171,10 @@ int main(int argc, char *argv[])
 	//Start Web Socket//
     cs.open();
 
-	//Receive Command//
+	//力控示教线程
+	//t_forceteaching = std::thread([&]()->bool{});
 
+	//Receive Command//
 	cs.runCmdLine();
 
 	return 0;
