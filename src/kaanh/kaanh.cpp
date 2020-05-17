@@ -406,13 +406,27 @@ namespace kaanh
 			{
                 auto p = std::any_cast<aris::core::Matrix>(cal.calculateExpression("jointtarget(" + std::string(cmd_param.second) + ")").second);
                 //auto p = plan.matrixParam(cmd_param.first);
-				if (p.size() == plan.controller()->motionPool().size())
+				if (plan.name() == "MoveAbsJ")
 				{
-					param.axis_pos_vec.assign(p.begin(), p.end());
+					if (p.size() == plan.model()->motionPool().size())
+					{
+						param.axis_pos_vec.assign(p.begin(), p.end());
+					}
+					else
+					{
+						THROW_FILE_LINE("");
+					}
 				}
 				else
 				{
-					THROW_FILE_LINE("");
+					if (p.size() == plan.controller()->motionPool().size())
+					{
+						param.axis_pos_vec.assign(p.begin(), p.end());
+					}
+					else
+					{
+						THROW_FILE_LINE("");
+					}
 				}
 			}
 			else if (cmd_param.first == "acc")
@@ -483,7 +497,12 @@ namespace kaanh
 	auto check_input_movement(const std::map<std::string_view, std::string_view> &cmd_params, Plan &plan, SetInputMovement &param, SetActiveMotor &active)->void
 	{
 		auto c = plan.controller();
-		for (Size i = 0; i < c->motionPool().size(); ++i)
+		int num;
+		if (plan.name() == "MoveAbsJ")
+			num = plan.controller()->motionPool().size();
+		else
+			num = plan.model()->motionPool().size();
+		for (Size i = 0; i < num; ++i)
 		{
 			if (active.active_motor[i])
 			{
@@ -821,7 +840,10 @@ namespace kaanh
                 aris::plan::moveAbsolute(static_cast<double>(count()), imp_->axis_begin_pos_vec[i], imp_->axis_pos_vec[i], imp_->axis_vel_vec[i] / 1000
                     , imp_->axis_acc_vec[i] / 1000 / 1000, imp_->axis_dec_vec[i] / 1000 / 1000, p, v, a, imp_->total_count_vec[i]);
                 controller()->motionAtAbs(i).setTargetPos(p);
-                if(model()->generalMotionPool().size()>0)model()->motionPool().at(i).setMp(p);
+				if (model()->generalMotionPool().size() > 0)
+				{
+					if(i< model()->motionPool().size())model()->motionPool().at(i).setMp(p);
+				}
             }
         }
         if(model()->generalMotionPool().size()>0)
@@ -1018,7 +1040,7 @@ namespace kaanh
 		if (plan->count() == 1)
 		{
 			g_count = 0.0;
-			for (int i = 0; i < plan->controller()->motionPool().size(); i++)
+			for (int i = 0; i < std::min(plan->controller()->motionPool().size(), plan->model()->motionPool().size()); i++)
 			{
 				max_acc = std::max(plan->controller()->motionPool().at(i).maxAcc(), max_acc);
 				max_vel = std::max(plan->controller()->motionPool().at(i).maxVel(), max_vel);
@@ -3008,7 +3030,7 @@ namespace kaanh
 		double k0, k1;
 
 		// If the inputs are too close for comfort, linearly interpolate
-		if (cosa > 0.9995f)
+		if (cosa > 0.999999f)//如果出现姿态出现往复波动时，这个数值要设置得更大一些，避免二阶不连续
 		{
 			k0 = 1.0f - t;
 			k1 = t;
@@ -3390,6 +3412,7 @@ namespace kaanh
 				return 0;
 			}
 		}
+
 
 		//暂停、恢复//
 		step = PauseContinueB(this, pwinter);
