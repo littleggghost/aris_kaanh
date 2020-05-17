@@ -397,7 +397,11 @@ namespace kaanh
         "		<Param name=\"jerk\" default=\"0.1\"/>"
     auto set_input_movement(const std::map<std::string_view, std::string_view> &cmd_params, Plan &plan, SetInputMovement &param)->void
 	{
-		param.axis_begin_pos_vec.resize(plan.controller()->motionPool().size(), 0.0);
+		if (plan.name() == "MoveAbsJ")
+			param.axis_begin_pos_vec.resize(plan.model()->motionPool().size(), 0.0);
+		else
+			param.axis_begin_pos_vec.resize(plan.controller()->motionPool().size(), 0.0);
+
 		auto &cal = plan.controlServer()->model().calculator();
 
 		for (auto cmd_param : cmd_params)
@@ -2366,6 +2370,9 @@ namespace kaanh
                 mvl_param.sp = s;
                 mvl_param.vel = mvl_param.sp.v_tcp;
                 mvl_param.angular_vel = mvl_param.sp.w_tcp;
+
+				mvl_param.joint_vel.clear();
+				mvl_param.joint_vel.resize(model()->motionPool().size(), 0.0);
 				for (int i = 0; i < model()->motionPool().size(); ++i)
 				{
 					mvl_param.joint_vel[i] = controller()->motionPool()[i].maxVel()*mvl_param.sp.w_per;
