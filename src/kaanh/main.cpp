@@ -171,7 +171,6 @@ int main(int argc, char *argv[])
     cs.open();
 
 	//Receive Command//
-
 	cs.runCmdLine();
 
 	return 0;
