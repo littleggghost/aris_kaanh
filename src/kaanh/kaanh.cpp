@@ -27,6 +27,9 @@ std::atomic_bool g_is_paused = false;
 std::atomic_bool g_is_stopped = false;
 //state machine flag//
 
+static double g_vel_percent_last = 1.0;
+static double g_vel_percent_now = 1.0;
+
 aris::core::Calculator g_cal;
 aris::dynamic::Model g_model;
 aris::dynamic::Marker *g_tool, *g_wobj;
@@ -1055,9 +1058,9 @@ namespace kaanh
 		}
 
 		//暂停/停止、恢复功能
-        //double temp = max_acc / max_vel * (1.0 - g_counter * g_counter) / 1000;//规划temp的大小，避免二阶不连续
-        //temp = std::max(temp, max_acc / max_vel * (1.0 - 0.99) / 1000);//限定temp的最小值，避免g_vel_percent_last=100时，step很小而无法减速
-        double temp = max_acc / max_vel * (0.75) / 1000;//规划temp的大小，避免二阶不连续
+        double temp = max_acc / max_vel * (1.0 - g_counter * g_counter) / 1000;//规划temp的大小，避免二阶不连续
+        temp = std::max(temp, max_acc / max_vel * (1.0 - 0.99) / 1000);//限定temp的最小值，避免g_vel_percent_last=100时，step很小而无法减速
+        //double temp = max_acc / max_vel * (0.75) / 1000;//规划temp的大小，避免二阶不连续
         if (pwinter.isAutoPaused() || pwinter.isAutoStopped())
 		{
 			g_counter = g_counter - temp;
@@ -1069,10 +1072,7 @@ namespace kaanh
         g_counter = std::max(std::min(g_counter, 1.0), 0.0);
 
 		//渐变调速
-		static double g_vel_percent_last = g_vel_percent.load();
-		static double g_vel_percent_now = g_vel_percent.load();
 		g_vel_percent_now = g_vel_percent.load();
-        
         double step = max_acc / max_vel * 100.0*(1.0-g_vel_percent_last / 100.0*g_vel_percent_last / 100.0) / 1000;//规划step的大小，避免二阶不连续
         step = std::max(step, max_acc / max_vel *100.0*(1.0 - 99.0 / 100.0) / 1000);//限定step的最小值，避免g_vel_percent_last=100时，step很小而无法减速
         if (g_vel_percent_now - g_vel_percent_last > step)
@@ -2945,9 +2945,9 @@ namespace kaanh
 			"		<Param name=\"joint_acc\" default=\"0.9\"/>"
 			"		<Param name=\"joint_dec\" default=\"0.9\"/>"
 			"		<Param name=\"joint_jerk\" default=\"10.0\"/>"
-            "		<Param name=\"angular_acc\" default=\"10\"/>"
+            "		<Param name=\"angular_acc\" default=\"5\"/>"
             "		<Param name=\"angular_vel\" default=\"2\"/>"
-            "		<Param name=\"angular_dec\" default=\"10\"/>"
+            "		<Param name=\"angular_dec\" default=\"5\"/>"
             "		<Param name=\"angular_jerk\" default=\"10.0\"/>"
 			"		<Param name=\"zone\" default=\"fine\"/>"
 			"		<Param name=\"load\" default=\"{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}\"/>"
@@ -3880,9 +3880,9 @@ namespace kaanh
             "		<Param name=\"vel\" default=\"{0.025, 0.025, 3.4, 0.0, 0.0}\"/>"
             "		<Param name=\"dec\" default=\"1\"/>"
 			"		<Param name=\"jerk\" default=\"10.0\"/>"
-            "		<Param name=\"angular_acc\" default=\"10\"/>"
+            "		<Param name=\"angular_acc\" default=\"5\"/>"
             "		<Param name=\"angular_vel\" default=\"2\"/>"
-            "		<Param name=\"angular_dec\" default=\"10\"/>"
+            "		<Param name=\"angular_dec\" default=\"5\"/>"
             "		<Param name=\"angular_jerk\" default=\"10\"/>"
 			"		<Param name=\"speed\" default=\"{0.1, 0.1, 3.49, 0.0, 0.0}\"/>"
 			"		<Param name=\"zone\" default=\"fine\"/>"
@@ -5548,6 +5548,7 @@ namespace kaanh
 				param.increase_status = std::max(std::min(1, this_p->int32Param("direction")), -1);
 
 				std::shared_ptr<aris::plan::Plan> planptr = cs.currentExecutePlan();
+
 				//当前有指令在执行//
 				if (planptr && planptr->cmdName() != this_p->cmdName())throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "Other command is running");
 				if (j_count.exchange(param.increase_count))
@@ -8069,6 +8070,14 @@ namespace kaanh
 				param.vel_percent = int32Param(p.first);
 			}
 		}
+
+        std::shared_ptr<aris::plan::Plan> planptr = controlServer()->currentExecutePlan();
+        if (!planptr)//avoid pos second not continuous when adjust vel
+        {
+            g_vel_percent_last = param.vel_percent;
+            g_vel_percent_now = param.vel_percent;
+        }
+
 		g_vel_percent.store(param.vel_percent);
 
 		std::vector<std::pair<std::string, std::any>> ret_value;
