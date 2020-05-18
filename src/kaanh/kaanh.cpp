@@ -7836,6 +7836,7 @@ namespace kaanh
 	{
 		auto param = std::any_cast<SetPdoParam>(&this->param());	
 		ecController()->slavePool().at(param->motion_id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
+		controller()->mout() << "setvalue:" << param->value << std::endl;
 		return 0;
 	}
 	auto SetPdo::collectNrt()->void{}
@@ -7852,6 +7853,72 @@ namespace kaanh
 			"	</GroupParam>"
 			"</Command>");
 	}
+
+	
+	// 读pdo //
+	struct GetPdoParam
+	{
+		int motion_id;
+		std::uint16_t index;
+		std::uint8_t subindex;
+		std::int32_t value;
+		aris::Size bit_size;
+	};
+	auto GetPdo::prepareNrt()->void
+	{
+		auto&cs = aris::server::ControlServer::instance();
+
+		GetPdoParam param;
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "motion_id")
+			{
+
+				param.motion_id = int32Param(p.first);
+			}
+			else if (p.first == "index")
+			{
+				param.index = int32Param(p.first);
+			}
+			else if (p.first == "subindex")
+			{
+				param.subindex = int32Param(p.first);
+			}
+			else if (p.first == "value")
+			{
+				param.value = int32Param(p.first);
+			}
+			else if (p.first == "bitsize")
+			{
+				param.bit_size = int32Param(p.first);
+			}
+		}
+
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+	}
+	auto GetPdo::executeRT()->int
+	{
+		auto param = std::any_cast<GetPdoParam>(&this->param());
+		ecController()->slavePool().at(param->motion_id).readPdo(param->index, param->subindex, &param->value, param->bit_size);
+		controller()->mout() << "getvalue:" << param->value << std::endl;
+		return 0;
+	}
+	auto GetPdo::collectNrt()->void {}
+	GetPdo::GetPdo(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"getpdo\">"
+			"	<GroupParam>"
+			"		<Param name=\"motion_id\" default=\"0\"/>"
+			"		<Param name=\"index\" default=\"0x6040\"/>"
+			"		<Param name=\"subindex\" default=\"0x00\"/>"
+			"		<Param name=\"value\" default=\"1\"/>"
+			"		<Param name=\"bitsize\" default=\"16\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
 
 
 	auto GetXml::prepareNrt()->void

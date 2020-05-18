@@ -593,6 +593,17 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(SetPdo);
 	};
 
+	class GetPdo : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		auto virtual executeRT()->int;
+		auto virtual collectNrt()->void;
+		explicit GetPdo(const std::string &name = "GetPdo_plan");
+		ARIS_REGISTER_TYPE(GetPdo);
+	};
+
+
 	class ScanSlave : public aris::plan::Plan
 	{
 	public:
