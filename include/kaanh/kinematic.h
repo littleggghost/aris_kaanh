@@ -12,6 +12,16 @@ auto get_teachpt_data(std::string datastr, double *data, size_t data_size)->int;
 机器人零点标定，包含首次标定，负载偏置标定。
 */
 
+//3点-Wobj标定，基于3点计算工件坐标系相对于base的位姿
+class CalibW3P : public aris::plan::Plan
+{
+public:
+	auto virtual prepareNrt()->void;
+	explicit CalibW3P(const std::string &name = "CalibW3P");
+	ARIS_REGISTER_TYPE(CalibW3P);
+};
+
+
 //4点-TCP标定，基于4点计算工具坐标系原点位置
 class CalibT4P : public aris::plan::Plan
 {

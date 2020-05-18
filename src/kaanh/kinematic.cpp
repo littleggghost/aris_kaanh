@@ -90,7 +90,115 @@ auto get_teachpt_data(std::string datastr, double *data, size_t data_size)->int
 	}
 }
 
-//4点标定法
+
+//基于3点标定出工件坐标系，3点不共线
+//示教流程：先示教工件坐标系原点，然后示教工件坐标系x轴上的一点，最后示教工件平面上面的另一个点
+struct CalibW3PParam
+{
+	std::vector<double> pe_3pt;
+	std::vector<double> wobj_pe;
+	std::string wobj_name;
+	std::string calib_info;
+
+};
+auto CalibW3P::prepareNrt()->void
+{
+	//参数初始化
+	CalibW3PParam param;
+	param.pe_3pt.clear();
+	param.pe_3pt.resize(18,0.0);
+	param.wobj_pe.resize(6, 0.0);
+	for (auto &p : cmdParams())
+	{
+		if (p.first == "pose")
+		{
+			auto temp = this->matrixParam(p.first);
+			if (temp.size() == param.pe_3pt.size())
+			{
+				param.pe_3pt.assign(temp.begin(), temp.end());
+			}
+			else
+			{
+				param.calib_info = std::string(" Input data error, the calculation process was aborted!").c_str();
+			}
+		}
+		else if (p.first == "wobj")
+		{
+			param.wobj_name = std::string(p.second);
+		}
+	}
+	this->param() = param;
+
+	double zero[3] = { param.pe_3pt[0], param.pe_3pt[1], param.pe_3pt[2] };//工件坐标系原点
+	double x_raw[3] = { param.pe_3pt[6] - param.pe_3pt[0], param.pe_3pt[7] - param.pe_3pt[1], param.pe_3pt[8] - param.pe_3pt[2] };//获得工件坐标系x轴向量
+	double xy_raw[3] = { param.pe_3pt[12] - param.pe_3pt[0], param.pe_3pt[13] - param.pe_3pt[1], param.pe_3pt[14] - param.pe_3pt[2] };//获得工件坐标系xy屏幕上不在x轴上一点
+	double y_raw[3], z_raw[3];
+
+	auto norm_x = aris::dynamic::s_norm(3, x_raw);
+	if(std::abs(norm_x) < 1e-9)
+	{
+		param.calib_info = std::string("The teaching points are in line, The calculation process was aborted!").c_str();
+		throw std::runtime_error("The teaching points are in line");
+	}
+	double x[3] = { x_raw[0] / norm_x, x_raw[1] / norm_x, x_raw[2] / norm_x };//工件坐标系x轴方向向量
+
+	crossVector(x_raw, xy_raw, z_raw);
+	auto norm_z = aris::dynamic::s_norm(3, z_raw);
+	if (std::abs(norm_z) < 1e-9)
+	{
+		param.calib_info = std::string("The teaching points are in line, The calculation process was aborted!").c_str();
+		throw std::runtime_error("The teaching points are in line");
+	}
+	double z[3] = { z_raw[0] / norm_z, z_raw[1] / norm_z,  z_raw[2] / norm_z };//工件坐标系z轴方向向量
+
+	crossVector(z_raw, x_raw, y_raw);
+	auto norm_y = aris::dynamic::s_norm(3, y_raw);
+	if (std::abs(norm_y) < 1e-9)
+	{
+		param.calib_info = std::string("The teaching points are in line, The calculation process was aborted!").c_str();
+		throw std::runtime_error("The teaching points are in line");
+	}
+	double y[3] = { y_raw[0] / norm_y, y_raw[1] / norm_y,  y_raw[2] / norm_y };//工件坐标系y轴方向向量
+
+	double wobj[16]{ x[0], y[0], z[0], zero[0], x[1], y[1], z[1], zero[1], x[2], y[2], z[2], zero[2], 0, 0, 0, 1 };
+
+	//将标定结果转换为欧拉角形式
+	aris::dynamic::s_pm2pe(wobj, param.wobj_pe.data());
+
+	if (model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name) != model()->partPool().findByName("ground")->markerPool().end())
+	{
+		dynamic_cast<aris::dynamic::Marker*>(&*model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name))->setPrtPm(wobj);
+	}
+	else
+	{
+		model()->partPool().findByName("ground")->markerPool().add<aris::dynamic::Marker>(param.wobj_name, wobj);
+	}
+
+	auto xmlpath = std::filesystem::absolute(".");
+	const std::string xmlfile = "kaanh.xml";
+	xmlpath = xmlpath / xmlfile;
+	controlServer()->saveXmlFile(xmlpath.string().c_str());
+
+	std::vector<std::pair<std::string, std::any>> out_param;
+	out_param.push_back(std::make_pair<std::string, std::any>("calib_info", param.calib_info));
+	out_param.push_back(std::make_pair<std::string, std::any>("wobj_pe", param.wobj_pe));
+	ret() = out_param;
+
+	option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+}
+CalibW3P::CalibW3P(const std::string &name) :Plan(name)
+{
+	command().loadXmlStr(
+		"<Command name=\"CalibW3P\">"
+		"	<GroupParam>"
+		"		<Param name=\"pose\" default=\"{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}\"/>"
+		"		<Param name=\"wobj\" default=\"wobj0\"/>"
+		"   </GroupParam>"
+		"</Command>");
+}
+
+
+//4点法标定工具坐标系
 struct CalibT4PParam
 {
 	double pe_4pt[24];
@@ -269,7 +377,7 @@ auto CalibT4P::deltaRP_4Pt(double R[36], double P[12], double * deltaR, double *
 }
 
 
-//5点标定法
+//5点法标定工具坐标系
 struct CalibT5PParam
 {
 	double pe_5pt[30];
@@ -537,7 +645,7 @@ auto CalibT5P::deltaRP_5Pt(double R[45], double P[15], double * deltaR, double *
 }
 
 
-//6点标定法
+//6点法标定工具坐标系
 struct CalibT6PParam
 {
 	double pe_6pt[36];

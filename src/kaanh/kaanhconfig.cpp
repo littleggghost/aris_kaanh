@@ -989,6 +989,7 @@ namespace kaanhconfig
         plan_root->planPool().add<kaanh::FCStop>();
 		plan_root->planPool().add<kaanh::SetFS>();
 	
+		plan_root->planPool().add<CalibW3P>();
 		plan_root->planPool().add<CalibT4P>();
 		plan_root->planPool().add<CalibT5P>();
 		plan_root->planPool().add<CalibT6P>();
