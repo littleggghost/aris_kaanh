@@ -3988,7 +3988,10 @@ namespace kaanh
         float rawdata[6];
 
     #ifdef UNIX
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(5));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(0));
+        std::uint8_t led1 = 0x01;
+        if(count() == 1)slave7.writePdo(0x7010, 1, &led1, 1);
+        else
         slave7.readPdo(0x6020, 11, &rawdata[0] ,32);
         slave7.readPdo(0x6020, 12, &rawdata[1], 32);
         slave7.readPdo(0x6020, 13, &rawdata[2], 32);
@@ -7795,7 +7798,7 @@ namespace kaanh
 		int motion_id;
 		std::uint16_t index;
 		std::uint8_t subindex;
-		std::int32_t value;
+        std::uint8_t value;
 		aris::Size bit_size;
 	};
 	auto SetPdo::prepareNrt()->void
@@ -7806,13 +7809,12 @@ namespace kaanh
 		for (auto &p : cmdParams())
 		{
 			if (p.first == "motion_id")
-			{
-				
+			{	
 				param.motion_id = int32Param(p.first);
 			}
 			else if (p.first == "index")
 			{
-				param.index = int32Param(p.first);
+                param.index = int32Param(p.first);
 			}
 			else if (p.first == "subindex")
 			{
@@ -7830,12 +7832,13 @@ namespace kaanh
 		
 		std::vector<std::pair<std::string, std::any>> ret_value;
 		ret() = ret_value;
-		//option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION|aris::plan::Plan::NOT_RUN_COLLECT_FUNCTION;
+
 	}
 	auto SetPdo::executeRT()->int
 	{
 		auto param = std::any_cast<SetPdoParam>(&this->param());	
-		ecController()->slavePool().at(param->motion_id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
+        uint8_t value = 0x01;
+        ecController()->slavePool().at(param->motion_id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
 		controller()->mout() << "setvalue:" << param->value << std::endl;
 		return 0;
 	}
