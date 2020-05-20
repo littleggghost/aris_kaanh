@@ -988,6 +988,7 @@ namespace kaanhconfig
         plan_root->planPool().add<kaanh::MoveJoint>();
         plan_root->planPool().add<kaanh::FCStop>();
 		plan_root->planPool().add<kaanh::SetFS>();
+		plan_root->planPool().add<kaanh::AdmitInit>();
 	
 		plan_root->planPool().add<CalibW3P>();
 		plan_root->planPool().add<CalibT4P>();
@@ -998,7 +999,7 @@ namespace kaanhconfig
 		plan_root->planPool().add<CalibZO>();
 		plan_root->planPool().add<CalibZL>();
 		plan_root->planPool().add<SwitchTool>();
-		
+
 		return plan_root;
 	}
 }

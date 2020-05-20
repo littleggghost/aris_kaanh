@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string>
 #include <bitset>
+#include"kaanh/ftc_ctrl.h"
 
 //statemachine old//
 # define M_RUN 0	//手动单步执行
@@ -751,7 +752,13 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(Kunwei);
 	};
 
-
+	class AdmitInit : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		explicit AdmitInit(const std::string &name = "AdmitInit");
+		ARIS_REGISTER_TYPE(AdmitInit);
+	};
 }
 
 #endif

@@ -42,7 +42,10 @@ struct CmdListParam
 }cmdparam;
 std::shared_ptr<kaanh::MoveBase> g_plan;
 static float rawdata[6];	//力传感器数据
-static float filterdata[6];	//力传感器滤波后数据
+static double filterdata[6];	//力传感器滤波后数据
+cpt_ftc::Admit admit;
+cpt_ftc::LowPass lp; //滤波器
+//extern cpt_ftc::Admit admit;//力控
 
 
 namespace kaanh
@@ -106,14 +109,12 @@ namespace kaanh
 		}
 		else
 		{
-			slave7.readPdo(0x6020, 11, &rawdata[0], 32);
-			slave7.readPdo(0x6020, 12, &rawdata[1], 32);
-			slave7.readPdo(0x6020, 13, &rawdata[2], 32);
-			slave7.readPdo(0x6020, 14, &rawdata[3], 32);
-			slave7.readPdo(0x6020, 15, &rawdata[4], 32);
-			slave7.readPdo(0x6020, 16, &rawdata[5], 32);
+			for (int i = 0; i < 6; i++)
+			{
+				slave7.readPdo(0x6020, i+11, &rawdata[i], 32);
+				lp.get_filter_data(1, 10, 0.001, rawdata[i], filterdata[i]);
+			}		
 		}
-
 	}
 
 	//获取状态字——100:去使能,200:手动,300:自动,400:程序运行中,410:程序暂停中,420:程序停止，500:错误//
@@ -1043,6 +1044,7 @@ namespace kaanh
 		Speed sp;
 		Zone zone;
 		Load ld;
+		bool fc;
 	};
 	struct MoveCParam
 	{
@@ -1062,6 +1064,7 @@ namespace kaanh
 		Speed sp;
 		Zone zone;
 		Load ld;
+		bool fc;
 	};
 	template<typename MoveType>
 	auto PauseContinueB(MoveType *plan, aris::server::ProgramWebInterface &pwinter)->double
@@ -2427,6 +2430,10 @@ namespace kaanh
 				auto temp = std::any_cast<kaanh::Load>(cal.calculateExpression("load(" + std::string(cmd_param.second) + ")").second);
 				mvl_param.ld = temp;
 			}
+			else if (cmd_param.first == "fc")
+			{
+				mvl_param.fc = int32Param(cmd_param.second);
+			}
 		}
 
 		//本指令cmdid-上一条指令的cmdid>1，且上一条指令执行完毕，g_plan赋值为nullptr
@@ -2668,6 +2675,33 @@ namespace kaanh
 		auto mvl_param = std::any_cast<MoveLParam>(&this->param());
 		auto &pwinter = dynamic_cast<aris::server::ProgramWebInterface&>(controlServer()->interfacePool().at(0));
 
+
+		//求重力分量
+		double G[6], toolfs_pe[6];
+		double center[3], xyzindex[3];
+		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
+		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
+		auto toolfs = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"));
+		std::copy(toolfs->data().begin(), toolfs->data().end(), toolfs_pe);
+		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
+		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
+		aris::dynamic::s_pe2pm(toolfs_pe, fs2tpm);
+		model()->generalMotionPool().at(0).updMpm();
+		mvl_param->tool->getPm(*mvl_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+
+		std::copy(c->data().begin(), c->data().end(), center);
+		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
+		s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
+		G[3] = G[2] * center[1] - G[1] * center[2];
+		G[4] = G[0] * center[2] - G[2] * center[0];
+		G[5] = G[1] * center[0] - G[0] * center[1];
+		std::copy(G, G+6, admit.G);
+
+		double pe321[6], fspm[16]; 
+		admit.get_cor_pos(filterdata, fs2bpm, 0.001, pe321);
+		aris::dynamic::s_pe2pm(pe321, fspm, "321");
+
 		//如果停止功能开启，并且时间已经停止，退出本条指令//
 		if (count() == 1)
 		{
@@ -2683,7 +2717,7 @@ namespace kaanh
 		PauseContinueB(this, pwinter);
 
 		// 取得起始位置 //
-		static double begin_pm[16], relative_pm[16], relative_pa[6], pos_ratio, ori_ratio, norm_pos, norm_ori;
+		static double begin_pm[16], target_pm[16], relative_pm[16], relative_pa[6], pos_ratio, ori_ratio, norm_pos, norm_ori;
 		double p, v, a, j;
 		double pos_total_count, ori_total_count;
 
@@ -2708,7 +2742,7 @@ namespace kaanh
 				mvl_param->norm_pos = aris::dynamic::s_norm(3, mvl_param->relative_pa.data());
 				mvl_param->norm_ori = aris::dynamic::s_norm(3, mvl_param->relative_pa.data() + 3);
 			}
-			double pa[6]{ 0,0,0,0,0,0 }, pm[16], pm2[16];
+			double pa[6]{ 0,0,0,0,0,0 }, pm[16];
 
 			traplan::sCurved(g_count, 0.0, mvl_param->norm_pos, mvl_param->vel / 1000 * mvl_param->pos_ratio, mvl_param->acc / 1000 / 1000 * mvl_param->pos_ratio* mvl_param->pos_ratio, mvl_param->jerk / 1000 / 1000 / 1000 * mvl_param->pos_ratio* mvl_param->pos_ratio* mvl_param->pos_ratio, p, v, a, j, pos_total_count);
 			if (mvl_param->norm_pos > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_pos, mvl_param->relative_pa.data(), pa);
@@ -2717,11 +2751,8 @@ namespace kaanh
 			if (mvl_param->norm_ori > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_ori, mvl_param->relative_pa.data() + 3, pa + 3);
 
 			aris::dynamic::s_pa2pm(pa, pm);
-			aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, pm2);
-
-			// 反解计算电机位置 //
-			mvl_param->tool->setPm(*mvl_param->wobj, pm2);
-			model()->generalMotionPool().at(0).updMpm();
+			aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, target_pm);
+			
 		}
 		else if (mvl_param->pre_plan->name() == "MoveL") //转弯区第二条指令或者第n条指令
 		{
@@ -2757,17 +2788,16 @@ namespace kaanh
 				aris::dynamic::s_pa2pm(pa, pm);
 
 				// 反解计算电机位置 //
-				double target_pa[6]{ 0,0,0,0,0,0 }, target_pm[16];
+				double target_pa[6]{ 0,0,0,0,0,0 };
 				aris::dynamic::s_pm_dot_pm(pre_pm, pm, pm2);
 				aris::dynamic::s_pm_dot_pm(param.begin_pm, pm2, target_pm);
-				mvl_param->tool->setPm(*mvl_param->wobj, target_pm);
-				model()->generalMotionPool().at(0).updMpm();
+				
 			}
 			else
 			{
 				//thisplan//
 				mvl_param->pre_plan->cmd_finished.store(true);
-				double pa[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 }, pm[16], pm2[16];
+				double pa[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 }, pm[16];
 
 				traplan::sCurved(g_count, 0.0, mvl_param->norm_pos, mvl_param->vel / 1000 * mvl_param->pos_ratio, mvl_param->acc / 1000 / 1000 * mvl_param->pos_ratio* mvl_param->pos_ratio, mvl_param->jerk / 1000 / 1000 / 1000 * mvl_param->pos_ratio* mvl_param->pos_ratio* mvl_param->pos_ratio, p, v, a, j, pos_total_count);
 				if (mvl_param->norm_pos > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_pos, mvl_param->relative_pa.data(), pa);
@@ -2776,11 +2806,8 @@ namespace kaanh
 				if (mvl_param->norm_ori > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_ori, mvl_param->relative_pa.data() + 3, pa + 3);
 
 				aris::dynamic::s_pa2pm(pa, pm);
-				aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, pm2);
+				aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, target_pm);
 
-				// 反解计算电机位置 //
-				mvl_param->tool->setPm(*mvl_param->wobj, pm2);
-				model()->generalMotionPool().at(0).updMpm();
 			}
 		}
 		else if (mvl_param->pre_plan->name() == "MoveC")
@@ -2828,16 +2855,14 @@ namespace kaanh
 				aris::dynamic::s_pa2pm(pa, pm);
 
 				// 反解计算电机位置 //
-				double target_pa[6]{ 0,0,0,0,0,0 }, target_pm[16];
+				double target_pa[6]{ 0,0,0,0,0,0 };
 				aris::dynamic::s_pm_dot_pm(pre_pm, pm, target_pm);
-				mvl_param->tool->setPm(*mvl_param->wobj, target_pm);
-				model()->generalMotionPool().at(0).updMpm();
 			}
 			else
 			{
 				//thisplan//
 				mvl_param->pre_plan->cmd_finished.store(true);
-				double pa[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 }, pm[16], pm2[16];
+				double pa[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 }, pm[16];
 
 				traplan::sCurved(g_count, 0.0, mvl_param->norm_pos, mvl_param->vel / 1000 * mvl_param->pos_ratio, mvl_param->acc / 1000 / 1000 * mvl_param->pos_ratio* mvl_param->pos_ratio, mvl_param->jerk / 1000 / 1000 / 1000 * mvl_param->pos_ratio* mvl_param->pos_ratio* mvl_param->pos_ratio, p, v, a, j, pos_total_count);
 				if (mvl_param->norm_pos > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_pos, mvl_param->relative_pa.data(), pa);
@@ -2846,16 +2871,13 @@ namespace kaanh
 				if (mvl_param->norm_ori > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_ori, mvl_param->relative_pa.data() + 3, pa + 3);
 
 				aris::dynamic::s_pa2pm(pa, pm);
-				aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, pm2);
+				aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, target_pm);
 
-				// 反解计算电机位置 //
-				mvl_param->tool->setPm(*mvl_param->wobj, pm2);
-				model()->generalMotionPool().at(0).updMpm();
 			}
 		}
 		else//本条指令设置了转弯区，但是与上一条指令无法实现转弯，比如moveJ,moveC,moveAbsJ
 		{
-			double pa[6]{ 0,0,0,0,0,0 }, pm[16], pm2[16];
+			double pa[6]{ 0,0,0,0,0,0 }, pm[16];
 
 			traplan::sCurved(g_count, 0.0, mvl_param->norm_pos, mvl_param->vel / 1000.0 * mvl_param->pos_ratio, mvl_param->acc / 1000.0 / 1000.0 * mvl_param->pos_ratio* mvl_param->pos_ratio, mvl_param->jerk / 1000.0 / 1000.0 / 1000.0 * mvl_param->pos_ratio* mvl_param->pos_ratio* mvl_param->pos_ratio, p, v, a, j, pos_total_count);
 			if (mvl_param->norm_pos > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_pos, mvl_param->relative_pa.data(), pa);
@@ -2864,12 +2886,18 @@ namespace kaanh
 			if (mvl_param->norm_ori > 1e-10)aris::dynamic::s_vc(3, p / mvl_param->norm_ori, mvl_param->relative_pa.data() + 3, pa + 3);
 
 			aris::dynamic::s_pa2pm(pa, pm);
-			aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, pm2);
-
-			// 反解计算电机位置 //
-			mvl_param->tool->setPm(*mvl_param->wobj, pm2);
-			model()->generalMotionPool().at(0).updMpm();
+			aris::dynamic::s_pm_dot_pm(mvl_param->begin_pm, pm, target_pm);
+	
 		}
+
+		// 力传感器补偿
+		if (mvl_param->fc)
+		{
+			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);
+		}
+
+		mvl_param->tool->setPm(*mvl_param->wobj, target_pm);
+		model()->generalMotionPool().at(0).updMpm();
 
 		//过奇异点判断
 		if (IsSingular(*this))return -1002;
@@ -2974,6 +3002,7 @@ namespace kaanh
 			"		<Param name=\"load\" default=\"{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
+			"		<Param name=\"fc\" default=\"0\"/>"
 			CHECK_PARAM_STRING
 			"	</GroupParam>"
 			"</Command>");
@@ -3306,6 +3335,10 @@ namespace kaanh
 				auto temp = std::any_cast<kaanh::Load>(cal.calculateExpression("load(" + std::string(cmd_param.second) + ")").second);
 				mvc_param.ld = temp;
 			}
+			else if (cmd_param.first == "fc")
+			{
+				mvc_param.fc = int32Param(cmd_param.second);
+			}
 		}
 
 		mvc_param.jerk = mvc_param.jerk *mvc_param.acc;
@@ -3507,6 +3540,33 @@ namespace kaanh
 		auto mvc_param = std::any_cast<MoveCParam>(&this->param());
 		auto &pwinter = dynamic_cast<aris::server::ProgramWebInterface&>(controlServer()->interfacePool().at(0));
 		static double step = 0.0;
+
+		//求力传感器补偿
+		double G[6], toolfs_pe[6];
+		double center[3], xyzindex[3];
+		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
+		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
+		auto toolfs = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"));
+		std::copy(toolfs->data().begin(), toolfs->data().end(), toolfs_pe);
+		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
+		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
+		aris::dynamic::s_pe2pm(toolfs_pe, fs2tpm);
+		model()->generalMotionPool().at(0).updMpm();
+		mvc_param->tool->getPm(*mvc_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+
+		std::copy(c->data().begin(), c->data().end(), center);
+		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
+		s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
+		G[3] = G[2] * center[1] - G[1] * center[2];
+		G[4] = G[0] * center[2] - G[2] * center[0];
+		G[5] = G[1] * center[0] - G[0] * center[1];
+		std::copy(G, G + 6, admit.G);
+
+		double pe321[6], fspm[16];
+		admit.get_cor_pos(filterdata, fs2bpm, 0.001, pe321);
+		aris::dynamic::s_pe2pm(pe321, fspm, "321");
+
 		//如果停止功能开启，并且时间已经停止，退出本条指令//
 		if (count() == 1)
 		{
@@ -3668,7 +3728,7 @@ namespace kaanh
 		*/
 
 		static double pre_pqt[7];
-		double pqt[7];
+		double pqt[7], target_pm[16];
 		if (mvc_param->pre_plan == nullptr) //转弯第一条指令
 		{
 			if (count() == 1)
@@ -3684,9 +3744,6 @@ namespace kaanh
 				if(!cal_circle_par(*mvc_param)) return -1;
 			}
 			cal_pqt(*mvc_param, *this, pqt);
-			// 更新目标点 //
-			mvc_param->tool->setPq(*mvc_param->wobj, pqt);
-			model()->generalMotionPool().at(0).updMpm();
 
 		}
 		else if (mvc_param->pre_plan->name() == "MoveC") //转弯区第二条指令或者第n条指令
@@ -3733,17 +3790,11 @@ namespace kaanh
 					mvc_param->angular_jerk / 1000.0 / 1000.0 / 1000.0 / mvc_param->ori_theta / 2.0 * mvc_param->ori_ratio * mvc_param->ori_ratio * mvc_param->ori_ratio, p, v, a, j, param.ori_total_count);
 				slerp(pre_pqt + 3, mvc_param->ee_end_pq.data() + 3, pqt + 3, p);
 
-				// 更新目标点 //
-				mvc_param->tool->setPq(*mvc_param->wobj, pqt);
-				model()->generalMotionPool().at(0).updMpm();
 			}
 			else
 			{
 				mvc_param->pre_plan->cmd_finished.store(true);
-				cal_pqt(*mvc_param, *this, pqt);
-				// 更新目标点 //
-				mvc_param->tool->setPq(*mvc_param->wobj, pqt);
-				model()->generalMotionPool().at(0).updMpm();
+				cal_pqt(*mvc_param, *this, pqt);;
 			}
 		
 		}
@@ -3785,27 +3836,29 @@ namespace kaanh
 					mvc_param->angular_jerk / 1000.0 / 1000.0 / 1000.0 / mvc_param->ori_theta / 2.0 * mvc_param->ori_ratio * mvc_param->ori_ratio * mvc_param->ori_ratio, p, v, a, j, param.ori_total_count);
 				slerp(pre_pqt + 3, mvc_param->ee_end_pq.data() + 3, pqt + 3, p);
 
-				// 更新目标点 //
-				mvc_param->tool->setPq(*mvc_param->wobj, pqt);
-				model()->generalMotionPool().at(0).updMpm();
 			}
 			else
 			{
 				mvc_param->pre_plan->cmd_finished.store(true);
 				cal_pqt(*mvc_param, *this, pqt);
-				// 更新目标点 //
-				mvc_param->tool->setPq(*mvc_param->wobj, pqt);
-				model()->generalMotionPool().at(0).updMpm();
 			}
 
 		}
 		else//本条指令设置了转弯区，但是与上一条指令无法实现转弯，比如moveJ,moveL,moveAbsJ
 		{
 			cal_pqt(*mvc_param, *this, pqt);
-			// 更新目标点 //
-			mvc_param->tool->setPq(*mvc_param->wobj, pqt);
-			model()->generalMotionPool().at(0).updMpm();
 		}
+
+		// 更新目标点 //
+		aris::dynamic::s_pq2pm(pqt, target_pm);
+
+		// 力传感器补偿
+		if (mvc_param->fc)
+		{
+			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);	
+		}
+		mvc_param->tool->setPq(*mvc_param->wobj, target_pm);
+		model()->generalMotionPool().at(0).updMpm();
 
 		//过奇异点判断
 		if (IsSingular(*this))return -1002;
@@ -4006,8 +4059,8 @@ namespace kaanh
 
         auto &param = std::any_cast<KunweiParam&>(this->param());
         int16_t datanum = 0;
-        float rawdata[6];
 
+	/*
     #ifdef UNIX
         auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(0));
         std::uint8_t led1 = 0x01;
@@ -4020,7 +4073,7 @@ namespace kaanh
         slave7.readPdo(0x6020, 15, &rawdata[4], 32);
         slave7.readPdo(0x6020, 16, &rawdata[5], 32);
     #endif
-
+	*/
         auto &cout = controller()->mout();
 
         if(count()%100==0)
@@ -4028,7 +4081,7 @@ namespace kaanh
             cout << "datanum:" << datanum << std::endl;
             for(int i=0; i<6; i++)
             {
-                cout << rawdata[i] << "    ";
+                cout << filterdata[i] << "    ";
             }
             cout << std::endl;
         }
@@ -4256,12 +4309,9 @@ namespace kaanh
 		//提取p1,p2,p3三个位姿下的力传感器数据，并构造矩阵和向量
 		if (count() == param.total_count_vec[0] + 1000)
 		{
-			auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
-            float rawdata[6];
 			for (uint8_t i = 0; i < 6; i++)
 			{
-                slave7.readPdo(0x6030, i+1, &rawdata[i], 32);
-                param.sdata1[i] = double(rawdata[i]);
+                param.sdata1[i] = double(filterdata[i]);
                 cout << param.sdata1[i] << " ";
 			}
             cout << std::endl;
@@ -4279,12 +4329,9 @@ namespace kaanh
 		}
 		else if (count() == param.total_count_vec[0] + param.total_count_vec[1] + 2000)
 		{
-			auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
-            float rawdata[6];
 			for (uint8_t i = 0; i < 6; i++)
 			{
-                slave7.readPdo(0x6030, i+1, &rawdata[i], 32);
-                param.sdata2[i] = double(rawdata[i]);
+                param.sdata2[i] = double(filterdata[i]);
                 cout << param.sdata2[i] << " ";
 			}
             cout << std::endl;
@@ -4302,12 +4349,9 @@ namespace kaanh
 		}
 		else if (count() == param.total_count_vec[0] + param.total_count_vec[1] + param.total_count_vec[2] + 3000)
 		{
-			auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
-            float rawdata[6];
 			for (uint8_t i = 0; i < 6; i++)
 			{
-                slave7.readPdo(0x6030, i+1, &rawdata[i], 32);
-                param.sdata3[i] = double(rawdata[i]);
+                param.sdata3[i] = double(filterdata[i]);
                 cout << param.sdata3[i] << " ";
 			}
             cout << std::endl;
@@ -8736,4 +8780,79 @@ namespace kaanh
 			"</Command>");
 	}
 
+
+	auto AdmitInit::prepareNrt()->void
+	{
+		//求重力分量
+		double G[6], toolfs_pe[6];
+		double center[3], xyzindex[3];
+		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
+		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
+		auto toolfs = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"));
+		std::copy(toolfs->data().begin(), toolfs->data().end(), toolfs_pe);
+		aris::dynamic::Marker *tool, *wobj;
+		tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
+		wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
+		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
+		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
+		aris::dynamic::s_pe2pm(toolfs_pe, fs2tpm);
+		model()->generalMotionPool().at(0).updMpm();
+		tool->getPm(*wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+
+		std::copy(c->data().begin(), c->data().end(), center);
+		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
+		s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
+		G[3] = G[2] * center[1] - G[1] * center[2];
+		G[4] = G[0] * center[2] - G[2] * center[0];
+		G[5] = G[1] * center[0] - G[0] * center[1];
+
+		admit.admit_init(filterdata, G);
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "b")
+			{
+				auto b = matrixParam(p.first);
+				std::copy(b.begin(), b.end(), admit.B);
+			}
+			else if (p.first == "ftset")
+			{
+				auto b = matrixParam(p.first);
+				std::copy(b.begin(), b.end(), admit.ft_set);
+			}
+			else if (p.first == "deadzone")
+			{
+				auto b = matrixParam(p.first);
+				std::copy(b.begin(), b.end(), admit.dead_zone);
+			}
+			else if (p.first == "vellimit")
+			{
+				auto b = matrixParam(p.first);
+				std::copy(b.begin(), b.end(), admit.vel_limit);
+			}
+			else if (p.first == "corposlimit")
+			{
+				auto b = matrixParam(p.first);
+				std::copy(b.begin(), b.end(), admit.cor_pos_limit);
+			}
+		}
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+	}
+	AdmitInit::AdmitInit(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"admitinit\">"
+			"	<GroupParam>"
+			"		<Param name=\"b\" default=\"{100000,100000,100000,100000,100000,100000}\"/>"
+			"		<Param name=\"ftset\" default=\"{0,0,0,0,0,0}\"/>"
+			"		<Param name=\"deadzone\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"vellimit\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"corposlimit\" default=\"{1,1,1,1,1,1}\"/>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
 }
