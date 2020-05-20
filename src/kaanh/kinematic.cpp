@@ -165,6 +165,17 @@ auto CalibW3P::prepareNrt()->void
 	//将标定结果转换为欧拉角形式
 	aris::dynamic::s_pm2pe(wobj, param.wobj_pe.data());
 
+	try
+	{
+		model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name)->setPrtPm(wobj);
+	}
+	catch (std::exception)
+	{
+		param.calib_info = std::string("cann't find \"" + param.wobj_name + "\" node in markerPool.");
+		throw std::runtime_error("cann't find \"" + param.wobj_name + "\" node in markerPool.");
+	}
+
+	/*
 	if (model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name) != model()->partPool().findByName("ground")->markerPool().end())
 	{
 		dynamic_cast<aris::dynamic::Marker*>(&*model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name))->setPrtPm(wobj);
@@ -173,6 +184,7 @@ auto CalibW3P::prepareNrt()->void
 	{
 		model()->partPool().findByName("ground")->markerPool().add<aris::dynamic::Marker>(param.wobj_name, wobj);
 	}
+	*/
 
 	auto xmlpath = std::filesystem::absolute(".");
 	const std::string xmlfile = "kaanh.xml";
@@ -192,7 +204,7 @@ CalibW3P::CalibW3P(const std::string &name) :Plan(name)
 		"<Command name=\"CalibW3P\">"
 		"	<GroupParam>"
 		"		<Param name=\"pose\" default=\"{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}\"/>"
-		"		<Param name=\"wobj\" default=\"wobj0\"/>"
+		"		<Param name=\"wobj\" default=\"wobj1\"/>"
 		"   </GroupParam>"
 		"</Command>");
 }
@@ -204,6 +216,7 @@ struct CalibT4PParam
 	double pe_4pt[24];
 	std::vector<double> tool_pe;
 	std::string calib_info;
+	std::string tool_name;
 	
 };
 auto CalibT4P::prepareNrt()->void
@@ -217,6 +230,10 @@ auto CalibT4P::prepareNrt()->void
 			std::string tempstr=std::string(p.second);
 			int ret1 = get_teachpt_data(tempstr, param.pe_4pt, 24);
 			if (ret1 != 0) return;
+		}
+		else if (p.first == "tool")
+		{
+			param.tool_name = std::string(p.second);
 		}
 	}
 	this->param() = param;
@@ -252,10 +269,53 @@ auto CalibT4P::prepareNrt()->void
 	}
 	else
 	{
-		throw std::runtime_error("The calculation process was aborted!");		//无法计算标定结果，获取的示教点异常，请重新执行标定过程
 		param.calib_info = std::string("The calculation process was aborted!").c_str();
-		//return;
+		throw std::runtime_error("The calculation process was aborted!");		//无法计算标定结果，获取的示教点异常，请重新执行标定过程
 	}
+
+	//保存标定结果
+	{
+		//获取工具坐标系相对于法兰坐标系的位姿
+		double tool_pm_f[16];
+		s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
+		//获取法兰坐标系相对于底座坐标系的位姿
+		double tool0_pm_g[16];
+		try
+		{
+			auto mat1 = model()->partPool().findByName("L6")->markerPool().findByName("tool0")->prtPm();
+			for (size_t i = 0; i < 4; i++)
+			{
+				for (size_t j = 0; j < 4; j++)
+				{
+					tool0_pm_g[4 * i + j] = mat1[i][j];
+				}
+			}
+		}
+		catch (std::exception)
+		{
+			std::string calib_info = "cann't find \"tool0\" node in partPool.";
+			throw std::runtime_error("cann't find \"tool0\" node in partPool.");
+		}
+
+		//计算工具坐标系相对于底座坐标系的位姿
+		double tool_pm_g[16];
+		double tool_pe_g[6];
+		s_mm(4, 4, 4, tool0_pm_g, tool_pm_f, tool_pm_g);
+		s_pm2pe(tool_pm_g, tool_pe_g, "313");
+		try
+		{
+			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_g);
+		}
+		catch (std::exception)
+		{
+			std::string calib_info = "cann't find \"" + param.tool_name + "\" node in partPool.";
+			throw std::runtime_error("cann't find \"" + param.tool_name + "\" node in partPool.");
+		}
+
+		const std::string calib_info = "The configuration node of " + param.tool_name + "'s pose is created or updated.";
+		param.calib_info = calib_info.c_str();
+	}
+
 	std::vector<std::pair<std::string, std::any>> out_param;
 	out_param.push_back(std::make_pair<std::string, std::any>("calib_info", param.calib_info));
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
@@ -269,6 +329,7 @@ CalibT4P::CalibT4P(const std::string &name) :Plan(name)
 		"<Command name=\"CalibT4P\">"
 		"	<GroupParam>"
 		"		<Param name=\"pose\" default=\"{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}\"/>"
+		"		<Param name=\"tool\" default=\"tool1\"/>"
 		"   </GroupParam>"
 		"</Command>");
 }
@@ -383,6 +444,7 @@ struct CalibT5PParam
 	double pe_5pt[30];
 	std::vector<double> tool_pe;
 	std::string calib_info;
+	std::string tool_name;
 };
 auto CalibT5P::prepareNrt()->void
 {
@@ -395,6 +457,10 @@ auto CalibT5P::prepareNrt()->void
 			std::string tempstr = std::string(p.second);
 			int ret1 = get_teachpt_data(tempstr, param.pe_5pt, 30);
 			if (ret1 != 0) return;
+		}
+		else if (p.first == "tool")
+		{
+			param.tool_name = std::string(p.second);
 		}
 	}
 	this->param() = param;
@@ -439,6 +505,49 @@ auto CalibT5P::prepareNrt()->void
 		//return;
 	}
 	
+	//保存标定结果
+	{
+		//获取工具坐标系相对于法兰坐标系的位姿
+		double tool_pm_f[16];
+		s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
+		//获取法兰坐标系相对于底座坐标系的位姿
+		double tool0_pm_g[16];
+		try
+		{
+			auto mat1 = model()->partPool().findByName("L6")->markerPool().findByName("tool0")->prtPm();
+			for (size_t i = 0; i < 4; i++)
+			{
+				for (size_t j = 0; j < 4; j++)
+				{
+					tool0_pm_g[4 * i + j] = mat1[i][j];
+				}
+			}
+		}
+		catch (std::exception)
+		{
+			std::string calib_info = "cann't find \"tool0\" node in partPool.";
+			throw std::runtime_error("cann't find \"tool0\" node in partPool.");
+		}
+
+		//计算工具坐标系相对于底座坐标系的位姿
+		double tool_pm_g[16];
+		double tool_pe_g[6];
+		s_mm(4, 4, 4, tool0_pm_g, tool_pm_f, tool_pm_g);
+		s_pm2pe(tool_pm_g, tool_pe_g, "313");
+		try
+		{
+			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_g);
+		}
+		catch (std::exception)
+		{
+			std::string calib_info = "cann't find \"" + param.tool_name + "\" node in partPool.";
+			throw std::runtime_error("cann't find \"" + param.tool_name + "\" node in partPool.");
+		}
+
+		const std::string calib_info = "The configuration node of " + param.tool_name + "'s pose is created or updated.";
+		param.calib_info = calib_info.c_str();
+	}
+
 	std::vector<std::pair<std::string, std::any>> out_param;
 	out_param.push_back(std::make_pair<std::string, std::any>("calib_info", param.calib_info));
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
@@ -451,6 +560,7 @@ CalibT5P::CalibT5P(const std::string &name) :Plan(name)
 		"<Command name=\"CalibT5P\">"
 		"	<GroupParam>"
 		"		<Param name=\"pose\" default=\"{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}\"/>"
+		"		<Param name=\"tool\" default=\"tool1\"/>"
 		"   </GroupParam>"
 		"</Command>");
 }
@@ -651,6 +761,7 @@ struct CalibT6PParam
 	double pe_6pt[36];
 	std::vector<double> tool_pe;
 	std::string calib_info;
+	std::string tool_name;
 };
 auto CalibT6P::prepareNrt()->void
 {
@@ -663,6 +774,10 @@ auto CalibT6P::prepareNrt()->void
 			std::string tempstr = std::string(p.second);
 			int ret1 = get_teachpt_data(tempstr, param.pe_6pt, 36);
 			if (ret1 != 0) return;
+		}
+		else if (p.first == "tool")
+		{
+			param.tool_name = std::string(p.second);
 		}
 	}
 	this->param() = param;
@@ -708,6 +823,50 @@ auto CalibT6P::prepareNrt()->void
 		param.calib_info = calib_info.c_str();
 		//return;
 	}
+
+	//保存标定结果
+	{
+		//获取工具坐标系相对于法兰坐标系的位姿
+		double tool_pm_f[16];
+		s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
+		//获取法兰坐标系相对于底座坐标系的位姿
+		double tool0_pm_g[16];
+		try
+		{
+			auto mat1 = model()->partPool().findByName("L6")->markerPool().findByName("tool0")->prtPm();
+			for (size_t i = 0; i < 4; i++)
+			{
+				for (size_t j = 0; j < 4; j++)
+				{
+					tool0_pm_g[4 * i + j] = mat1[i][j];
+				}
+			}
+		}
+		catch (std::exception)
+		{
+			std::string calib_info = "cann't find \"tool0\" node in partPool.";
+			throw std::runtime_error("cann't find \"tool0\" node in partPool.");
+		}
+
+		//计算工具坐标系相对于底座坐标系的位姿
+		double tool_pm_g[16];
+		double tool_pe_g[6];
+		s_mm(4, 4, 4, tool0_pm_g, tool_pm_f, tool_pm_g);
+		s_pm2pe(tool_pm_g, tool_pe_g, "313");
+		try
+		{
+			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_g);
+		}
+		catch (std::exception)
+		{
+			std::string calib_info = "cann't find \"" + param.tool_name + "\" node in partPool.";
+			throw std::runtime_error("cann't find \"" + param.tool_name + "\" node in partPool.");
+		}
+
+		const std::string calib_info = "The configuration node of " + param.tool_name + "'s pose is created or updated.";
+		param.calib_info = calib_info.c_str();
+	}
+
 	std::vector<std::pair<std::string, std::any>> out_param;
 	out_param.push_back(std::make_pair<std::string, std::any>("calib_info", param.calib_info));
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
@@ -721,6 +880,7 @@ CalibT6P::CalibT6P(const std::string &name) :Plan(name)
 		"<Command name=\"CalibT6P\">"
 		"	<GroupParam>"
 		"		<Param name=\"pose\" default=\"{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}\"/>"
+		"		<Param name=\"tool\" default=\"tool1\"/>"
 		"   </GroupParam>"
 		"</Command>");
 }
@@ -912,7 +1072,7 @@ auto CalibT6P::deltaRP_6Pt(double R[54], double P[18], double * deltaR, double *
 //设定工具坐标系的标定结果
 struct SetTFParam
 {
-	//size_t tool_id;
+	size_t tool_id;
 	std::string tool_name;
 	double tool_pe[6];
 	std::string calib_info;
@@ -924,11 +1084,11 @@ auto SetTF::prepareNrt()->void
 	std::vector<std::string> tempvec;
 	for (auto &p : cmdParams())
 	{
-		/*if (p.first == "tool_id")
+		if (p.first == "tool_id")
 		{
 			param.tool_id = int32Param(p.first);
-		}*/
-		if (p.first == "tool_name")
+		}
+		else if (p.first == "tool_name")
 		{
 			param.tool_name=std::string(p.second);
 		}
@@ -993,18 +1153,7 @@ auto SetTF::prepareNrt()->void
 		{
 			throw std::runtime_error("cann't find \"" + param.tool_name + "\" node in partPool.");
 		}
-		/*
-		auto mat2 = model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->prtPm();
-		for (size_t i = 0; i < 4; i++)
-		{
-			for (size_t j = 0; j < 4; j++)
-			{
-				std::cout << mat2[i][j] << ",";
-			}
-			std::cout << std::endl;
-		}
-		*/
-		//param.calib_info = "工具坐标系位姿的配置节点已生成。";
+
 		const std::string calib_info = "The configuration node of " + param.tool_name +"'s pose is created or updated.";
 		param.calib_info = calib_info.c_str();
 	}
@@ -1017,9 +1166,9 @@ auto SetTF::prepareNrt()->void
 SetTF::SetTF(const std::string &name) :Plan(name)
 {
 	command().loadXmlStr(
-		"<Command name=\"settf\">"
+		"<Command name=\"SetTF\">"
 		"	<GroupParam>"
-		"		<Param name=\"tool_name\" default=\"tool0\"/>"
+		"		<Param name=\"tool_name\" default=\"tool1\"/>"
 		"		<Param name=\"tool_pe\" default=\"{0,0,0,0,0,0}\"/>"
 		"   </GroupParam>"
 		"</Command>");

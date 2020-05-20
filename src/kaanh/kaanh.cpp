@@ -41,6 +41,8 @@ struct CmdListParam
 	int current_plan_id = -1;
 }cmdparam;
 std::shared_ptr<kaanh::MoveBase> g_plan;
+static float rawdata[6];	//力传感器数据
+static float filterdata[6];	//力传感器滤波后数据
 
 
 namespace kaanh
@@ -91,6 +93,25 @@ namespace kaanh
 		if (!inter.isAutoRunning())
 		{
             g_counter = 1.0;
+		}
+
+		//获取力传感器数据，并进行滤波
+		auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(cs.controller().slavePool().at(6));
+		std::uint8_t led1 = 0x01;
+		static int fs_init = 0;
+		if (fs_init == 0)
+		{
+			slave7.writePdo(0x7010, 1, &led1, 1);
+			fs_init++;
+		}
+		else
+		{
+			slave7.readPdo(0x6020, 11, &rawdata[0], 32);
+			slave7.readPdo(0x6020, 12, &rawdata[1], 32);
+			slave7.readPdo(0x6020, 13, &rawdata[2], 32);
+			slave7.readPdo(0x6020, 14, &rawdata[3], 32);
+			slave7.readPdo(0x6020, 15, &rawdata[4], 32);
+			slave7.readPdo(0x6020, 16, &rawdata[5], 32);
 		}
 
 	}
@@ -4029,12 +4050,13 @@ namespace kaanh
 	//力传感器标定:零点、机械臂安装倾角、负载重量、重心数据//
 	struct CalibFZeroParam
 	{
-		double thelta_setup = 51.166;//力传感器安装位置相对tcp偏移角
-		double pos_setup = 0.061;//力传感器安装位置相对tcp偏移距离
+		double thelta_setup = 51.166;	//力传感器安装位置相对tcp偏移角
+		double pos_setup = 0.061;		//力传感器安装位置相对tcp偏移距离
 		std::vector<double> Gravity_value;		//负载重力分量
 		std::vector<double> Gravity_center;		//重心数据:x,y,z
 		std::vector<double> Gravity_xyzindex;	//重力系数:Lx,Ly,Lz
 		std::vector<double> Zero_value;			//力传感器零点偏移量
+		double fs2tpm[16];						//力传感器相对法兰的旋转矩阵
 		aris::dynamic::Marker *tool, *wobj;
 		std::vector<Size> total_count_vec;
 		std::vector<double> p1, p2, p3;
@@ -4170,6 +4192,14 @@ namespace kaanh
 				}
 				for (int i = 0; i < controller()->motionPool().size(); ++i) param.dec[i] *= controller()->motionPool().at(i).maxAcc();
 			}
+			else if (cmd_param.first == "zoffset")
+			{
+				param.pos_setup = doubleParam(cmd_param.first);
+			}
+			else if (cmd_param.first == "rzoffset")
+			{
+				param.thelta_setup = doubleParam(cmd_param.first);
+			}
 		}
 
 		this->param() = param;
@@ -4184,14 +4214,13 @@ namespace kaanh
 		aris::Size t_count;
 		static aris::Size total_count = 1;
 		aris::Size return_value = 0;
-		static double fs2tpm[16];
 		// 获取6个电机初始位置 //
 		if (count() == 1)
 		{
 			//获取力传感器相对tcp的旋转矩阵//
 			auto thelta = (- param.thelta_setup)*PI / 180;
 			double pq_setup[7]{ 0.0,0.0,param.pos_setup,0.0,0.0,sin(thelta / 2.0),cos(thelta / 2.0) };
-			s_pq2pm(pq_setup, fs2tpm);
+			s_pq2pm(pq_setup, param.fs2tpm);
 
 			for (int i = 0; i < 6; i++)
 			{
@@ -4266,7 +4295,7 @@ namespace kaanh
 			double pm[16], pmr[16];
 			model()->generalMotionPool().at(0).updMpm();
 			param.tool->getPm(*param.wobj, pmr);
-			s_pm_dot_pm(pmr, fs2tpm, pm);
+			s_pm_dot_pm(pmr, param.fs2tpm, pm);
 			double rm[18] = { pm[0],pm[4],pm[8],1,0,0,pm[1],pm[5],pm[9],0,1,0,pm[2],pm[6],pm[10],0,0,1 };//取pm的逆
 			std::copy(rm, rm + 18, param.R.begin());
 		}
@@ -4289,7 +4318,7 @@ namespace kaanh
 			double pm[16], pmr[16];
 			model()->generalMotionPool().at(0).updMpm();
 			param.tool->getPm(*param.wobj, pmr);
-			s_pm_dot_pm(pmr, fs2tpm, pm);
+			s_pm_dot_pm(pmr, param.fs2tpm, pm);
 			double rm[18] = { pm[0],pm[4],pm[8],1,0,0,pm[1],pm[5],pm[9],0,1,0,pm[2],pm[6],pm[10],0,0,1 };//取pm的逆
 			std::copy(rm, rm + 18, param.R.begin() + 18);
 		}
@@ -4312,7 +4341,7 @@ namespace kaanh
 			double pm[16], pmr[16];
 			model()->generalMotionPool().at(0).updMpm();
 			param.tool->getPm(*param.wobj, pmr);
-			s_pm_dot_pm(pmr, fs2tpm, pm);
+			s_pm_dot_pm(pmr, param.fs2tpm, pm);
 			double rm[18] = { pm[0],pm[4],pm[8],1,0,0,pm[1],pm[5],pm[9],0,1,0,pm[2],pm[6],pm[10],0,0,1 };//取pm的逆
 			std::copy(rm, rm + 18, param.R.begin() + 36);
 		}
@@ -4322,6 +4351,17 @@ namespace kaanh
 	auto CalibFZero::collectNrt()->void
 	{
 		auto &param = std::any_cast<CalibFZeroParam&>(this->param());
+		
+		//保存力传感器相对法兰的位姿矩阵
+		if (model()->partPool().findByName("L6")->markerPool().findByName("toolfs") != model()->partPool().findByName("L6")->markerPool().end())
+		{
+			dynamic_cast<aris::dynamic::Marker*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"))->setPrtPm(param.fs2tpm);
+		}
+		else
+		{
+			model()->partPool().findByName("L6")->markerPool().add<aris::dynamic::Marker>("toolfs", param.fs2tpm);
+		}
+
 		// QR分解求方程的解
 		double U[54], tau[9], tau2[9];
 		aris::Size p[9];
@@ -4415,6 +4455,8 @@ namespace kaanh
 			"		<Param name=\"p1\" default=\"{0,0,0,0,-0.6,-0.7}\"/>"
             "		<Param name=\"p2\" default=\"{0,0,0,-0.6,0.5,0}\"/>"
             "		<Param name=\"p3\" default=\"{0,0,0,0.6,0.8,0.8}\"/>"
+			"		<Param name=\"zoffset\" default=\"0.061\"/>"
+			"		<Param name=\"rzoffset\" default=\"51.166\"/>"
 			"		<Param name=\"vel\" default=\"0.05\"/>"
 			"		<Param name=\"acc\" default=\"0.1\"/>"
 			"		<Param name=\"dec\" default=\"0.1\"/>"
