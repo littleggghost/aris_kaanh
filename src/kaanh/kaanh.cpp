@@ -4103,36 +4103,14 @@ namespace kaanh
 
 		for (auto cmd_param : cmdParams())
 		{
-			if (cmd_param.first == "p1")
+			if (cmd_param.first == "pose")
 			{
 				auto p = matrixParam(cmd_param.first);
-				if (p.size() == 6)
+				if (p.size() == 18)
 				{
-					param.p1.assign(p.begin(), p.end());
-				}
-				else
-				{
-					THROW_FILE_LINE("");
-				}
-			}
-			else if (cmd_param.first == "p2")
-			{
-				auto p = matrixParam(cmd_param.first);
-				if (p.size() == 6)
-				{
-					param.p2.assign(p.begin(), p.end());
-				}
-				else
-				{
-					THROW_FILE_LINE("");
-				}
-			}
-			else if (cmd_param.first == "p3")
-			{
-				auto p = matrixParam(cmd_param.first);
-				if (p.size() == 6)
-				{
-					param.p3.assign(p.begin(), p.end());
+					param.p1.assign(p.begin(), p.begin() + 6);
+					param.p2.assign(p.begin() + 6, p.begin() + 12);
+					param.p3.assign(p.begin() + 12, p.end());
 				}
 				else
 				{
@@ -4452,9 +4430,7 @@ namespace kaanh
 		command().loadXmlStr(
 			"<Command name=\"CalibFZero\">"
 			"	<GroupParam>"
-			"		<Param name=\"p1\" default=\"{0,0,0,0,-0.6,-0.7}\"/>"
-            "		<Param name=\"p2\" default=\"{0,0,0,-0.6,0.5,0}\"/>"
-            "		<Param name=\"p3\" default=\"{0,0,0,0.6,0.8,0.8}\"/>"
+			"		<Param name=\"pose\" default=\"{0,0,0,0,-0.6,-0.7}\"/>"
 			"		<Param name=\"zoffset\" default=\"0.061\"/>"
 			"		<Param name=\"rzoffset\" default=\"51.166\"/>"
 			"		<Param name=\"vel\" default=\"0.05\"/>"
@@ -7964,7 +7940,6 @@ namespace kaanh
 			"	</GroupParam>"
 			"</Command>");
 	}
-
 
 
 	auto GetXml::prepareNrt()->void
