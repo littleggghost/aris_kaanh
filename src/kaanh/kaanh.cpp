@@ -44,7 +44,7 @@ std::shared_ptr<kaanh::MoveBase> g_plan;
 static float rawdata[6];	//力传感器数据
 static std::atomic<std::array<double, 6>>filterdata;//力传感器滤波后数据
 cpt_ftc::Admit admit;
-cpt_ftc::LowPass lp; //滤波器
+cpt_ftc::LowPass lp[6]; //滤波器
 //extern cpt_ftc::Admit admit;//力控
 
 
@@ -100,7 +100,6 @@ namespace kaanh
 
 
 		//获取力传感器数据，并进行滤波
-
         auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(6));
         static int fcinit=0;
         if((motion_state[5]==1)&&fcinit<1)
@@ -113,9 +112,10 @@ namespace kaanh
         for (int i = 0; i < 6; i++)
         {
             slave7->readPdo(0x6020, i+11, &rawdata[i], 32);
-            lp.get_filter_data(2, 10, 0.001, rawdata[i], outdata[i]);
+            lp[i].get_filter_data(2, 10, 0.001, rawdata[i], outdata[i]);
+            outdata[i] *= 9.8;
         }
-        //cs.controller().mout()<<"rawdata[0]:" << rawdata[0] << "  outdata[0]:" << outdata[0]<< std::endl;
+
         filterdata.store(outdata);
 
 	}
