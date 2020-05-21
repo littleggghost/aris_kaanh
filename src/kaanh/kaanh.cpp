@@ -42,7 +42,7 @@ struct CmdListParam
 }cmdparam;
 std::shared_ptr<kaanh::MoveBase> g_plan;
 static float rawdata[6];	//力传感器数据
-static double filterdata[6];	//力传感器滤波后数据
+static std::atomic<std::array<double, 6>>filterdata;//力传感器滤波后数据
 cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp; //滤波器
 //extern cpt_ftc::Admit admit;//力控
@@ -98,25 +98,26 @@ namespace kaanh
             g_counter = 1.0;
 		}
 
-		/*
+
 		//获取力传感器数据，并进行滤波
-		auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(cs.controller().slavePool().at(6));
-		std::uint8_t led1 = 0x01;
-		static int fs_init = 0;
-		if (fs_init == 0)
-		{
-			slave7.writePdo(0x7010, 1, &led1, 1);
-			fs_init++;
-		}
-		else
-		{
-			for (int i = 0; i < 6; i++)
-			{
-				slave7.readPdo(0x6020, i+11, &rawdata[i], 32);
-				lp.get_filter_data(1, 10, 0.001, rawdata[i], filterdata[i]);
-			}		
-		}
-		*/
+
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(6));
+        static int fcinit=0;
+        if((motion_state[5]==1)&&fcinit<1)
+        {
+            std::uint8_t led1 = 0x01;
+            slave7->writePdo(0x7010, 1, &led1, 1);
+            fcinit++;
+        }
+        std::array<double, 6> outdata = {0,0,0,0,0,0};
+        for (int i = 0; i < 6; i++)
+        {
+            slave7->readPdo(0x6020, i+11, &rawdata[i], 32);
+            lp.get_filter_data(2, 10, 0.001, rawdata[i], outdata[i]);
+        }
+        //cs.controller().mout()<<"rawdata[0]:" << rawdata[0] << "  outdata[0]:" << outdata[0]<< std::endl;
+        filterdata.store(outdata);
+
 	}
 
 	//获取状态字——100:去使能,200:手动,300:自动,400:程序运行中,410:程序暂停中,420:程序停止，500:错误//
@@ -560,7 +561,7 @@ namespace kaanh
     std::atomic_bool having_model=false;
     struct GetParam
     {
-        std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai;
+        std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai, forcedata;
         std::vector<bool> di;
         std::int32_t state_code;
         aris::control::EthercatController::SlaveLinkState sls[6];
@@ -582,6 +583,7 @@ namespace kaanh
         par.ai.resize(100, 1.0);
         par.di.resize(100, false);
         par.motion_state.resize(6, 0);
+        par.forcedata.resize(6, 0.0);
         std::any param = par;
         //std::any param = std::make_any<GetParam>();
 
@@ -667,6 +669,9 @@ namespace kaanh
 		auto &cs = *controlServer();
 		auto &inter = dynamic_cast<aris::server::ProgramWebInterface&>(cs.interfacePool().at(0));
 
+        std::array<double, 6> temp = filterdata.load();
+        out_data.forcedata.assign(temp.begin(), temp.end());
+        //std::cout << "fx:"<< temp[0] << std::endl;
 		std::vector<std::pair<std::string, std::any>> out_param;
 		for (auto p : cmdParams())
 		{
@@ -694,6 +699,7 @@ namespace kaanh
 				out_param.push_back(std::make_pair(std::string("pro_err_msg"), std::make_any<std::string>(inter.lastError())));
 				out_param.push_back(std::make_pair(std::string("pro_err_line"), std::make_any<int>(inter.lastErrorLine())));
 				out_param.push_back(std::make_pair(std::string("line"), std::make_any<int>(inter.currentLine())));
+                out_param.push_back(std::make_pair(std::string("force_data"), out_data.forcedata));
 			}
 			else if (p.first == "pos")
 			{
@@ -2434,7 +2440,9 @@ namespace kaanh
 			}
 			else if (cmd_param.first == "fc")
 			{
-				mvl_param.fc = int32Param(cmd_param.first);
+                //auto isf = std::any_cast<bool>(cal.calculateExpression("fc(" + std::string(cmd_param.second) + ")").second);
+                auto isf = std::stoi(std::string(cmd_param.second));
+                mvl_param.fc = isf;
 			}
 		}
 
@@ -2892,7 +2900,8 @@ namespace kaanh
 			std::copy(G, G + 6, admit.G);
 
 			double pe321[6], fspm[16];
-			admit.get_cor_pos(filterdata, fs2bpm, 0.001, pe321);
+            std::array<double, 6> fdata = filterdata.load();
+            admit.get_cor_pos(fdata.data(), fs2bpm, 0.001, pe321);
 			aris::dynamic::s_pe2pm(pe321, fspm, "321");
 
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);
@@ -3339,7 +3348,9 @@ namespace kaanh
 			}
 			else if (cmd_param.first == "fc")
 			{
-				mvc_param.fc = int32Param(cmd_param.first);
+                //auto isf = std::any_cast<bool>(cal.calculateExpression("fc(" + std::string(cmd_param.second) + ")").second);
+                auto isf = std::stoi(std::string(cmd_param.second));
+                mvc_param.fc = isf;
 			}
 		}
 
@@ -3854,7 +3865,8 @@ namespace kaanh
 			std::copy(G, G + 6, admit.G);
 
 			double pe321[6], fspm[16];
-			admit.get_cor_pos(filterdata, fs2bpm, 0.001, pe321);
+            std::array<double, 6> fdata = filterdata.load();
+            admit.get_cor_pos(fdata.data(), fs2bpm, 0.001, pe321);
 			aris::dynamic::s_pe2pm(pe321, fspm, "321");
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);	
 		}
@@ -4061,9 +4073,9 @@ namespace kaanh
         auto &param = std::any_cast<KunweiParam&>(this->param());
         int16_t datanum = 0;
 
-	/*
     #ifdef UNIX
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(0));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+        float rawdata[6];
         std::uint8_t led1 = 0x01;
         if(count() == 1)slave7.writePdo(0x7010, 1, &led1, 1);
         else
@@ -4074,7 +4086,7 @@ namespace kaanh
         slave7.readPdo(0x6020, 15, &rawdata[4], 32);
         slave7.readPdo(0x6020, 16, &rawdata[5], 32);
     #endif
-	*/
+
         auto &cout = controller()->mout();
 
         if(count()%100==0)
@@ -4082,7 +4094,7 @@ namespace kaanh
             cout << "datanum:" << datanum << std::endl;
             for(int i=0; i<6; i++)
             {
-                cout << filterdata[i] << "    ";
+                cout << rawdata[i] << "    ";
             }
             cout << std::endl;
         }
@@ -4312,7 +4324,7 @@ namespace kaanh
 		{
 			for (uint8_t i = 0; i < 6; i++)
 			{
-                param.sdata1[i] = double(filterdata[i]);
+                param.sdata1[i] = double(filterdata.load()[i]);
                 cout << param.sdata1[i] << " ";
 			}
             cout << std::endl;
@@ -4332,7 +4344,7 @@ namespace kaanh
 		{
 			for (uint8_t i = 0; i < 6; i++)
 			{
-                param.sdata2[i] = double(filterdata[i]);
+                param.sdata2[i] = double(filterdata.load()[i]);
                 cout << param.sdata2[i] << " ";
 			}
             cout << std::endl;
@@ -4352,7 +4364,7 @@ namespace kaanh
 		{
 			for (uint8_t i = 0; i < 6; i++)
 			{
-                param.sdata3[i] = double(filterdata[i]);
+                param.sdata3[i] = double(filterdata.load()[i]);
                 cout << param.sdata3[i] << " ";
 			}
             cout << std::endl;
@@ -4374,14 +4386,14 @@ namespace kaanh
 	auto CalibFZero::collectNrt()->void
 	{
 		auto &param = std::any_cast<CalibFZeroParam&>(this->param());
-		
+
 		//保存力传感器相对法兰的位姿矩阵
 		if (model()->partPool().findByName("L6")->markerPool().findByName("toolfs") != model()->partPool().findByName("L6")->markerPool().end())
 		{
 			dynamic_cast<aris::dynamic::Marker*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"))->setPrtPm(param.fs2tpm);
 		}
 		else
-		{
+        {
 			model()->partPool().findByName("L6")->markerPool().add<aris::dynamic::Marker>("toolfs", param.fs2tpm);
 		}
 
@@ -4450,7 +4462,6 @@ namespace kaanh
 			std::cout << param.Zero_value[i] << "  ";
 		}
 		std::cout << std::endl;
-
 		//负载重力xyz方向系数
 		param.Gravity_xyzindex[0] = param.l[0];
 		param.Gravity_xyzindex[1] = param.l[1];
@@ -6399,10 +6410,12 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
-			model()->generalMotionPool()[0].getMpe(target_p);
+            param.tool->getPe(*param.wobj, target_p, eu_type);
+            //model()->generalMotionPool()[0].getMpe(target_p);
 			std::fill_n(target_p + 3, 3, 0.0);
 
-			model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+            param.tool->getPe(*param.wobj, p_now, eu_type);
+            //model()->generalMotionPool()[0].getMpe(p_now, eu_type);
 			std::fill_n(p_now + 3, 3, 0.0);
             std::fill_n(v_now, 6, 0.0);
             std::fill_n(a_now, 6, 0.0);
@@ -6527,10 +6540,14 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
-			model()->generalMotionPool()[0].getMpe(target_p);
-			std::fill_n(target_p + 3, 3, 0.0);
 
-			model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+            param.tool->getPe(*param.wobj, target_p, eu_type);
+            //model()->generalMotionPool()[0].getMpe(target_p);
+            std::fill_n(target_p + 3, 3, 0.0);
+
+            param.tool->getPe(*param.wobj, p_now, eu_type);
+            //model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+
 			std::fill_n(p_now + 3, 3, 0.0);
 
 			model()->generalMotionPool()[0].getMve(v_now, eu_type);
@@ -6653,10 +6670,13 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
-			model()->generalMotionPool()[0].getMpe(target_p);
-			std::fill_n(target_p + 3, 3, 0.0);
+            param.tool->getPe(*param.wobj, target_p, eu_type);
+            //model()->generalMotionPool()[0].getMpe(target_p);
+            std::fill_n(target_p + 3, 3, 0.0);
 
-			model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+            param.tool->getPe(*param.wobj, p_now, eu_type);
+            //model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+
 			std::fill_n(p_now + 3, 3, 0.0);
 
 			model()->generalMotionPool()[0].getMve(v_now, eu_type);
@@ -6780,10 +6800,13 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
-			model()->generalMotionPool()[0].getMpe(target_p);
-			std::fill_n(target_p + 3, 3, 0.0);
+            param.tool->getPe(*param.wobj, target_p, eu_type);
+            //model()->generalMotionPool()[0].getMpe(target_p);
+            std::fill_n(target_p + 3, 3, 0.0);
 
-			model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+            param.tool->getPe(*param.wobj, p_now, eu_type);
+            //model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+
 			std::fill_n(p_now + 3, 3, 0.0);
 
 			model()->generalMotionPool()[0].getMve(v_now, eu_type);
@@ -6906,10 +6929,13 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
-			model()->generalMotionPool()[0].getMpe(target_p);
-			std::fill_n(target_p + 3, 3, 0.0);
+            param.tool->getPe(*param.wobj, target_p, eu_type);
+            //model()->generalMotionPool()[0].getMpe(target_p);
+            std::fill_n(target_p + 3, 3, 0.0);
 
-			model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+            param.tool->getPe(*param.wobj, p_now, eu_type);
+            //model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+
 			std::fill_n(p_now + 3, 3, 0.0);
 
 			model()->generalMotionPool()[0].getMve(v_now, eu_type);
@@ -7032,10 +7058,13 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
-			model()->generalMotionPool()[0].getMpe(target_p);
-			std::fill_n(target_p + 3, 3, 0.0);
+            param.tool->getPe(*param.wobj, target_p, eu_type);
+            //model()->generalMotionPool()[0].getMpe(target_p);
+            std::fill_n(target_p + 3, 3, 0.0);
 
-			model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+            param.tool->getPe(*param.wobj, p_now, eu_type);
+            //model()->generalMotionPool()[0].getMpe(p_now, eu_type);
+
 			std::fill_n(p_now + 3, 3, 0.0);
 
 			model()->generalMotionPool()[0].getMve(v_now, eu_type);
@@ -7699,13 +7728,14 @@ namespace kaanh
 	{
 		auto&cs = aris::server::ControlServer::instance();
 		if (cs.running())throw std::runtime_error("cs is running, please stop the cs using cs_stop!");
-		aris::control::EthercatController ec_controller;
+        //aris::control::EthercatController ec_controller;
 
+        ecController()->slavePool().clear();
 #ifdef UNIX
-		ec_controller.scan();
+         ecController()->scan();
 		std::vector<std::pair<std::string, std::any>> ret_value;
-        ret_value.push_back(std::make_pair<std::string, std::any>("controller_xml", ec_controller.xmlString()));
-        std::cout <<ec_controller.xmlString() <<std::endl;
+        ret_value.push_back(std::make_pair<std::string, std::any>("controller_xml",  ecController()->xmlString()));
+        std::cout << ecController()->xmlString() <<std::endl;
 #endif
 #ifdef WIN32
 		std::vector<std::pair<std::string, std::any>> ret_value;
@@ -7812,8 +7842,8 @@ namespace kaanh
 	};
 	auto SaveXml::prepareNrt()->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-		if (cs.running())throw std::runtime_error("cs is running, please stop the cs using cs_stop!");
+        //auto&cs = aris::server::ControlServer::instance();
+        //if (cs.running())throw std::runtime_error("cs is running, please stop the cs using cs_stop!");
 
 		SaveXmlParam param;
 		for (auto &p : cmdParams())
@@ -7838,7 +7868,7 @@ namespace kaanh
 		param.path = param.path + '/' + param.filename;
 
 		std::cout << "input path:" << param.path << std::endl;
-        cs.saveXmlFile(param.path.c_str());
+        controlServer()->saveXmlFile(param.path.c_str());
 
 		std::vector<std::pair<std::string, std::any>> ret_value;
 		ret() = ret_value;
@@ -8808,7 +8838,8 @@ namespace kaanh
 		G[4] = G[0] * center[2] - G[2] * center[0];
 		G[5] = G[1] * center[0] - G[0] * center[1];
 
-		admit.admit_init(filterdata, G);
+        admit.admit_init(filterdata.load().data(), G);
+
 		for (auto &p : cmdParams())
 		{
 			if (p.first == "b")

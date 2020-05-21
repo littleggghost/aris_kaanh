@@ -730,6 +730,7 @@ namespace kaanhconfig
 			}
 			return params[0];
 		});
+
 		cal.addTypename("jointtarget");
 		cal.addFunction("jointtarget", std::vector<std::string>{"Matrix"}, "jointtarget", [](std::vector<std::any>&params)->std::any
 		{
@@ -750,7 +751,6 @@ namespace kaanhconfig
 			}
 			return params[0];
 		});
-
 
 		cal.addTypename("zone");
 		cal.addFunction("zone", std::vector<std::string>{"Matrix"}, "zone", [](std::vector<std::any>&params)->std::any

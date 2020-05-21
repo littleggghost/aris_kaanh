@@ -488,7 +488,6 @@ auto CalibT5P::prepareNrt()->void
 		//将标定结果转换为欧拉角形式
 		double re321[3];
 		s_rm2re(tcf, re321, "321");
-		//const double pose[6] = { tcp[0] * 1000, tcp[1] * 1000, tcp[2] * 1000, re321[0] *180 / PI, re321[1] * 180 / PI, re321[2] * 180 / PI };
 		const double pose[6] = { tcp[0], tcp[1], tcp[2], re321[0], re321[1], re321[2] };
 		for (int i = 0; i < 6; i++)
 		{
@@ -793,7 +792,7 @@ auto CalibT6P::prepareNrt()->void
 		{
 			temp_pe[j] = param.pe_6pt[6 * i + j];
 		}
-		s_pe2pm(temp_pe, temp_pm, "321");
+        s_pe2pm(temp_pe, temp_pm, "321");
 		for (int k = 0; k < 16; k++)
 		{
 			pm_6pt[16 * i + k] = temp_pm[k];
@@ -804,9 +803,9 @@ auto CalibT6P::prepareNrt()->void
 	{
 		//将标定结果转换为欧拉角形式
 		double re321[3];
-		s_rm2re(tcf, re321, "321");
-		//const double pose[6] = { tcp[0] * 1000, tcp[1] * 1000, tcp[2] * 1000, re321[0] * 180 / PI, re321[1] * 180 / PI, re321[2] * 180 / PI };
-		const double pose[6] = { tcp[0], tcp[1], tcp[2], re321[0], re321[1], re321[2] };
+        s_rm2re(tcf, re321, "321");
+        const double pose[6] = { tcp[0], tcp[1], tcp[2], re321[0], re321[1], re321[2] };
+        //const double pose[6] = { tcp[0], tcp[1], tcp[2], re321[2], re321[1], re321[0] };
 		for (int i = 0; i < 6; i++)
 		{
 			param.tool_pe.push_back(pose[i]);
@@ -828,7 +827,7 @@ auto CalibT6P::prepareNrt()->void
 	{
 		//获取工具坐标系相对于法兰坐标系的位姿
 		double tool_pm_f[16];
-		s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
+        s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
 		//获取法兰坐标系相对于底座坐标系的位姿
 		double tool0_pm_g[16];
 		try
@@ -852,7 +851,7 @@ auto CalibT6P::prepareNrt()->void
 		double tool_pm_g[16];
 		double tool_pe_g[6];
 		s_mm(4, 4, 4, tool0_pm_g, tool_pm_f, tool_pm_g);
-		s_pm2pe(tool_pm_g, tool_pe_g, "313");
+        s_pm2pe(tool_pm_g, tool_pe_g, "313");
 		try
 		{
 			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_g);
@@ -872,7 +871,7 @@ auto CalibT6P::prepareNrt()->void
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
 	this->ret() = out_param;
 
-	option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION | NOT_PRINT_CMD_INFO | NOT_PRINT_CMD_INFO;
+    option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
 }
 CalibT6P::CalibT6P(const std::string &name) :Plan(name)
 {
