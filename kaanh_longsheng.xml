@@ -10,7 +10,7 @@
     <InterfaceRoot/>
     <EthercatController name="ethercat_controller" sample_period_ns="1000000" esi_dirs="">
         <SlavePoolObject name="slave_pool">
-            <EthercatMotor phy_id="0" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="2.9670597283903599" min_pos="-2.9670597283903599" max_vel="2.0420352248333655" min_vel="-2.0420352248333655" max_acc="8.7266462599716466" min_acc="-8.7266462599716466" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="3191090.8100000001" pos_offset="0.057037359955174678" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="0" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.9670597283903599" min_pos="-2.9670597283903599" max_vel="2.0420352248333655" min_vel="-2.0420352248333655" max_acc="8.7266462599716466" min_acc="-8.7266462599716466" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="3191090.8133" pos_offset="0.057037359955174678" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -41,7 +41,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="1" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="1.605702911834783" min_pos="-2.5656340004316642" max_vel="2.0420352248333655" min_vel="-2.0420352248333655" max_acc="8.7266462599716466" min_acc="-8.7266462599716466" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-3188733.5499999998" pos_offset="-0.10007717930935485" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="1" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="1.605702911834783" min_pos="-2.5656340004316642" max_vel="2.0420352248333655" min_vel="-2.0420352248333655" max_acc="8.7266462599716466" min_acc="-8.7266462599716466" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-3188733.5477999998" pos_offset="-0.10007717930935485" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -72,7 +72,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="2" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="2.6179938779914944" min_pos="-1.5707963267948966" max_vel="2.5656340004316642" min_vel="-2.5656340004316642" max_acc="12.217304763960307" min_acc="-12.217304763960307" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689825.6000000001" pos_offset="-1.2751550047995772" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="2" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.6179938779914944" min_pos="-1.5707963267948966" max_vel="2.5656340004316642" min_vel="-2.5656340004316642" max_acc="12.217304763960307" min_acc="-12.217304763960307" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1689825.5966" pos_offset="-1.2751550047995772" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -103,7 +103,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="3" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="3.1415926535897931" min_pos="-3.1415926535897931" max_vel="6.6322511575784526" min_vel="-6.6322511575784526" max_acc="17.453292519943293" min_acc="-17.453292519943293" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-1606111.3799999999" pos_offset="0.086254171633559765" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="3" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="3.1415926535897931" min_pos="-3.1415926535897931" max_vel="6.6322511575784526" min_vel="-6.6322511575784526" max_acc="17.453292519943293" min_acc="-17.453292519943293" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-1606111.3799000001" pos_offset="0.086254171633559765" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -134,7 +134,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="4" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="2.0943951023931953" min_pos="-2.0943951023931953" max_vel="6.1086523819801535" min_vel="-6.1086523819801535" max_acc="17.453292519943293" min_acc="-17.453292519943293" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1774918.71" pos_offset="-1.5647574875829959" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="4" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.0943951023931953" min_pos="-2.0943951023931953" max_vel="6.1086523819801535" min_vel="-6.1086523819801535" max_acc="17.453292519943293" min_acc="-17.453292519943293" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="1774918.7091999999" pos_offset="-1.5647574875829959" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -165,7 +165,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="5" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="650000" max_pos="6.2831853071795862" min_pos="-6.2831853071795862" max_vel="10.471975511965978" min_vel="-10.471975511965978" max_acc="34.906585039886586" min_acc="-34.906585039886586" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-1042708.24" pos_offset="-2.0833820748131111" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="5" vendor_id="0x00000748" product_code="0x00000000" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="6.2831853071795862" min_pos="-6.2831853071795862" max_vel="10.471975511965978" min_vel="-10.471975511965978" max_acc="34.906585039886586" min_acc="-34.906585039886586" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-1042708.2351" pos_offset="-2.0833820748131111" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -196,6 +196,53 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
+            <EthercatSlave phy_id="6" vendor_id="0x000fffff" product_code="0x000c7011" revision_num="0x00000001" dc_assign_activate="0x00000000" sync0_shift_ns="650000">
+                <SyncManagerPoolObject>
+                    <SyncManager is_tx="false"/>
+                    <SyncManager is_tx="true"/>
+                    <SyncManager is_tx="false">
+                        <Pdo index="0x1601">
+                            <PdoEntry name="entry" index="0x7010" subindex="0x01" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x02" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x03" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x04" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x05" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x06" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x07" size="1"/>
+                            <PdoEntry name="entry" index="0x7010" subindex="0x08" size="1"/>
+                            <PdoEntry name="entry" index="0x0000" subindex="0x00" size="8"/>
+                        </Pdo>
+                    </SyncManager>
+                    <SyncManager is_tx="true">
+                        <Pdo index="0x1a00">
+                            <PdoEntry name="entry" index="0x6000" subindex="0x01" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x02" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x03" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x04" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x05" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x06" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x07" size="1"/>
+                            <PdoEntry name="entry" index="0x6000" subindex="0x08" size="1"/>
+                            <PdoEntry name="entry" index="0x0000" subindex="0x09" size="8"/>
+                        </Pdo>
+                        <Pdo index="0x1a02">
+                            <PdoEntry name="entry" index="0x6020" subindex="0x01" size="1"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x02" size="1"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x03" size="2"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x05" size="2"/>
+                            <PdoEntry name="entry" index="0x0000" subindex="0x00" size="8"/>
+                            <PdoEntry name="entry" index="0x1802" subindex="0x07" size="1"/>
+                            <PdoEntry name="entry" index="0x1802" subindex="0x09" size="1"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0b" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0c" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0d" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0e" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0f" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x10" size="32"/>
+                        </Pdo>
+                    </SyncManager>
+                </SyncManagerPoolObject>
+            </EthercatSlave>
         </SlavePoolObject>
         <Pipe name="mout_pipe"/>
         <Pipe name="lout_pipe"/>
@@ -207,13 +254,16 @@
         <Environment name="environment" gravity="{0,0,-9.8,0,0,0}"/>
         <VariablePoolElement name="variable_pool">
             <MatrixVariable name="tool0_axis_home">{0,0,0,0,0,0}</MatrixVariable>
+            <MatrixVariable name="Gravity_center">{-0.135924465789799,-0.130105311062039,-0.133864345138363}</MatrixVariable>
+            <MatrixVariable name="Zero_value">{3.49343044893205,2.79041624590796,3.81054284348112,3.32170216639367,3.52013916017091,3.56948751926091}</MatrixVariable>
+            <MatrixVariable name="Gravity_xyzindex">{-0.580865706208465,0.617892176944092,0.202274650206517}</MatrixVariable>
         </VariablePoolElement>
         <PartPoolElement name="part_pool">
             <Part name="ground" active="true" pe="{0,0,0,-0,0,-0}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,1,1,1,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_0_j" active="true" pe="{0,0,0.5,0.785398163397448,0,0.785398163397448}"/>
                     <Marker name="wobj0" active="true" pe="{0,0,0,-0,0,-0}"/>
-                    <Marker name="wobj1" active="true" pe="{0,0,0,-0,0,-0}"/>
+                    <Marker name="wobj1" active="true" pe="{0.671187129319066,-0.124362752831667,1.1399851523426,5.49999832559142,5.69007296067115e-11,5.49999832559142}"/>
                     <Marker name="wobj2" active="true" pe="{0,0,0,-0,0,-0}"/>
                     <Marker name="wobj3" active="true" pe="{0,0,0,-0,0,-0}"/>
                     <Marker name="wobj4" active="true" pe="{0,0,0,-0,0,-0}"/>
@@ -248,61 +298,62 @@
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L1" active="true" pe="{0,0,0,7.77239247229042e-06,0,7.77239247229042e-06}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L1" active="true" pe="{0,0,0,0.0252109703103957,0,0.0252109703103957}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_0_i" active="true" pe="{0,0,0.5,0.785398163397448,0,0.785398163397448}"/>
-                    <Marker name="joint_1_j" active="true" pe="{0.1489056,0,0.5,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_1_j" active="true" pe="{0.1489055915,0,0.5,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L2" active="true" pe="{0.0506968731193828,7.88071989859476e-07,-0.0123747882917849,4.71240452516963,0.100070763203153,1.5707963267949}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L2" active="true" pe="{-0.070939289411613,-0.00357993099161371,0.0269234698241108,1.62121826741568,0.145731208848432,4.71238898038469}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
-                    <Marker name="joint_1_i" active="true" pe="{0.1489056,0,0.5,3.14159265358979,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="joint_2_j" active="true" pe="{0.1489056,0,1.1003464,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_1_i" active="true" pe="{0.1489055915,0,0.5,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_2_j" active="true" pe="{0.1489055915,0,1.1003463997,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L3" active="true" pe="{0.050378654218046,7.83125345472293e-07,-0.0123637793826913,4.71240452516963,0.0997840051622946,1.5707963267949}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L3" active="true" pe="{0.174657513497703,0.00881404156532577,-0.0147052157860303,4.76281092100548,0.0793594549047025,1.5707963267949}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
-                    <Marker name="joint_2_i" active="true" pe="{0.1489056,0,1.1003464,3.14159265358979,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="joint_3_j" active="true" pe="{0.7891276,0,1.3511974,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                    <Marker name="joint_2_i" active="true" pe="{0.1489055915,0,1.1003463997,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_3_j" active="true" pe="{0.7891279543,0,1.3511974362,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L4" active="true" pe="{0.0498764043977814,0.11640708106948,-0.00736520001131117,5.42727397657668,0.131804646637606,0.860236670305992}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L4" active="true" pe="{0.19437325052995,-0.765804664888022,0.228616904414928,3.30483588315631,0.614999368343103,3.00375285134753}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
-                    <Marker name="joint_3_i" active="true" pe="{0.7891276,0,1.3511974,1.5707963267949,1.5707963267949,1.5707963267949}"/>
-                    <Marker name="joint_4_j" active="true" pe="{0.7891276,0,1.3511974,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_3_i" active="true" pe="{0.7891279543,0,1.3511974362,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                    <Marker name="joint_4_j" active="true" pe="{0.7891279543,0,1.3511974362,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L5" active="true" pe="{0.0498192169272654,0.11640434753952,-0.00733916597956139,5.42747350715056,0.131774182197955,0.86003886999394}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L5" active="true" pe="{-0.681723182823366,-0.125176694117348,1.1422237871426,2.03577224255412,0.99423270998196,3.96232383034632}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
-                    <Marker name="joint_4_i" active="true" pe="{0.7891276,0,1.3511974,3.14159265358979,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="joint_5_j" active="true" pe="{0.7891276,0,1.3511974,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                    <Marker name="joint_4_i" active="true" pe="{0.7891279543,0,1.3511974362,3.14159265358979,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_5_j" active="true" pe="{0.7891279543,0,1.3511974362,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L6" active="true" pe="{-0.139846845041882,-1.23025353324637,1.88813592355616,3.09641462172489,1.99487477946971,3.03211730594749}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L6" active="true" pe="{-0.647124585449482,0.173058262253386,0.970271515519909,1.78203372174384,0.833342477170474,4.11832013912832}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
-                    <Marker name="joint_5_i" active="true" pe="{0.7891276,0,1.3511974,1.5707963267949,1.5707963267949,1.5707963267949}"/>
-                    <Marker name="tool0" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool1" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool2" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool3" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool4" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool5" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool6" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool7" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool8" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool9" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool10" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool11" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool12" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool13" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool14" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool15" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool16" active="true" pe="{0.8891276,0,1.3511974,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="joint_5_i" active="true" pe="{0.7891279543,0,1.3511974362,1.5707963267949,1.5707963267949,1.5707963267949}"/>
+                    <Marker name="tool0" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool1" active="true" pe="{1.08258806234467,-0.0165655454748844,1.35341991568861,0.3633724242249,0.186135253151347,5.9914896641756}"/>
+                    <Marker name="tool2" active="true" pe="{1.14561625416013,0.0310844013217976,1.37814220689346,1.55657116822228,1.37940039904584,3.5627343411847}"/>
+                    <Marker name="tool3" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool4" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool5" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool6" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool7" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool8" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool9" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool10" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool11" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool12" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool13" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool14" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool15" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool16" active="true" pe="{0.8891279543,0,1.3511974362,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="toolfs" active="true" pe="{0,0,0.03,4.97418836818384,0,4.97418836818384}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
@@ -316,12 +367,12 @@
             <RevoluteJoint name="joint_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0,0,0,0,0}"/>
         </JointPoolElement>
         <MotionPoolElement name="motion_pool">
-            <Motion name="motion_0" active="true" prt_m="L1" prt_n="ground" mak_i="joint_0_i" mak_j="joint_0_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="1.5544784944580836e-05" mv="0" ma="0"/>
-            <Motion name="motion_1" active="true" prt_m="L2" prt_n="L1" mak_i="joint_1_i" mak_j="joint_1_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="-0.10007076320315318" mv="0" ma="0"/>
-            <Motion name="motion_2" active="true" prt_m="L3" prt_n="L2" mak_i="joint_2_i" mak_j="joint_2_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.00028675804085853684" mv="0" ma="0"/>
-            <Motion name="motion_3" active="true" prt_m="L4" prt_n="L3" mak_i="joint_3_i" mak_j="joint_3_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.086257405137120699" mv="0" ma="0"/>
-            <Motion name="motion_4" active="true" prt_m="L5" prt_n="L4" mak_i="joint_4_i" mak_j="joint_4_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="3.9630729709472234e-05" mv="0" ma="0"/>
-            <Motion name="motion_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="-2.0833891175541108" mv="0" ma="0"/>
+            <Motion name="motion_0" active="true" prt_m="L1" prt_n="ground" mak_i="joint_0_i" mak_j="joint_0_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.050421940620791368" mv="0" ma="0"/>
+            <Motion name="motion_1" active="true" prt_m="L2" prt_n="L1" mak_i="joint_1_i" mak_j="joint_1_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.14573120884843194" mv="0" ma="0"/>
+            <Motion name="motion_2" active="true" prt_m="L3" prt_n="L2" mak_i="joint_2_i" mak_j="joint_2_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="-0.22509066375313447" mv="0" ma="0"/>
+            <Motion name="motion_3" active="true" prt_m="L4" prt_n="L3" mak_i="joint_3_i" mak_j="joint_3_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="-0.61051554978179379" mv="0" ma="0"/>
+            <Motion name="motion_4" active="true" prt_m="L5" prt_n="L4" mak_i="joint_4_i" mak_j="joint_4_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.94097412004966452" mv="0" ma="0"/>
+            <Motion name="motion_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.25676616135637409" mv="0" ma="0"/>
         </MotionPoolElement>
         <GeneralMotionPoolElement name="general_motion_pool">
             <GeneralMotion name="ee" active="false" prt_m="L6" prt_n="ground" mak_i="tool0" mak_j="wobj0" cf="{0,0,0,0,0,0}"/>
@@ -820,14 +871,18 @@
                         <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
                         <Param name="dec" default="1.0"/>
                         <Param name="jerk" default="10.0"/>
-                        <Param name="angular_acc" default="10"/>
+                        <Param name="joint_acc" default="0.9"/>
+                        <Param name="joint_dec" default="0.9"/>
+                        <Param name="joint_jerk" default="10.0"/>
+                        <Param name="angular_acc" default="5"/>
                         <Param name="angular_vel" default="2"/>
-                        <Param name="angular_dec" default="10"/>
+                        <Param name="angular_dec" default="5"/>
                         <Param name="angular_jerk" default="10.0"/>
                         <Param name="zone" default="fine"/>
                         <Param name="load" default="{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}"/>
                         <Param name="tool" default="tool0"/>
                         <Param name="wobj" default="wobj0"/>
+                        <Param name="fc" default="0"/>
                         <UniqueParam default="check_all">
                             <Param name="check_all"/>
                             <Param name="check_none"/>
@@ -998,9 +1053,9 @@
                         <Param name="vel" default="{0.025, 0.025, 3.4, 0.0, 0.0}"/>
                         <Param name="dec" default="1"/>
                         <Param name="jerk" default="10.0"/>
-                        <Param name="angular_acc" default="10"/>
+                        <Param name="angular_acc" default="5"/>
                         <Param name="angular_vel" default="2"/>
-                        <Param name="angular_dec" default="10"/>
+                        <Param name="angular_dec" default="5"/>
                         <Param name="angular_jerk" default="10"/>
                         <Param name="speed" default="{0.1, 0.1, 3.49, 0.0, 0.0}"/>
                         <Param name="zone" default="fine"/>
@@ -1284,6 +1339,17 @@
                     </GroupParam>
                 </Command>
             </SetPdo>
+            <GetPdo name="GetPdo_plan">
+                <Command name="getpdo">
+                    <GroupParam>
+                        <Param name="motion_id" default="0"/>
+                        <Param name="index" default="0x6040"/>
+                        <Param name="subindex" default="0x00"/>
+                        <Param name="value" default="1"/>
+                        <Param name="bitsize" default="16"/>
+                    </GroupParam>
+                </Command>
+            </GetPdo>
             <SetDH name="SetDH_plan">
                 <Command name="setdh">
                     <GroupParam>
@@ -1434,12 +1500,19 @@
                     </GroupParam>
                 </Command>
             </Yuli>
+            <Kunwei name="Kunwei_plan">
+                <Command name="kw">
+                    <GroupParam>
+                        <Param name="times" abbreviation="t" default="1000"/>
+                    </GroupParam>
+                </Command>
+            </Kunwei>
             <CalibFZero name="CalibFZero_plan">
                 <Command name="CalibFZero">
                     <GroupParam>
-                        <Param name="p1" default="{0,0,0,0,-0.6,-0.7}"/>
-                        <Param name="p2" default="{0,0,0,-0.6,0.5,0}"/>
-                        <Param name="p3" default="{0,0,0,0.6,0.8,0.8}"/>
+                        <Param name="pose" default="{0,0,0,0,-0.6,-0.7}"/>
+                        <Param name="zoffset" default="0.061"/>
+                        <Param name="rzoffset" default="51.166"/>
                         <Param name="vel" default="0.05"/>
                         <Param name="acc" default="0.1"/>
                         <Param name="dec" default="0.1"/>
@@ -1491,10 +1564,32 @@
                     </GroupParam>
                 </Command>
             </SetFS>
+            <AdmitInit name="AdmitInit">
+                <Command name="admitinit">
+                    <GroupParam>
+                        <Param name="b" default="{100000,100000,100000,100000,100000,100000}"/>
+                        <Param name="ftset" default="{0,0,0,0,0,0}"/>
+                        <Param name="deadzone" default="{1,1,1,1,1,1}"/>
+                        <Param name="vellimit" default="{1,1,1,1,1,1}"/>
+                        <Param name="corposlimit" default="{1,1,1,1,1,1}"/>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
+                    </GroupParam>
+                </Command>
+            </AdmitInit>
+            <CalibW3P name="CalibW3P">
+                <Command name="CalibW3P">
+                    <GroupParam>
+                        <Param name="pose" default="{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}"/>
+                        <Param name="wobj" default="wobj1"/>
+                    </GroupParam>
+                </Command>
+            </CalibW3P>
             <CalibT4P name="CalibT4P">
                 <Command name="CalibT4P">
                     <GroupParam>
                         <Param name="pose" default="{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}"/>
+                        <Param name="tool" default="tool1"/>
                     </GroupParam>
                 </Command>
             </CalibT4P>
@@ -1502,6 +1597,7 @@
                 <Command name="CalibT5P">
                     <GroupParam>
                         <Param name="pose" default="{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}"/>
+                        <Param name="tool" default="tool1"/>
                     </GroupParam>
                 </Command>
             </CalibT5P>
@@ -1509,13 +1605,14 @@
                 <Command name="CalibT6P">
                     <GroupParam>
                         <Param name="pose" default="{0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0}"/>
+                        <Param name="tool" default="tool1"/>
                     </GroupParam>
                 </Command>
             </CalibT6P>
             <SetTF name="SetTF">
-                <Command name="settf">
+                <Command name="SetTF">
                     <GroupParam>
-                        <Param name="tool_name" default="tool0"/>
+                        <Param name="tool_name" default="tool1"/>
                         <Param name="tool_pe" default="{0,0,0,0,0,0}"/>
                     </GroupParam>
                 </Command>
