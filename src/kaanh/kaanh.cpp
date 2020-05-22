@@ -3976,6 +3976,7 @@ namespace kaanh
 			"		<Param name=\"load\" default=\"{1,0.05,0.05,0.05,0,0.97976,0,0.200177,1.0,1.0,1.0}\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
+			"		<Param name=\"fc\" default=\"0\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}
