@@ -783,7 +783,6 @@ auto CalibT6P::prepareNrt()->void
 	double pm_6pt[96];
 	double tcp[3];		//计算获得的tcp
 	double tcp_error;	//计算tcp的误差
-	double tcf[9];		//计算获得的tcf
 	for (int i = 0; i < 6; i++)
 	{
 		double temp_pe[6];
@@ -798,36 +797,12 @@ auto CalibT6P::prepareNrt()->void
 			pm_6pt[16 * i + k] = temp_pm[k];
 		}
 	}
-	int ret = cal_TCP_TCF(pm_6pt, tcp, tcp_error, tcf);
+	int ret = cal_TCP_TCF(pm_6pt, tcp, tcp_error, param.tool_pe.data());//计算321欧拉角形式的工具坐标系
 	if (ret == 0)
-	{
-		//将标定结果转换为欧拉角形式
-		double re321[3];
-        s_rm2re(tcf, re321, "321");
-        const double pose[6] = { tcp[0], tcp[1], tcp[2], re321[0], re321[1], re321[2] };
-        //const double pose[6] = { tcp[0], tcp[1], tcp[2], re321[2], re321[1], re321[0] };
-		for (int i = 0; i < 6; i++)
-		{
-			param.tool_pe.push_back(pose[i]);
-		}
-		
-		//param.calib_info = "工具坐标系6点标定完成！工具中心点（TCP）的拟合误差是：" + std::to_string(tcp_error * 1000) + "mm";
-		const std::string calib_info = "The calculation is done! The calibration error of TCP is:" + std::to_string(tcp_error * 1000) + "mm";
-		param.calib_info = calib_info.c_str();
-	}
-	else
-	{
-		throw std::runtime_error("The calculation process was aborted!");		//无法计算标定结果，获取的示教点异常，请重新执行标定过程。
-		const std::string calib_info = "The calculation process was aborted!";
-		param.calib_info = calib_info.c_str();
-		//return;
-	}
-
-	//保存标定结果
 	{
 		//获取工具坐标系相对于法兰坐标系的位姿
 		double tool_pm_f[16];
-        s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
+		s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
 		//获取法兰坐标系相对于底座坐标系的位姿
 		double tool0_pm_g[16];
 		try
@@ -851,7 +826,7 @@ auto CalibT6P::prepareNrt()->void
 		double tool_pm_g[16];
 		double tool_pe_g[6];
 		s_mm(4, 4, 4, tool0_pm_g, tool_pm_f, tool_pm_g);
-        s_pm2pe(tool_pm_g, tool_pe_g, "313");
+		s_pm2pe(tool_pm_g, tool_pe_g, "313");
 		try
 		{
 			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_g);
@@ -863,6 +838,12 @@ auto CalibT6P::prepareNrt()->void
 		}
 
 		const std::string calib_info = "The configuration node of " + param.tool_name + "'s pose is created or updated.";
+		param.calib_info = calib_info.c_str();
+	}
+	else
+	{
+		throw std::runtime_error("The calculation process was aborted!");		//无法计算标定结果，获取的示教点异常，请重新执行标定过程。
+		const std::string calib_info = "The calculation process was aborted!";
 		param.calib_info = calib_info.c_str();
 	}
 
@@ -943,6 +924,7 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 	tcp_error = std::sqrt(sum_prod_error);
 
 	//计算tcf
+	/*
 	double tcf_deltaRz[9], tcf_deltaPz[3], tcf_deltaRy[9], tcf_deltaPy[3];
 	for (int i = 0; i < 9; i++)
 	{
@@ -1005,15 +987,46 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 	{
 		n_Tx[i] = n_Tx[i] / std::sqrt(prod_ox);
 	}
-	/*std::cout << a_Tz[0] << "," << a_Tz[1] << "," << a_Tz[2] << std::endl;
-	std::cout << s_Ty[0] << "," << s_Ty[1] << "," << s_Ty[2] << std::endl;
-	std::cout << n_Tx[0] << "," << n_Tx[1] << "," << n_Tx[2] << std::endl;*/
 	for (int i = 0; i < 3; i++)
 	{
 		tcf[i * 3 + 0] = n_Tx[i];
 		tcf[i * 3 + 1] = s_Ty[i];
 		tcf[i * 3 + 2] = a_Tz[i];
 	}
+	*/
+	double zero[3] = { tcp[0], tcp[1], tcp[2] };//工具坐标系原点
+	double x_raw[3] = { tcf_P[3] - tcf_P[0], tcf_P[4] - tcf_P[1], tcf_P[5] - tcf_P[2] };//获得工具坐标系x轴向量
+	double xy_raw[3] = { tcf_P[6] - tcf_P[0], tcf_P[7] - tcf_P[1], tcf_P[8] - tcf_P[2] };//获得工具坐标系xy屏幕上不在x轴上一点
+	double y_raw[3], z_raw[3];
+
+	auto norm_x = aris::dynamic::s_norm(3, x_raw);
+	if (std::abs(norm_x) < 1e-9)
+	{
+		return -1;
+	}
+	double x[3] = { x_raw[0] / norm_x, x_raw[1] / norm_x, x_raw[2] / norm_x };//工具坐标系x轴方向向量
+
+	crossVector(x_raw, xy_raw, z_raw);
+	auto norm_z = aris::dynamic::s_norm(3, z_raw);
+	if (std::abs(norm_z) < 1e-9)
+	{
+		return -1;
+	}
+	double z[3] = { z_raw[0] / norm_z, z_raw[1] / norm_z,  z_raw[2] / norm_z };//工具坐标系z轴方向向量
+
+	crossVector(z_raw, x_raw, y_raw);
+	auto norm_y = aris::dynamic::s_norm(3, y_raw);
+	if (std::abs(norm_y) < 1e-9)
+	{
+		return -1;
+	}
+	double y[3] = { y_raw[0] / norm_y, y_raw[1] / norm_y,  y_raw[2] / norm_y };//工具坐标系y轴方向向量
+
+	double tool_pm[16]{ x[0], y[0], z[0], zero[0], x[1], y[1], z[1], zero[1], x[2], y[2], z[2], zero[2], 0, 0, 0, 1 };
+
+	//将标定结果转换为321欧拉角形式
+	aris::dynamic::s_pm2pe(tool_pm, tcf, "321");
+	
 	return 0;
 }
 auto CalibT6P::tm2RP_6Pt(double tm[96], double *R, double *P)->int
