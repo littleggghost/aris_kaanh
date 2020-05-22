@@ -671,7 +671,7 @@ namespace kaanh
 
         std::array<double, 6> temp = filterdata.load();
         out_data.forcedata.assign(temp.begin(), temp.end());
-        //std::cout << "fx:"<< temp[0] << std::endl;
+
 		std::vector<std::pair<std::string, std::any>> out_param;
 		for (auto p : cmdParams())
 		{
@@ -3870,7 +3870,7 @@ namespace kaanh
 			aris::dynamic::s_pe2pm(pe321, fspm, "321");
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);	
 		}
-		mvc_param->tool->setPq(*mvc_param->wobj, target_pm);
+		mvc_param->tool->setPm(*mvc_param->wobj, target_pm);
 		model()->generalMotionPool().at(0).updMpm();
 
 		//过奇异点判断

@@ -782,7 +782,7 @@ auto CalibT6P::prepareNrt()->void
 	this->param() = param;
 	double pm_6pt[96];
 	double tcp[3];		//计算获得的tcp
-	double tcp_error;		//计算tcp的误差
+	double tcp_error;	//计算tcp的误差
 	double tcf[9];		//计算获得的tcf
 	for (int i = 0; i < 6; i++)
 	{
