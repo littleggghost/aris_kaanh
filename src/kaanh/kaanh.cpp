@@ -7903,7 +7903,7 @@ namespace kaanh
 		SetPdoParam param;
 		for (auto &p : cmdParams())
 		{
-			if (p.first == "motion_id")
+			if (p.first == "id")
 			{	
 				param.motion_id = int32Param(p.first);
 			}
@@ -7932,7 +7932,6 @@ namespace kaanh
 	auto SetPdo::executeRT()->int
 	{
 		auto param = std::any_cast<SetPdoParam>(&this->param());	
-        uint8_t value = 0x01;
         ecController()->slavePool().at(param->motion_id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
 		controller()->mout() << "setvalue:" << param->value << std::endl;
 		return 0;
@@ -7943,7 +7942,7 @@ namespace kaanh
 		command().loadXmlStr(
 			"<Command name=\"setpdo\">"
 			"	<GroupParam>"
-			"		<Param name=\"motion_id\" default=\"0\"/>"
+			"		<Param name=\"id\" default=\"0\"/>"
 			"		<Param name=\"index\" default=\"0x6040\"/>"
 			"		<Param name=\"subindex\" default=\"0x00\"/>"
 			"		<Param name=\"value\" default=\"1\"/>"

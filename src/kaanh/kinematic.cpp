@@ -779,6 +779,7 @@ auto CalibT6P::prepareNrt()->void
 			param.tool_name = std::string(p.second);
 		}
 	}
+	param.tool_pe.resize(6,0.0);
 	this->param() = param;
 	double pm_6pt[96];
 	double tcp[3];		//计算获得的tcp
