@@ -7925,7 +7925,7 @@ namespace kaanh
 				param.bit_size = int32Param(p.first);
 			}
 		}
-		
+		this->param() = param;
 		std::vector<std::pair<std::string, std::any>> ret_value;
 		ret() = ret_value;
 
@@ -7992,6 +7992,7 @@ namespace kaanh
 			}
 		}
 
+		this->param() = param;
 		std::vector<std::pair<std::string, std::any>> ret_value;
 		ret() = ret_value;
 	}
