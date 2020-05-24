@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     cs.saveXmlFile(xmlpath.string().c_str());
 	cs.init();
 
-	/*
+	
 	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3, 0.2, 0.6, 1.57, 0.8, 1.57}.data());
 	cs.model().generalMotionPool()[0].updMpm();
 	cs.model().solverPool()[0].kinPos();
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
 	cs.model().solverPool()[0].kinPos();
 	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 << "   ";
 	std::cout << std::endl;
-	*/
+	
 
 	aris::core::logDirectory(logp);
 

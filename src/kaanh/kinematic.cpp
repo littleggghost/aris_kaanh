@@ -98,11 +98,13 @@ struct CalibW3PParam
 	std::vector<double> pe_3pt;
 	std::vector<double> wobj_pe;
 	std::string wobj_name;
+	std::string tool_name;
 	std::string calib_info;
 
 };
 auto CalibW3P::prepareNrt()->void
 {
+
 	//参数初始化
 	CalibW3PParam param;
 	param.pe_3pt.clear();
@@ -126,8 +128,22 @@ auto CalibW3P::prepareNrt()->void
 		{
 			param.wobj_name = std::string(p.second);
 		}
+		else if (p.first == "tool")
+		{
+			param.tool_name = std::string(p.second);
+		}
 	}
-	this->param() = param;
+
+	for (int i = 0; i < 3; ++i)
+	{
+		auto pe_tool = param.pe_3pt.data() + i * 6;
+		double pm_tool[16];
+		double pm_part[16];
+		s_pe2pm(pe_tool, pm_tool);
+		s_pm_dot_inv_pm(pm_tool, *model()->partPool()[6].markerPool().findByName("tool0")->prtPm(), pm_part);
+		s_pm_dot_pm(pm_part, *model()->partPool()[6].markerPool().findByName(param.tool_name)->prtPm(), pm_tool);
+		s_pm2pe(pm_tool, pe_tool);
+	}
 
 	double zero[3] = { param.pe_3pt[0], param.pe_3pt[1], param.pe_3pt[2] };//工件坐标系原点
 	double x_raw[3] = { param.pe_3pt[6] - param.pe_3pt[0], param.pe_3pt[7] - param.pe_3pt[1], param.pe_3pt[8] - param.pe_3pt[2] };//获得工件坐标系x轴向量
@@ -167,7 +183,9 @@ auto CalibW3P::prepareNrt()->void
 
 	try
 	{
-		model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name)->setPrtPm(wobj);
+		double wobj_pe_wrt_prt[6];//wobj相对于地面的位姿
+		s_pe2pe(*model()->partPool().findByName("ground")->markerPool().findByName("wobj0")->pm(), param.wobj_pe.data(), wobj_pe_wrt_prt);
+		model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name)->setPrtPe(wobj_pe_wrt_prt);
 	}
 	catch (std::exception)
 	{
@@ -204,6 +222,7 @@ CalibW3P::CalibW3P(const std::string &name) :Plan(name)
 		"<Command name=\"CalibW3P\">"
 		"	<GroupParam>"
 		"		<Param name=\"pose\" default=\"{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}\"/>"
+		"		<Param name=\"tool\" default=\"tool1\"/>"
 		"		<Param name=\"wobj\" default=\"wobj1\"/>"
 		"   </GroupParam>"
 		"</Command>");
@@ -799,11 +818,14 @@ auto CalibT6P::prepareNrt()->void
 		}
 	}
 	int ret = cal_TCP_TCF(pm_6pt, tcp, tcp_error, param.tool_pe.data());//计算313欧拉角形式的工具坐标系
+
 	if (ret == 0)
 	{
 		try
 		{
-			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(param.tool_pe.data());
+			double tool_pe_wrt_prt[6];
+			s_pe2pe(*model()->partPool().findByName("L6")->markerPool().findByName("tool0")->pm(), param.tool_pe.data(), tool_pe_wrt_prt);
+			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_wrt_prt);
 		}
 		catch (std::exception)
 		{
@@ -974,7 +996,8 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 	double pg[3]{pm1[3], pm1[7], pm1[11]};//获取第一个点的位置，即法兰盘相对base的位置
 	s_mma(3, 1, 3, pm1, 4, zero, 1, pg, 1);//获取参考尖点相对base的位置pg
 
-	double *pm5 = transmatric + 64;//获取第5个点的位姿矩阵,即法兰盘相对base的矩阵
+	double pm5[16];//获取第5个点的位姿矩阵,即法兰盘相对base的矩阵
+	std::copy(transmatric + 64, transmatric + 80, pm5);//获取第5个点的位姿矩阵,即法兰盘相对base的矩阵
 	double pt5[3]{ pm5[3], pm5[7], pm5[11] };//获取第5个点的位置，即法兰盘相对base的位置
 	s_mma(3, 1, 3, pm5, 4, zero, 1, pt5, 1);//获取在第5个示教点时，tcp相对base的位置pt5
 
