@@ -907,7 +907,7 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 	s_mm(3, 1, 9, pinv, deltaP, tcp);
 	//计算tcp_error
 	double new_deltaP[9], error_vec[9];
-	s_mm(9, 1, 3, deltaR, tcp, new_deltaP);
+	s_mm(9, 1, 3, deltaR, tcp, new_deltaP);//获得tcp相对法兰的位置
 	for (int i = 0; i < 9; i++)
 	{
 		error_vec[i] = new_deltaP[i] - deltaP[i];
@@ -996,8 +996,29 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 	}
 	*/
 	double zero[3] = { tcp[0], tcp[1], tcp[2] };//工具坐标系原点
-	double x_raw[3] = { tcf_P[3] - tcf_P[0], tcf_P[4] - tcf_P[1], tcf_P[5] - tcf_P[2] };//获得工具坐标系x轴向量
-	double xy_raw[3] = { tcf_P[6] - tcf_P[0], tcf_P[7] - tcf_P[1], tcf_P[8] - tcf_P[2] };//获得工具坐标系xy屏幕上不在x轴上一点
+	double pm1[16];
+	std::copy(transmatric, transmatric + 16, pm1);//获取第一个点的位姿矩阵,即法兰盘相对base的矩阵
+	double pg[3]{pm1[3], pm1[7], pm1[11]};//获取第一个点的位置，即法兰盘相对base的位置
+	s_mma(3, 1, 3, pm1, zero, pg);//获取参考尖点相对base的位置pg
+
+	double pm5[16];
+	std::copy(transmatric + 64, transmatric + 80, pm5);//获取第5个点的位姿矩阵,即法兰盘相对base的矩阵
+	double pt5[3]{ pm5[3], pm5[7], pm5[11] };//获取第5个点的位置，即法兰盘相对base的位置
+	s_mma(3, 1, 3, pm5, zero, pt5);//获取在第5个示教点时，tcp相对base的位置pt5
+
+	double x_base[3] = { pg[0] - pt5[0], pg[1] - pt5[1], pg[2] - pt5[2] };//获得工具坐标系x轴相对base的向量
+	double x_raw[3];
+	s_mm(3, 1, 3, pm5, aris::dynamic::ColMajor{ 4 }, x_base, 1, x_raw, 1);//获得工具坐标系x轴向量
+	
+	double pm6[16];
+	std::copy(transmatric + 64, transmatric + 80, pm6);//获取第6个点的位姿矩阵,即法兰盘相对base的矩阵
+	double pt6[3]{ pm6[3], pm6[7], pm6[11] };//获取第6个点的位置，即法兰盘相对base的位置
+	s_mma(3, 1, 3, pm6, zero, pt6);//获取在第6个示教点时，tcp相对base的位置pt6
+
+	double y_base[3] = { pg[0] - pt6[0], pg[1] - pt6[1], pg[2] - pt6[2] };//获得工具坐标系y轴大致方向相对base的向量
+	double xy_raw[3];
+	s_mm(3, 1, 3, pm6, aris::dynamic::ColMajor{ 4 }, y_base, 1, xy_raw, 1);//获得工具坐标系xy轴向量
+	
 	double y_raw[3], z_raw[3];
 
 	auto norm_x = aris::dynamic::s_norm(3, x_raw);
