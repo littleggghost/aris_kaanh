@@ -134,6 +134,7 @@ auto CalibW3P::prepareNrt()->void
 		}
 	}
 
+	//×ø±êÏµ×ª»»
 	for (int i = 0; i < 3; ++i)
 	{
 		auto pe_tool = param.pe_3pt.data() + i * 6;

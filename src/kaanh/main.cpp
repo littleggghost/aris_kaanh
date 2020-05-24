@@ -99,57 +99,14 @@ int main(int argc, char *argv[])
 	std::cout << is_true << std::endl;
 	*/
 
-    /*
-    //-------for sanxiang robot begin//
-    cs.resetController(kaanhconfig::createControllerSanXiang().release());
-    cs.resetModel(kaanhconfig::createModelSanXiang().release());
-    cs.resetPlanRoot(kaanhconfig::createPlanRoot().release());
-	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
-	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
-	cs.resetSensorRoot(new aris::sensor::SensorRoot);
-	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
-	//cs.model().saveXmlFile(modelxmlpath.string().c_str());	//for new model
-	cs.model().loadXmlFile(modelxmlpath.string().c_str());
-	cs.saveXmlFile(xmlpath.string().c_str());
-    //-------for sanxiang robot end//
-    */
-
-    /*
-    //-------for daye robot begin//
-    cs.resetController(kaanhconfig::createControllerDaye().release());
-    cs.resetModel(kaanhconfig::createModelDaye().release());
-    cs.resetPlanRoot(kaanhconfig::createPlanRoot().release());
-	cs.interfacePool().add<aris::server::WebInterface>("", "5866", aris::core::Socket::WEB);
-	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
-	cs.resetSensorRoot(new aris::sensor::SensorRoot);
-	cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
-	//cs.model().saveXmlFile(modelxmlpath.string().c_str());	//for new model
-	cs.model().loadXmlFile(modelxmlpath.string().c_str());
-	cs.saveXmlFile(xmlpath.string().c_str());
-    //-------for daye robot end//
-    */
-   
-	/*
-	//-------for qifan robot begin//
-	cs.resetController(kaanhconfig::createControllerQifan().release());
-	cs.resetModel(kaanhconfig::createModelQifan().release());
-	cs.resetPlanRoot(kaanhconfig::createPlanRoot().release());
-	cs.interfacePool().add<aris::server::ProgramWebInterface>("", "5866", aris::core::Socket::WEB);
-	cs.interfacePool().add<aris::server::WebInterface>("", "5867", aris::core::Socket::TCP);
-	cs.resetSensorRoot(new aris::sensor::SensorRoot);
-	//cs.interfaceRoot().loadXmlFile(uixmlpath.string().c_str());
-	//cs.model().saveXmlFile(modelxmlpath.string().c_str());	//for new model
-	//cs.model().loadXmlFile(modelxmlpath.string().c_str());
-	cs.saveXmlFile(xmlpath.string().c_str());
-	//-------for qifan robot end// 
-    */
 
     cs.loadXmlFile(path.string().c_str());
     cs.resetPlanRoot(kaanhconfig::createPlanRoot().release());
     cs.saveXmlFile(xmlpath.string().c_str());
 	cs.init();
 
-	
+	/*test*/
+	/*
 	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3, 0.2, 0.6, 1.57, 0.8, 1.57}.data());
 	cs.model().generalMotionPool()[0].updMpm();
 	cs.model().solverPool()[0].kinPos();
@@ -189,7 +146,7 @@ int main(int argc, char *argv[])
 	cs.model().solverPool()[0].kinPos();
 	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 << "   ";
 	std::cout << std::endl;
-	
+	*/
 
 	aris::core::logDirectory(logp);
 
