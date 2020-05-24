@@ -1,7 +1,7 @@
 #pragma once
 #ifndef _FTC_CTRL_
 #define _FTC_CTRL_
-//#include<aris.hpp>
+#include<aris.hpp>
 namespace cpt_ftc
 {
 	class LowPass
