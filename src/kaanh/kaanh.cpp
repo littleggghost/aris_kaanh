@@ -46,7 +46,7 @@ static std::atomic<std::array<double, 6>>filterdata;	//力传感器滤波后数�
 cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp[6]; //滤波器
 //extern cpt_ftc::Admit admit;//力控
-const int FS_NUM = 7;	//force sensor slave number
+const int FS_NUM = 6;	//force sensor slave number
 
 
 namespace kaanh
