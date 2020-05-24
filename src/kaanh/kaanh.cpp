@@ -46,6 +46,7 @@ static std::atomic<std::array<double, 6>>filterdata;//力传感器滤波后数�
 cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp[6]; //滤波器
 //extern cpt_ftc::Admit admit;//力控
+const int FS_NUM = 7;
 
 
 namespace kaanh
@@ -100,7 +101,7 @@ namespace kaanh
 
 
 		//获取力传感器数据，并进行滤波
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(6));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
         static int fcinit=0;
         if((motion_state[5]==1)&&fcinit<1)
         {
@@ -4011,7 +4012,7 @@ namespace kaanh
         float rawdata[6];
 
     #ifdef UNIX
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
         slave7.readPdo(0x6030, 0x00, &datanum ,16);
         slave7.readPdo(0x6030, 0x01, &rawdata[0] ,32);
         slave7.readPdo(0x6030, 0x02, &rawdata[1], 32);
@@ -4075,7 +4076,7 @@ namespace kaanh
         int16_t datanum = 0;
 
     #ifdef UNIX
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
         float rawdata[6];
         std::uint8_t led1 = 0x01;
         if(count() == 1)slave7.writePdo(0x7010, 1, &led1, 1);
@@ -4600,7 +4601,7 @@ namespace kaanh
 		}
 
 		//获取力传感器数值
-		auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
         float data[6];
 		for (uint8_t i = 0; i < 6; i++)
 		{
@@ -4874,7 +4875,7 @@ namespace kaanh
 		}
 
 		//获取力传感器数值
-		auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
 		float data[6];
 		for (uint8_t i = 0; i < 6; i++)
 		{
@@ -5176,7 +5177,7 @@ namespace kaanh
 			s_pq2pm(pq_setup, imp_->fs2tpm);
 
 #ifdef UNIX
-			auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+            auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
 			slave7.readPdo(0x6030, 0x01, &rawdata[0], 32);
 			slave7.readPdo(0x6030, 0x02, &rawdata[1], 32);
 			slave7.readPdo(0x6030, 0x03, &rawdata[2], 32);
@@ -5206,7 +5207,7 @@ namespace kaanh
 		}
 
 #ifdef UNIX
-		auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(6));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
 		slave7.readPdo(0x6030, 0x01, &realdata[0], 32);
 		slave7.readPdo(0x6030, 0x02, &realdata[1], 32);
 		slave7.readPdo(0x6030, 0x03, &realdata[2], 32);
