@@ -215,7 +215,7 @@ auto CalibW3P::prepareNrt()->void
 	out_param.push_back(std::make_pair<std::string, std::any>("wobj_pe", param.wobj_pe));
 	ret() = out_param;
 
-	option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+	option() |= NOT_RUN_EXECUTE_FUNCTION;
 }
 CalibW3P::CalibW3P(const std::string &name) :Plan(name)
 {
@@ -341,7 +341,7 @@ auto CalibT4P::prepareNrt()->void
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
 	ret() = out_param;
 
-	option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION | NOT_PRINT_CMD_INFO | NOT_PRINT_CMD_INFO;
+	option() |= NOT_RUN_EXECUTE_FUNCTION;
 }
 CalibT4P::CalibT4P(const std::string &name) :Plan(name)
 {
@@ -571,7 +571,7 @@ auto CalibT5P::prepareNrt()->void
 	out_param.push_back(std::make_pair<std::string, std::any>("calib_info", param.calib_info));
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
 	this->ret()= out_param;
-	option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION | NOT_PRINT_CMD_INFO | NOT_PRINT_CMD_INFO;
+	option() |= NOT_RUN_EXECUTE_FUNCTION;
 }
 CalibT5P::CalibT5P(const std::string &name) :Plan(name)
 {
