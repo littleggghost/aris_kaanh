@@ -42,11 +42,11 @@ struct CmdListParam
 }cmdparam;
 std::shared_ptr<kaanh::MoveBase> g_plan;
 static float rawdata[6];	//力传感器数据
-static std::atomic<std::array<double, 6>>filterdata;//力传感器滤波后数据
+static std::atomic<std::array<double, 6>>filterdata;	//力传感器滤波后数据
 cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp[6]; //滤波器
 //extern cpt_ftc::Admit admit;//力控
-const int FS_NUM = 7;
+const int FS_NUM = 7;	//force sensor slave number
 
 
 namespace kaanh
@@ -2900,10 +2900,10 @@ namespace kaanh
 			G[5] = G[1] * center[0] - G[0] * center[1];
 			std::copy(G, G + 6, admit.G);
 
-			double pe321[6], fspm[16];
+			double fspm[16];
             std::array<double, 6> fdata = filterdata.load();
-            admit.get_cor_pos(fdata.data(), fs2bpm, 0.001, pe321);
-			aris::dynamic::s_pe2pm(pe321, fspm, "321");
+			auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
+			aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
 
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);
 		}
@@ -3865,10 +3865,10 @@ namespace kaanh
 			G[5] = G[1] * center[0] - G[0] * center[1];
 			std::copy(G, G + 6, admit.G);
 
-			double pe321[6], fspm[16];
+			double fspm[16];
             std::array<double, 6> fdata = filterdata.load();
-            admit.get_cor_pos(fdata.data(), fs2bpm, 0.001, pe321);
-			aris::dynamic::s_pe2pm(pe321, fspm, "321");
+            auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
+			aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);	
 		}
 		mvc_param->tool->setPm(*mvc_param->wobj, target_pm);

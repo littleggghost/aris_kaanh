@@ -23,7 +23,7 @@ using namespace std;
 
 namespace cpt_ftc
 {
-    void cpt_ftc::LowPass::get_filter_data(int n_order, int fc, double Ts, double x_in, double &x_out)
+	void cpt_ftc::LowPass::get_filter_data(int n_order, int fc, double Ts, double x_in, double x_out)
 	{
 		Wc = 2 * PI*fc;
 		if (n_order == 1)
@@ -56,51 +56,19 @@ namespace cpt_ftc
 	//LowPass low_pass;
 	void cpt_ftc::Admit::admit_init(double ft[6],double g[6])
 	{
-		fill_n(cor_vel, 16, 0);
-		fill_n(cor_pos_now, 16, 0);
+		fill_n(cor_vel, 6, 0);
+		fill_n(cor_pos_now, 6, 0);
+		fill_n(cor_pos, 6, 0);
 		fill_n(pm_now, 16, 0);
-		pm_now[0] = pm_now[5] = pm_now[10] = pm_now[15] = 1.0;
-		init = 0;
-		//fill_n(ft_offset, 6, 0);
-		
+		pm_now[0] = pm_now[5] = pm_now[10] = pm_now[15] = 1.0;		
 		for (int i = 0; i < 6; i++)
 		{
 			G[i] = g[i];
 			ft_offset[i] = ft[i] - G[i];
 		}
 	}
-	void cpt_ftc::Admit::get_cor_pos(double ft[6], double pm_fce2target[16], double dt, double cor_pos[6])
+	auto cpt_ftc::Admit::get_cor_pos(double ft[6], double pm_fce2target[16], double dt)->std::array<double,6>
 	{
-		//double ft_new[6];
-		//if (init < 5)
-		//{
-		//	for (int i = 0; i < 6; i++)
-		//	{
-		//		ft_offset[i] += (ft[i] - G[i]);
-		//	}
-		//	init += 1;
-		//}
-
-		//if (init == 5)
-		//{
-		//	for (int i = 0; i < 6; i++)
-		//	{
-		//		ft_offset[i] = ft_offset[i] / 5;
-		//	}
-		//	init += 1;
-		//}
-		//if (init > 5)
-		//{
-
-			//ft_ext转到选定坐标系
-			//
-			//for (int i = 0; i < 6; i++)
-			//{
-			//
-			//	ft_ext[i] = ft_set[i]-(ft_new[i]-G[i] - ft_offset[i]);
-			//}
-
-
 		double ft_ext_sensor[6];
 		for (int i = 0; i < 6; i++)
 		{
@@ -154,7 +122,7 @@ namespace cpt_ftc
 			double pm_next[16];
 			s_pm_dot_pm(pm_now, pm, pm_next);
 			double pe_next[6];
-            s_pm2pe(pm_next, pe_next, "313");
+			s_pm2pe(pm_next, pe_next, "321");
 			s_vc(16, pm_next, pm_now);
 			//for (int i = 0; i < 3; i++)
 			//{
@@ -175,6 +143,7 @@ namespace cpt_ftc
 
 		}
 		//}
+		return std::array<double, 6>{cor_pos[0], cor_pos[1],cor_pos[2],cor_pos[3],cor_pos[4],cor_pos[5]};
 	}
 
 	// admit init//

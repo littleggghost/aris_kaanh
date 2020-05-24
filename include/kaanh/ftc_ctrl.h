@@ -7,7 +7,7 @@ namespace cpt_ftc
 	class LowPass
 	{
 	public:
-        void get_filter_data(int n_order, int fc, double Ts, double x_in, double &x_out);
+		void get_filter_data(int n_order, int fc, double Ts, double x_in, double x_out);
 	private:
 		const double PI = 3.14159265;
 		double Wc;
@@ -35,16 +35,16 @@ namespace cpt_ftc
 		double G[6];
 		//LowPass low_pass;
 		auto admit_init(double ft[6], double g[6])->void;
-		auto get_cor_pos(double ft[6], double pm_fce2target[16], double dt, double cor_pos[6])->void;
+		auto cpt_ftc::Admit::get_cor_pos(double ft[6], double pm_fce2target[16], double dt)->std::array<double, 6>;
 	private:
 		const double PI = 3.14159265;
 		double cor_vel[6]{};
 		double cor_pos_now[6]{};
+		double cor_pos[6]{};
 		double pm_now[16] = { 1.0,0,0,0,
 				0,1.0,0,0,
 				0,0,1.0,0,
 				0,0,0,1.0 };
-		double init;
 		double ft_offset[6];//可以将此处做到单独的函数调用。
 	};
 
