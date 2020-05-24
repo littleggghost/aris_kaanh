@@ -149,6 +149,48 @@ int main(int argc, char *argv[])
     cs.saveXmlFile(xmlpath.string().c_str());
 	cs.init();
 
+	/*
+	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3, 0.2, 0.6, 1.57, 0.8, 1.57}.data());
+	cs.model().generalMotionPool()[0].updMpm();
+	cs.model().solverPool()[0].kinPos();
+	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 <<"   ";
+	std::cout << std::endl;
+
+	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3, 0.2, 0.6, 1.27, 0.8, 1.57}.data());
+	cs.model().generalMotionPool()[0].updMpm();
+	cs.model().solverPool()[0].kinPos();
+	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp()/2/PI*360.0 << "   ";
+	std::cout << std::endl;
+
+	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3, 0.2, 0.6, 1.27, 0.8, 1.27}.data());
+	cs.model().generalMotionPool()[0].updMpm();
+	cs.model().solverPool()[0].kinPos();
+	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 << "   ";
+	std::cout << std::endl;
+
+	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3, 0.2, 0.6, 0.9, 1.2, 1.2}.data());
+	cs.model().generalMotionPool()[0].updMpm();
+	cs.model().solverPool()[0].kinPos();
+	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 << "   ";
+	std::cout << std::endl;
+	// - 0.68221807128202   0.73009129686273   0.30000000000000
+	//	0.49378190310898 - 0.64847195478769 - 0.57936478665510   0.20000000000000
+	//	0.86869685777062   0.33773159027558   0.36235775447668   0.60000000000000
+	//	0.00000000000000   0.00000000000000   0.00000000000000   1.00000000000000
+	dsp(4, 4, *cs.model().partPool()[6].markerPool().findByName("tool1")->pm());
+	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3 + 0.03930905063127*0.1, 0.2- 0.49378190310898*0.1, 0.6- 0.86869685777062*0.1, 0.9, 1.2, 1.2}.data());
+	cs.model().generalMotionPool()[0].updMpm();
+	cs.model().solverPool()[0].kinPos();
+	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 << "   ";
+	std::cout << std::endl;
+
+	cs.model().partPool()[6].markerPool().findByName("tool1")->setPe(std::array<double, 6>{0.3 + 0.68221807128202*0.1, 0.2 + 0.64847195478769*0.1, 0.6 - 0.33773159027558*0.1, 0.9, 1.2, 1.2}.data());
+	cs.model().generalMotionPool()[0].updMpm();
+	cs.model().solverPool()[0].kinPos();
+	for (int i = 0; i < 6; ++i)std::cout << cs.model().motionPool()[i].mp() / 2 / PI * 360.0 << "   ";
+	std::cout << std::endl;
+	*/
+
 	aris::core::logDirectory(logp);
 
     auto &cal = cs.model().calculator();

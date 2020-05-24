@@ -798,39 +798,12 @@ auto CalibT6P::prepareNrt()->void
 			pm_6pt[16 * i + k] = temp_pm[k];
 		}
 	}
-	int ret = cal_TCP_TCF(pm_6pt, tcp, tcp_error, param.tool_pe.data());//计算321欧拉角形式的工具坐标系
+	int ret = cal_TCP_TCF(pm_6pt, tcp, tcp_error, param.tool_pe.data());//计算313欧拉角形式的工具坐标系
 	if (ret == 0)
 	{
-		//获取工具坐标系相对于法兰坐标系的位姿
-		double tool_pm_f[16];
-		s_pe2pm(param.tool_pe.data(), tool_pm_f, "321");
-		//获取法兰坐标系相对于底座坐标系的位姿
-		double tool0_pm_g[16];
 		try
 		{
-			auto mat1 = model()->partPool().findByName("L6")->markerPool().findByName("tool0")->prtPm();
-			for (size_t i = 0; i < 4; i++)
-			{
-				for (size_t j = 0; j < 4; j++)
-				{
-					tool0_pm_g[4 * i + j] = mat1[i][j];
-				}
-			}
-		}
-		catch (std::exception)
-		{
-			std::string calib_info = "cann't find \"tool0\" node in partPool.";
-			throw std::runtime_error("cann't find \"tool0\" node in partPool.");
-		}
-
-		//计算工具坐标系相对于底座坐标系的位姿
-		double tool_pm_g[16];
-		double tool_pe_g[6];
-		s_mm(4, 4, 4, tool0_pm_g, tool_pm_f, tool_pm_g);
-		s_pm2pe(tool_pm_g, tool_pe_g, "313");
-		try
-		{
-			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_g);
+			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(param.tool_pe.data());
 		}
 		catch (std::exception)
 		{
@@ -853,7 +826,7 @@ auto CalibT6P::prepareNrt()->void
 	out_param.push_back(std::make_pair<std::string, std::any>("tool_pe", param.tool_pe));
 	this->ret() = out_param;
 
-    option() |= NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+    option() |= NOT_RUN_EXECUTE_FUNCTION;
 }
 CalibT6P::CalibT6P(const std::string &name) :Plan(name)
 {
@@ -999,21 +972,20 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 	double pm1[16];
 	std::copy(transmatric, transmatric + 16, pm1);//获取第一个点的位姿矩阵,即法兰盘相对base的矩阵
 	double pg[3]{pm1[3], pm1[7], pm1[11]};//获取第一个点的位置，即法兰盘相对base的位置
-	s_mma(3, 1, 3, pm1, zero, pg);//获取参考尖点相对base的位置pg
+	s_mma(3, 1, 3, pm1, 4, zero, 1, pg, 1);//获取参考尖点相对base的位置pg
 
-	double pm5[16];
-	std::copy(transmatric + 64, transmatric + 80, pm5);//获取第5个点的位姿矩阵,即法兰盘相对base的矩阵
+	double *pm5 = transmatric + 64;//获取第5个点的位姿矩阵,即法兰盘相对base的矩阵
 	double pt5[3]{ pm5[3], pm5[7], pm5[11] };//获取第5个点的位置，即法兰盘相对base的位置
-	s_mma(3, 1, 3, pm5, zero, pt5);//获取在第5个示教点时，tcp相对base的位置pt5
+	s_mma(3, 1, 3, pm5, 4, zero, 1, pt5, 1);//获取在第5个示教点时，tcp相对base的位置pt5
 
 	double x_base[3] = { pg[0] - pt5[0], pg[1] - pt5[1], pg[2] - pt5[2] };//获得工具坐标系x轴相对base的向量
 	double x_raw[3];
 	s_mm(3, 1, 3, pm5, aris::dynamic::ColMajor{ 4 }, x_base, 1, x_raw, 1);//获得工具坐标系x轴向量
 	
 	double pm6[16];
-	std::copy(transmatric + 64, transmatric + 80, pm6);//获取第6个点的位姿矩阵,即法兰盘相对base的矩阵
+	std::copy(transmatric + 80, transmatric + 96, pm6);//获取第6个点的位姿矩阵,即法兰盘相对base的矩阵
 	double pt6[3]{ pm6[3], pm6[7], pm6[11] };//获取第6个点的位置，即法兰盘相对base的位置
-	s_mma(3, 1, 3, pm6, zero, pt6);//获取在第6个示教点时，tcp相对base的位置pt6
+	s_mma(3, 1, 3, pm6, 4, zero, 1, pt6, 1);//获取在第6个示教点时，tcp相对base的位置pt6
 
 	double y_base[3] = { pg[0] - pt6[0], pg[1] - pt6[1], pg[2] - pt6[2] };//获得工具坐标系y轴大致方向相对base的向量
 	double xy_raw[3];
@@ -1046,9 +1018,24 @@ auto CalibT6P::cal_TCP_TCF(double transmatric[96], double tcp[3], double &tcp_er
 
 	double tool_pm[16]{ x[0], y[0], z[0], zero[0], x[1], y[1], z[1], zero[1], x[2], y[2], z[2], zero[2], 0, 0, 0, 1 };
 
-	//将标定结果转换为321欧拉角形式
-	aris::dynamic::s_pm2pe(tool_pm, tcf, "321");
-	
+	//将标定结果转换为313欧拉角形式
+	aris::dynamic::s_pm2pe(tool_pm, tcf, "313");
+	/*
+	double ground_pnt[3];
+	aris::dynamic::s_pp2pp(pm1, tcf, ground_pnt);
+	aris::dynamic::dsp(1, 3, ground_pnt);
+	aris::dynamic::s_pp2pp(transmatric + 16, tcf, ground_pnt);
+	aris::dynamic::dsp(1, 3, ground_pnt);
+	aris::dynamic::s_pp2pp(transmatric + 32, tcf, ground_pnt);
+	aris::dynamic::dsp(1, 3, ground_pnt);
+	aris::dynamic::s_pp2pp(transmatric + 48, tcf, ground_pnt);
+	aris::dynamic::dsp(1, 3, ground_pnt);
+
+	auto &tool0_prt_pm = model()->partPool()[6].markerPool().findByName("tool0")->prtPm();
+	double tool_final[16];
+	aris::dynamic::s_mm(4, 4, 4, *tool0_prt_pm, tool_pm, tool_final);
+	dsp(4, 4, tool_final);
+	*/
 	return 0;
 }
 auto CalibT6P::tm2RP_6Pt(double tm[96], double *R, double *P)->int
