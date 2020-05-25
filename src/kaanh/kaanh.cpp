@@ -2895,15 +2895,14 @@ namespace kaanh
 		if (mvl_param->fc)
 		{
 			//求重力分量
-			double G[6], toolfs_pe[6];
+			double G[6];
 			double center[3], xyzindex[3];
 			auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
 			auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
-			auto toolfs = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"));
-			std::copy(toolfs->data().begin(), toolfs->data().end(), toolfs_pe);
+			auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
 			//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
 			double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
-			aris::dynamic::s_pe2pm(toolfs_pe, fs2tpm);
+			std::copy(temp, temp + 16, fs2tpm);
 			model()->generalMotionPool().at(0).updMpm();
 			mvl_param->tool->getPm(*mvl_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
 			s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
@@ -3859,16 +3858,15 @@ namespace kaanh
 		// 力传感器补偿
 		if (mvc_param->fc)
 		{
-			//求力传感器补偿启用
-			double G[6], toolfs_pe[6];
+			//求重力分量
+			double G[6];
 			double center[3], xyzindex[3];
 			auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
 			auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
-			auto toolfs = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"));
-			std::copy(toolfs->data().begin(), toolfs->data().end(), toolfs_pe);
+			auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
 			//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
 			double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
-			aris::dynamic::s_pe2pm(toolfs_pe, fs2tpm);
+			std::copy(temp, temp + 16, fs2tpm);
 			model()->generalMotionPool().at(0).updMpm();
 			mvc_param->tool->getPm(*mvc_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
 			s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
@@ -9031,18 +9029,17 @@ namespace kaanh
 	auto AdmitInit::prepareNrt()->void
 	{
 		//求重力分量
-		double G[6], toolfs_pe[6];
+		double G[6];
 		double center[3], xyzindex[3];
 		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
 		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
-		auto toolfs = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->partPool().findByName("L6")->markerPool().findByName("toolfs"));
-		std::copy(toolfs->data().begin(), toolfs->data().end(), toolfs_pe);
+		auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
 		aris::dynamic::Marker *tool, *wobj;
 		tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
 		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
-		aris::dynamic::s_pe2pm(toolfs_pe, fs2tpm);
+		std::copy(temp, temp + 16, fs2tpm);
 		model()->generalMotionPool().at(0).updMpm();
 		tool->getPm(*wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
 		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
