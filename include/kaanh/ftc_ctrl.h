@@ -7,7 +7,7 @@ namespace cpt_ftc
 	class LowPass
 	{
 	public:
-		void get_filter_data(int n_order, int fc, double Ts, double x_in, double x_out);
+        void get_filter_data(int n_order, int fc, double Ts, double x_in, double &x_out);
 	private:
 		const double PI = 3.14159265;
 		double Wc;

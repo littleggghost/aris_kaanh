@@ -103,11 +103,7 @@ namespace kaanh
 
 
 		//获取力传感器数据，并进行滤波
-#ifdef UNIX
-
-#endif // UNIX
-
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(7));
         static int fcinit=0;
         if((motion_state[5]==1)&&fcinit<1)
         {
@@ -687,7 +683,8 @@ namespace kaanh
 		auto &inter = dynamic_cast<aris::server::ProgramWebInterface&>(cs.interfacePool().at(0));
 
         std::array<double, 6> temp = filterdata.load();
-        out_data.forcedata.assign(temp.begin(), temp.end());
+        //out_data.forcedata.assign(temp.begin(), temp.end());
+        std::copy(temp.begin(), temp.end(), out_data.forcedata.begin());
 
 		std::vector<std::pair<std::string, std::any>> out_param;
 		for (auto p : cmdParams())
@@ -8201,7 +8198,7 @@ namespace kaanh
 			}
 			for (int i = 0; i < 8; i++)
 			{
-				if (do_temp[i])value = value | (0x01 << i);
+                if (do_temp[i])value = (value | (0x01 << i));
 			}
 		}
 		else
@@ -8218,13 +8215,13 @@ namespace kaanh
 			}
 			for (int i = 0; i < 8; i++)
 			{
-				if (do_temp[i])value = value | (0x01 << i);
+                if (do_temp[i])value = (value | (0x01 << i));
 			}
 		}
 		//根据do信号刷新dig_out的数值
 		dig_out.store(do_temp);
 
-		ecController()->slavePool().at(param->slave_id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
+        ecController()->slavePool().at(param->slave_id).writePdo(param->index, param->subindex, &value, param->bit_size);
 		controller()->mout() << "setvalue:" << param->value << std::endl;
 		return 0;
 	}

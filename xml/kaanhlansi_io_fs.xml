@@ -10,7 +10,7 @@
     <InterfaceRoot/>
     <EthercatController name="ethercat_controller" sample_period_ns="1000000" esi_dirs="">
         <SlavePoolObject name="slave_pool">
-            <EthercatMotor phy_id="0" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.9670597283903599" min_pos="-2.9670597283903599" max_vel="7.8539816339744828" min_vel="-7.8539816339744828" max_acc="39.269908169872416" min_acc="-39.269908169872416" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-106807074.30850001" pos_offset="-0.062395520758797278" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="0" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.9670597283903599" min_pos="-2.9670597283903599" max_vel="7.8539816339744828" min_vel="-7.8539816339744828" max_acc="39.269908169872416" min_acc="-39.269908169872416" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-106807074.30850001" pos_offset="-0.020629791758572973" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -41,7 +41,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="1" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="1.3962634015954636" min_pos="-2.1816615649929116" max_vel="5.1927035905335295" min_vel="-5.1927035905335295" max_acc="25.96351795266764" min_acc="-25.96351795266764" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="161545699.89160001" pos_offset="0.087772608082794829" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="1" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="1.3962634015954636" min_pos="-2.1816615649929116" max_vel="5.1927035905335295" min_vel="-5.1927035905335295" max_acc="25.96351795266764" min_acc="-25.96351795266764" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="161545699.89160001" pos_offset="0.0049567350756638947" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -103,7 +103,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="3" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="3.1415926535897931" min_pos="-3.1415926535897931" max_vel="5.1333274893806822" min_vel="-5.1333274893806822" max_acc="25.666637446903405" min_acc="-25.666637446903405" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="163414823.692" pos_offset="-0.72752304540131629" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="3" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="3.1415926535897931" min_pos="-3.1415926535897931" max_vel="5.1333274893806822" min_vel="-5.1333274893806822" max_acc="25.666637446903405" min_acc="-25.666637446903405" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="163414823.692" pos_offset="-0.7833037682950551" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -134,7 +134,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="4" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.2689280275926285" min_pos="-2.2689280275926285" max_vel="12.319930123977572" min_vel="-12.319930123977572" max_acc="61.599650619887861" min_acc="-61.599650619887861" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="68089509.871600002" pos_offset="0.46078437581902298" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="4" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="2.2689280275926285" min_pos="-2.2689280275926285" max_vel="12.319930123977572" min_vel="-12.319930123977572" max_acc="61.599650619887861" min_acc="-61.599650619887861" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="68089509.871600002" pos_offset="0.43984042479509095" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -165,7 +165,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatMotor phy_id="5" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="6.2831853071795862" min_pos="-6.2831853071795862" max_vel="12.566370614359172" min_vel="-12.566370614359172" max_acc="62.831853071795862" min_acc="-62.831853071795862" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-66754421.4428" pos_offset="-6.7040714562980197" home_pos="0" is_virtual="false">
+            <EthercatMotor phy_id="5" vendor_id="0x00000748" product_code="0x00000001" revision_num="0x00000002" dc_assign_activate="0x00000300" sync0_shift_ns="900000" max_pos="6.2831853071795862" min_pos="-6.2831853071795862" max_vel="12.566370614359172" min_vel="-12.566370614359172" max_acc="62.831853071795862" min_acc="-62.831853071795862" max_pos_following_error="0.10000000000000001" max_vel_following_error="0.5" pos_factor="-66754421.4428" pos_offset="-6.6755178697353923" home_pos="0" is_virtual="false">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false"/>
                     <SyncManager is_tx="true"/>
@@ -196,7 +196,7 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-           <EthercatSlave phy_id="6" vendor_id="0x00000a09" product_code="0x00000201" revision_num="0x00000064" dc_assign_activate="0x00000000" sync0_shift_ns="650000">
+            <EthercatSlave phy_id="6" vendor_id="0x00000a09" product_code="0x00000201" revision_num="0x00000064" dc_assign_activate="0x00000000" sync0_shift_ns="650000">
                 <SyncManagerPoolObject>
                     <SyncManager is_tx="false">
                         <Pdo index="0x1600">
@@ -255,12 +255,12 @@
                             <PdoEntry name="entry" index="0x0000" subindex="0x00" size="8"/>
                             <PdoEntry name="entry" index="0x1802" subindex="0x07" size="1"/>
                             <PdoEntry name="entry" index="0x1802" subindex="0x09" size="1"/>
-                            <PdoEntry name="entry" index="0x6020" subindex="0x11" size="32"/>
-                            <PdoEntry name="entry" index="0x6020" subindex="0x12" size="32"/>
-                            <PdoEntry name="entry" index="0x6020" subindex="0x13" size="32"/>
-                            <PdoEntry name="entry" index="0x6020" subindex="0x14" size="32"/>
-                            <PdoEntry name="entry" index="0x6020" subindex="0x15" size="32"/>
-                            <PdoEntry name="entry" index="0x6020" subindex="0x16" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0b" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0c" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0d" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0e" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x0f" size="32"/>
+                            <PdoEntry name="entry" index="0x6020" subindex="0x10" size="32"/>
                         </Pdo>
                     </SyncManager>
                 </SyncManagerPoolObject>
@@ -317,46 +317,46 @@
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L1" active="true" pe="{0,0,0,6.28318530717959,0,6.28318530717959}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L1" active="true" pe="{0,0,0,0.160727002043695,0,0.160727002043695}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_0_i" active="true" pe="{0,0,0.3325,0.785398163397448,0,0.785398163397448}"/>
                     <Marker name="joint_1_j" active="true" pe="{0.02,0,0.3325,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L2" active="true" pe="{-4.13970022327094e-17,-9.66450862560077e-17,1.4520550696499e-15,0.346370675310721,1.85105414102057e-16,5.93681463186886}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L2" active="true" pe="{-0.00868727072441592,-0.00289289473229233,0.000677515559738353,1.89225033088229,0.027564031515618,4.71238898038468}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_1_i" active="true" pe="{0.02,0,0.3325,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_2_j" active="true" pe="{0.02,0,0.6425,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L3" active="true" pe="{-1.50003632462289e-15,-3.68387061144525e-16,-2.44346792832353e-15,3.27289871382961,1.87688083131048e-15,3.01028659334997}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L3" active="true" pe="{-0.00256117129864046,-0.000852879942777821,0.000330755432333042,1.89225033088249,0.0175048266645237,4.71238898038448}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_2_i" active="true" pe="{0.02,0,0.6425,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_3_j" active="true" pe="{0.31,0,0.66255,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L4" active="true" pe="{1.99803688981747e-14,3.60011251255621e-14,2.12053817403927e-14,1.70467869622652,4.5912740946511e-14,4.57850661095307}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L4" active="true" pe="{0.135181114226573,-0.405814219350441,0.156879110141771,3.44234391425635,0.701979867102176,3.16870314532524}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_3_i" active="true" pe="{0.31,0,0.66255,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                     <Marker name="joint_4_j" active="true" pe="{0.31,0,0.66255,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L5" active="true" pe="{1.07757872547893e-14,-2.12099430525764e-14,-3.76852140035217e-14,3.08081430299725,3.73605766870054e-14,3.20237100418234}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L5" active="true" pe="{-0.161526190769878,-0.357746329432875,0.326405465674646,2.77645566581725,0.83581729588296,3.65694482660174}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_4_i" active="true" pe="{0.31,0,0.66255,3.14159265358979,1.5707963267949,4.71238898038469}"/>
                     <Marker name="joint_5_j" active="true" pe="{0.31,0,0.66255,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                 </MarkerPoolElement>
                 <GeometryPoolElement name="geometry_pool"/>
             </Part>
-            <Part name="L6" active="true" pe="{8.82642367622907e-15,0.452307062443388,0.178410739286744,7.98246372460216e-15,0.751418697255965,6.28318530717958}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
+            <Part name="L6" active="true" pe="{-0.228258417827589,0.099574175710885,0.154016448256872,1.5781688954124,0.374305426607541,4.7035251608957}" vel="{0,0,0,0,0,0}" acc="{0,0,0,0,0,0}" inertia="{1,0,0,0,0,0,0,0,0,0}">
                 <MarkerPoolElement name="marker_pool">
                     <Marker name="joint_5_i" active="true" pe="{0.31,0,0.66255,1.5707963267949,1.5707963267949,1.5707963267949}"/>
                     <Marker name="tool0" active="true" pe="{0.394,0,0.66255,1.5707963267949,1.5707963267949,4.71238898038469}"/>
-                    <Marker name="tool1" active="true" pe="{0.394,0,0.66255,1.5707963267949,1.5707963267949,4.71238898038469}"/>
+                    <Marker name="tool1" active="true" pe="{0.652981881455343,-0.0292038220368912,0.655582385694976,1.60497257862531,1.59035396690211,6.20920507854518}"/>
                     <Marker name="tool2" active="true" pe="{0.394,0,0.66255,1.5707963267949,1.5707963267949,4.71238898038469}"/>
                     <Marker name="tool3" active="true" pe="{0.394,0,0.66255,1.5707963267949,1.5707963267949,4.71238898038469}"/>
                     <Marker name="tool4" active="true" pe="{0.394,0,0.66255,1.5707963267949,1.5707963267949,4.71238898038469}"/>
@@ -385,12 +385,12 @@
             <RevoluteJoint name="joint_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0,0,0,0,0}"/>
         </JointPoolElement>
         <MotionPoolElement name="motion_pool">
-            <Motion name="motion_0" active="true" prt_m="L1" prt_n="ground" mak_i="joint_0_i" mak_j="joint_0_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
-            <Motion name="motion_1" active="true" prt_m="L2" prt_n="L1" mak_i="joint_1_i" mak_j="joint_1_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
-            <Motion name="motion_2" active="true" prt_m="L3" prt_n="L2" mak_i="joint_2_i" mak_j="joint_2_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
-            <Motion name="motion_3" active="true" prt_m="L4" prt_n="L3" mak_i="joint_3_i" mak_j="joint_3_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
-            <Motion name="motion_4" active="true" prt_m="L5" prt_n="L4" mak_i="joint_4_i" mak_j="joint_4_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0" mv="0" ma="0"/>
-            <Motion name="motion_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.7514186972560164" mv="0" ma="0"/>
+            <Motion name="motion_0" active="true" prt_m="L1" prt_n="ground" mak_i="joint_0_i" mak_j="joint_0_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.32145403217541768" mv="0" ma="0"/>
+            <Motion name="motion_1" active="true" prt_m="L2" prt_n="L1" mak_i="joint_1_i" mak_j="joint_1_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.027564025325419204" mv="0" ma="0"/>
+            <Motion name="motion_2" active="true" prt_m="L3" prt_n="L2" mak_i="joint_2_i" mak_j="joint_2_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="-0.010059230699442701" mv="0" ma="0"/>
+            <Motion name="motion_3" active="true" prt_m="L4" prt_n="L3" mak_i="joint_3_i" mak_j="joint_3_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="-0.70179865091638394" mv="0" ma="0"/>
+            <Motion name="motion_4" active="true" prt_m="L5" prt_n="L4" mak_i="joint_4_i" mak_j="joint_4_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.47624914785164857" mv="0" ma="0"/>
+            <Motion name="motion_5" active="true" prt_m="L6" prt_n="L5" mak_i="joint_5_i" mak_j="joint_5_j" cf="{0}" frc_coe="{0,0,0}" component="5" mp="0.76286316508479679" mv="0" ma="0"/>
         </MotionPoolElement>
         <GeneralMotionPoolElement name="general_motion_pool">
             <GeneralMotion name="ee" active="false" prt_m="L6" prt_n="ground" mak_i="tool0" mak_j="wobj0" cf="{0,0,0,0,0,0}"/>
@@ -1092,6 +1092,8 @@
                             <Param name="pos"/>
                             <Param name="vel"/>
                         </UniqueParam>
+                        <Param name="tool" default="tool0"/>
+                        <Param name="wobj" default="wobj0"/>
                     </GroupParam>
                 </Command>
             </Get>
@@ -1369,6 +1371,23 @@
                     </GroupParam>
                 </Command>
             </GetPdo>
+            <WaitDI name="WaitDI_plan">
+                <Command name="waitdi">
+                    <GroupParam>
+                        <Param name="id" default="0"/>
+                        <Param name="slave_id" default="6"/>
+                    </GroupParam>
+                </Command>
+            </WaitDI>
+            <SetDO name="SetDO_plan">
+                <Command name="setdo">
+                    <GroupParam>
+                        <Param name="id" default="0"/>
+                        <Param name="value" default="0"/>
+                        <Param name="slave_id" default="6"/>
+                    </GroupParam>
+                </Command>
+            </SetDO>
             <SetDH name="SetDH_plan">
                 <Command name="setdh">
                     <GroupParam>

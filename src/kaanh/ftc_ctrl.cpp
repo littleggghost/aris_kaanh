@@ -23,7 +23,7 @@ using namespace std;
 
 namespace cpt_ftc
 {
-	void cpt_ftc::LowPass::get_filter_data(int n_order, int fc, double Ts, double x_in, double x_out)
+    void cpt_ftc::LowPass::get_filter_data(int n_order, int fc, double Ts, double x_in, double &x_out)
 	{
 		Wc = 2 * PI*fc;
 		if (n_order == 1)
