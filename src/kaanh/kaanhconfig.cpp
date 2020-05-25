@@ -964,6 +964,8 @@ namespace kaanhconfig
 		plan_root->planPool().add<kaanh::SetCon>();
 		plan_root->planPool().add<kaanh::SetPdo>();
 		plan_root->planPool().add<kaanh::GetPdo>();
+		plan_root->planPool().add<kaanh::WaitDI>();
+		plan_root->planPool().add<kaanh::SetDO>();
 		plan_root->planPool().add<kaanh::SetDH>();
 		plan_root->planPool().add<kaanh::SetPG>();
 		plan_root->planPool().add<kaanh::SetPPath>();

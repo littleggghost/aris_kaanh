@@ -103,6 +103,10 @@ namespace kaanh
 
 
 		//获取力传感器数据，并进行滤波
+#ifdef UNIX
+
+#endif // UNIX
+
         auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
         static int fcinit=0;
         if((motion_state[5]==1)&&fcinit<1)
@@ -8162,7 +8166,7 @@ namespace kaanh
 			}
 		}
 		//成石创新
-		param.index = 0x7001;
+		param.index = 0x7001;//do
 		if (param.id > 7)
 		{
 			param.subindex = 0x02;
