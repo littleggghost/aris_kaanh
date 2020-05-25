@@ -8086,9 +8086,9 @@ namespace kaanh
 		std::array<bool, 16> di_temp = dig_in.load();
 		if (param->id > 7)
 		{
-			param->value = param->value << param->id - 8;	//向高位平移id位
-			param->value &= 0x01;		//按位与
-			if (param->value)			//更新对应通道的di信号,高电平有效
+			param->value = param->value >> param->id - 8;	//向低位平移id位
+			param->value &= 0x01;							//按位与
+			if (param->value)								//更新对应通道的di信号,高电平有效
 			{
 				di_temp[param->id] = true;
 				is_true = false;
@@ -8101,9 +8101,9 @@ namespace kaanh
 		}
 		else
 		{
-			param->value = param->value << param->id;	//向高位平移id位
-			param->value &= 0x01;		//按位与
-			if (param->value)			//更新对应通道的di信号,高电平有效
+			param->value = param->value >> param->id;	//向低位平移id位
+			param->value &= 0x01;						//按位与
+			if (param->value)							//更新对应通道的di信号,高电平有效
 			{
 				di_temp[param->id] = true;
 				is_true = false;
