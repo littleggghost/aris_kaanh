@@ -8144,8 +8144,6 @@ namespace kaanh
 	};
 	auto SetDO::prepareNrt()->void
 	{
-		auto&cs = aris::server::ControlServer::instance();
-
 		SetDOParam param;
 		for (auto &p : cmdParams())
 		{
@@ -8164,18 +8162,16 @@ namespace kaanh
 			}
 		}
 		//成石创新
-		param.index = 0x6001;
+		param.index = 0x7001;
 		if (param.id > 7)
 		{
 			param.subindex = 0x02;
-			param.id = param.id - 8;
 		}
 		else
 		{
 			param.subindex = 0x01;
 		}
-		param.value = 0x01;						//di信号初始化，8路
-		param.value = param.value << param.id;	//向高位平移
+		param.value = 0x00;						//di信号初始化，8路
 		param.bit_size = 8;
 
 		this->param() = param;
@@ -8185,7 +8181,46 @@ namespace kaanh
 	auto SetDO::executeRT()->int
 	{
 		auto param = std::any_cast<SetDOParam>(&this->param());
-		ecController()->slavePool().at(param->id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
+		std::array<bool, 16> do_temp = dig_out.load();
+		uint8_t value = 0x00;
+		if (param->id > 7)
+		{
+			param->value = param->value << param->id - 8;	//向高位平移id位
+			param->value &= 0x01;		//按位与
+			if (param->value)			//更新对应通道的di信号,高电平有效
+			{
+				do_temp[param->id] = true;
+			}
+			else
+			{
+				do_temp[param->id] = false;
+			}
+			for (int i = 0; i < 8; i++)
+			{
+				if (do_temp[i])value = value | (0x01 << i);
+			}
+		}
+		else
+		{
+			param->value = param->value << param->id;	//向高位平移id位
+			param->value &= 0x01;		//按位与
+			if (param->value)			//更新对应通道的di信号,高电平有效
+			{
+				do_temp[param->id] = true;
+			}
+			else
+			{
+				do_temp[param->id] = false;
+			}
+			for (int i = 0; i < 8; i++)
+			{
+				if (do_temp[i])value = value | (0x01 << i);
+			}
+		}
+		//根据do信号刷新dig_out的数值
+		dig_out.store(do_temp);
+
+		ecController()->slavePool().at(param->slave_id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
 		controller()->mout() << "setvalue:" << param->value << std::endl;
 		return 0;
 	}
