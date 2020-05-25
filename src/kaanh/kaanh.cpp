@@ -47,6 +47,8 @@ cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp[6]; //滤波器
 //extern cpt_ftc::Admit admit;//力控
 const int FS_NUM = 7;	//force sensor slave number
+std::atomic<std::array<bool, 16>>dig_in;//数字量di
+std::atomic<std::array<bool, 16>>dig_out;//数字量do
 
 
 namespace kaanh
@@ -563,13 +565,14 @@ namespace kaanh
     struct GetParam
     {
         std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai, forcedata;
-        std::vector<bool> di;
+        std::vector<bool> digtal_in, digtal_out;
         std::int32_t state_code;
         aris::control::EthercatController::SlaveLinkState sls[6];
         aris::control::EthercatController::MasterLinkState mls{};
         std::vector<int> motion_state;
         std::string currentplan;
         int vel_percent;
+		aris::dynamic::Marker *tool, *wobj;
     };
     auto Get::prepareNrt()->void
     {
@@ -581,26 +584,32 @@ namespace kaanh
         par.motion_vel.clear();
         par.motion_acc.clear();
         par.motion_toq.clear();
-        par.ai.resize(100, 1.0);
-        par.di.resize(100, false);
+        par.ai.resize(16, 1.0);
+		par.digtal_in.resize(16, false);
+		par.digtal_out.resize(16, false);
         par.motion_state.resize(6, 0);
         par.forcedata.resize(6, 0.0);
         std::any param = par;
         //std::any param = std::make_any<GetParam>();
+		par.tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
+		par.wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 
         controlServer()->getRtData([&](aris::server::ControlServer& cs, const aris::plan::Plan *target, std::any& data)->void
         {
             update_state(cs);
-
+			model()->generalMotionPool().at(0).updMpm();
             for (aris::Size i(-1); ++i < cs.model().partPool().size();)
             {
+				//par.tool->getPq(*par.wobj, std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
                 cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
             }
 
             for (aris::Size i(0); i < cs.model().generalMotionPool().size();i++)
             {
-                cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
-                cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
+				par.tool->getPq(*par.wobj, std::any_cast<GetParam &>(data).end_pq.data());
+				par.tool->getPe(*par.wobj, std::any_cast<GetParam &>(data).end_pe.data(), "321");
+                //cs.model().generalMotionPool().at(0).getMpq(std::any_cast<GetParam &>(data).end_pq.data());
+                //cs.model().generalMotionPool().at(0).getMpe(std::any_cast<GetParam &>(data).end_pe.data(), "321");
             }
 
 #ifdef WIN32
@@ -623,10 +632,13 @@ namespace kaanh
             }
 #endif // UNIX
 
-            for (aris::Size i = 0; i < 100; i++)
+			std::array<bool, 16> d_in = dig_in.load();	//获取di的状态
+			std::array<bool, 16> d_out = dig_out.load();//获取do的状态
+            for (aris::Size i = 0; i < 16; i++)
             {
                 std::any_cast<GetParam &>(data).ai[i] = 1.0;
-                std::any_cast<GetParam &>(data).di[i] = false;
+                std::any_cast<GetParam &>(data).digtal_in[i] = d_in[i];
+				std::any_cast<GetParam &>(data).digtal_out[i] = d_out[i];
             }
 
             auto ec = dynamic_cast<aris::control::EthercatController*>(&cs.controller());
@@ -686,7 +698,8 @@ namespace kaanh
 				out_param.push_back(std::make_pair<std::string, std::any>("motion_acc", out_data.motion_acc));
 				out_param.push_back(std::make_pair<std::string, std::any>("motion_toq", out_data.motion_toq));
 				out_param.push_back(std::make_pair<std::string, std::any>("ai", out_data.ai));
-				out_param.push_back(std::make_pair<std::string, std::any>("di", out_data.di));
+				out_param.push_back(std::make_pair<std::string, std::any>("di", out_data.digtal_in));
+				out_param.push_back(std::make_pair<std::string, std::any>("do", out_data.digtal_out));
 				out_param.push_back(std::make_pair<std::string, std::any>("state_code", out_data.state_code));
 				out_param.push_back(std::make_pair<std::string, std::any>("slave_link_num", std::int32_t(out_data.mls.slaves_responding)));
 				out_param.push_back(std::make_pair<std::string, std::any>("slave_online_state", slave_online));
@@ -726,6 +739,8 @@ namespace kaanh
 			"			<Param name=\"pos\"/>"
 			"			<Param name=\"vel\"/>"
 			"		</UniqueParam>"
+			"		<Param name=\"tool\" default=\"tool0\"/>"
+			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"	</GroupParam>"
             "</Command>");
     }
@@ -8015,6 +8030,174 @@ namespace kaanh
 			"		<Param name=\"subindex\" default=\"0x00\"/>"
 			"		<Param name=\"value\" default=\"1\"/>"
 			"		<Param name=\"bitsize\" default=\"16\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
+	// 等待di信号 //
+	struct WaitDIParam
+	{
+		int id;			//di通道号
+		int slave_id;	//从站编号
+		std::uint16_t index;
+		std::uint8_t subindex;
+		std::uint8_t value;
+		aris::Size bit_size;
+	};
+	auto WaitDI::prepareNrt()->void
+	{
+		WaitDIParam param;
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "id")
+			{
+				param.id = int32Param(p.first);
+				if (param.id > 15 || param.id < 0)THROW_FILE_LINE("input id out of range");
+			}
+			else if (p.first == "slave_id")
+			{
+				param.slave_id = int32Param(p.first);
+			}
+		}
+		//成石创新
+		param.index = 0x6001;
+		if (param.id > 7)
+		{
+			param.subindex = 0x02;
+		}
+		else
+		{
+			param.subindex = 0x01;
+		}
+		param.value = 0x00;//di信号初始化，8路
+		param.bit_size = 8;
+
+		this->param() = param;
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+	}
+	auto WaitDI::executeRT()->int
+	{
+		auto param = std::any_cast<WaitDIParam>(&this->param());
+		ecController()->slavePool().at(param->slave_id).readPdo(param->index, param->subindex, &param->value, param->bit_size);
+		bool is_true = true;
+		std::array<bool, 16> di_temp = dig_in.load();
+		if (param->id > 7)
+		{
+			param->value = param->value << param->id - 8;	//向高位平移id位
+			param->value &= 0x01;		//按位与
+			if (param->value)			//更新对应通道的di信号,高电平有效
+			{
+				di_temp[param->id] = true;
+				is_true = false;
+			}
+			else
+			{
+				di_temp[param->id] = false;
+				is_true = true;
+			}
+		}
+		else
+		{
+			param->value = param->value << param->id;	//向高位平移id位
+			param->value &= 0x01;		//按位与
+			if (param->value)			//更新对应通道的di信号,高电平有效
+			{
+				di_temp[param->id] = true;
+				is_true = false;
+			}
+			else
+			{
+				di_temp[param->id] = false;
+				is_true = true;
+			}
+		}
+		
+		//根据di信号刷新dig_in的数值
+		dig_in.store(di_temp);
+		controller()->mout() << "getvalue:" << param->value << std::endl;
+		return is_true;
+	}
+	auto WaitDI::collectNrt()->void {}
+	WaitDI::WaitDI(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"waitdi\">"
+			"	<GroupParam>"
+			"		<Param name=\"id\" default=\"0\"/>"
+			"		<Param name=\"slave_id\" default=\"6\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
+	// 等待di信号 //
+	struct SetDOParam
+	{
+		int id;			//di通道号
+		int slave_id;	//从站编号
+		std::uint16_t index;
+		std::uint8_t subindex;
+		std::uint8_t value;
+		aris::Size bit_size;
+	};
+	auto SetDO::prepareNrt()->void
+	{
+		auto&cs = aris::server::ControlServer::instance();
+
+		SetDOParam param;
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "id")
+			{
+				param.id = int32Param(p.first);
+				if (param.id > 15 || param.id < 0)THROW_FILE_LINE("input id out of range");
+			}
+			else if (p.first == "slave_id")
+			{
+				param.slave_id = int32Param(p.first);
+			}
+			else if (p.first == "value")
+			{
+				param.value = int32Param(p.first);
+			}
+		}
+		//成石创新
+		param.index = 0x6001;
+		if (param.id > 7)
+		{
+			param.subindex = 0x02;
+			param.id = param.id - 8;
+		}
+		else
+		{
+			param.subindex = 0x01;
+		}
+		param.value = 0x01;						//di信号初始化，8路
+		param.value = param.value << param.id;	//向高位平移
+		param.bit_size = 8;
+
+		this->param() = param;
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+	}
+	auto SetDO::executeRT()->int
+	{
+		auto param = std::any_cast<SetDOParam>(&this->param());
+		ecController()->slavePool().at(param->id).writePdo(param->index, param->subindex, &param->value, param->bit_size);
+		controller()->mout() << "setvalue:" << param->value << std::endl;
+		return 0;
+	}
+	auto SetDO::collectNrt()->void {}
+	SetDO::SetDO(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"setdo\">"
+			"	<GroupParam>"
+			"		<Param name=\"id\" default=\"0\"/>"
+			"		<Param name=\"value\" default=\"0\"/>"
+			"		<Param name=\"slave_id\" default=\"6\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}

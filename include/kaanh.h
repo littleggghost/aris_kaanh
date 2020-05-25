@@ -605,6 +605,27 @@ namespace kaanh
 	};
 
 
+	class SetDO : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		auto virtual executeRT()->int;
+		auto virtual collectNrt()->void;
+		explicit SetDO(const std::string &name = "SetDO_plan");
+		ARIS_REGISTER_TYPE(SetDO);
+	};
+
+	class WaitDI : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		auto virtual executeRT()->int;
+		auto virtual collectNrt()->void;
+		explicit WaitDI(const std::string &name = "WaitDI_plan");
+		ARIS_REGISTER_TYPE(WaitDI);
+	};
+
+
 	class ScanSlave : public aris::plan::Plan
 	{
 	public:
