@@ -103,7 +103,7 @@ namespace kaanh
 
 
 		//获取力传感器数据，并进行滤波
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(7));
+        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
         static int fcinit=0;
         if((motion_state[5]==1)&&fcinit<1)
         {
