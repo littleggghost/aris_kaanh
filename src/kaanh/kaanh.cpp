@@ -8185,8 +8185,6 @@ namespace kaanh
 		uint8_t value = 0x00;
 		if (param->id > 7)
 		{
-			param->value = param->value << param->id - 8;	//向高位平移id位
-			param->value &= 0x01;		//按位与
 			if (param->value)			//更新对应通道的di信号,高电平有效
 			{
 				do_temp[param->id] = true;
@@ -8195,15 +8193,13 @@ namespace kaanh
 			{
 				do_temp[param->id] = false;
 			}
-			for (int i = 0; i < 8; i++)
+			for (int i = 8; i <16; i++)
 			{
                 if (do_temp[i])value = (value | (0x01 << i));
 			}
 		}
 		else
 		{
-			param->value = param->value << param->id;	//向高位平移id位
-			param->value &= 0x01;		//按位与
 			if (param->value)			//更新对应通道的di信号,高电平有效
 			{
 				do_temp[param->id] = true;
