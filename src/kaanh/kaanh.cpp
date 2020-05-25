@@ -8117,7 +8117,6 @@ namespace kaanh
 		
 		//根据di信号刷新dig_in的数值
 		dig_in.store(di_temp);
-		controller()->mout() << "getvalue:" << param->value << std::endl;
 		return is_true;
 	}
 	auto WaitDI::collectNrt()->void {}

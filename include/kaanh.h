@@ -197,8 +197,8 @@ namespace kaanh
 		auto virtual executeRT()->int;
 
 		virtual ~Sleep();
-		explicit Sleep(const std::string &name = "sleep_plan");
-		ARIS_REGISTER_TYPE(Sleep);
+        explicit Sleep(const std::string &name = "sleep");
+        ARIS_REGISTER_TYPE(kaanh::Sleep);
 		ARIS_DECLARE_BIG_FOUR(Sleep);
 
 	private:
