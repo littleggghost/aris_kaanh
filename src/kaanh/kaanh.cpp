@@ -4874,7 +4874,7 @@ namespace kaanh
 	{
 		auto &cout = controller()->mout();
 		auto &lout = controller()->lout();
-		char eu_type[4]{ '1', '2', '3', '\0' };
+        char eu_type[4]{ '1', '2', '3', '\0' };
 
 		// 前三维为xyz，后三维是w的积分，注意没有物理含义
 		static double v_tcp[6];
@@ -5194,12 +5194,11 @@ namespace kaanh
 
 #ifdef UNIX
             auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
-			slave7.readPdo(0x6030, 0x01, &rawdata[0], 32);
-			slave7.readPdo(0x6030, 0x02, &rawdata[1], 32);
-			slave7.readPdo(0x6030, 0x03, &rawdata[2], 32);
-			slave7.readPdo(0x6030, 0x04, &rawdata[3], 32);
-			slave7.readPdo(0x6030, 0x05, &rawdata[4], 32);
-			slave7.readPdo(0x6030, 0x06, &rawdata[5], 32);
+            for(int i=0; i<6; i++)
+            {
+                slave7.readPdo(0x6030, i+1, &rawdata[i], 32);
+            }
+
 #endif
 
 #ifdef WIN32
@@ -5224,12 +5223,11 @@ namespace kaanh
 
 #ifdef UNIX
         auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
-		slave7.readPdo(0x6030, 0x01, &realdata[0], 32);
-		slave7.readPdo(0x6030, 0x02, &realdata[1], 32);
-		slave7.readPdo(0x6030, 0x03, &realdata[2], 32);
-		slave7.readPdo(0x6030, 0x04, &realdata[3], 32);
-		slave7.readPdo(0x6030, 0x05, &realdata[4], 32);
-		slave7.readPdo(0x6030, 0x06, &realdata[5], 32);
+        for(int i=0; i<6; i++)
+        {
+            slave7.readPdo(0x6030, i+1, &realdata[i], 32);
+        }
+
 #endif
 
 #ifdef WIN32
@@ -8117,6 +8115,7 @@ namespace kaanh
 		
 		//根据di信号刷新dig_in的数值
 		dig_in.store(di_temp);
+        if(g_is_stopped)return 0;
 		return is_true;
 	}
 	auto WaitDI::collectNrt()->void {}
