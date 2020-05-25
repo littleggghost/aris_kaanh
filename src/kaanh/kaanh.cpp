@@ -8172,7 +8172,6 @@ namespace kaanh
 		{
 			param.subindex = 0x01;
 		}
-		param.value = 0x00;						//di信号初始化，8路
 		param.bit_size = 8;
 
 		this->param() = param;
