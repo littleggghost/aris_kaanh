@@ -6412,6 +6412,7 @@ namespace kaanh
 		static double p_now[6], v_now[6], a_now[6];
 		if (count() == 1)
 		{
+			model()->generalMotionPool().at(0).updMpm();
             param.tool->getPe(*param.wobj, target_p, eu_type);
             //model()->generalMotionPool()[0].getMpe(target_p);
 			std::fill_n(target_p + 3, 3, 0.0);

@@ -185,7 +185,7 @@ auto CalibW3P::prepareNrt()->void
 	try
 	{
 		double wobj_pe_wrt_prt[6];//wobj相对于地面的位姿
-		s_pe2pe(*model()->partPool().findByName("ground")->markerPool().findByName("wobj0")->pm(), param.wobj_pe.data(), wobj_pe_wrt_prt);
+		s_pe2pe(*model()->partPool().findByName("ground")->markerPool().findByName("wobj0")->prtPm(), param.wobj_pe.data(), wobj_pe_wrt_prt);
 		model()->partPool().findByName("ground")->markerPool().findByName(param.wobj_name)->setPrtPe(wobj_pe_wrt_prt);
 	}
 	catch (std::exception)
@@ -825,7 +825,7 @@ auto CalibT6P::prepareNrt()->void
 		try
 		{
 			double tool_pe_wrt_prt[6];
-			s_pe2pe(*model()->partPool().findByName("L6")->markerPool().findByName("tool0")->pm(), param.tool_pe.data(), tool_pe_wrt_prt);
+			s_pe2pe(*model()->partPool().findByName("L6")->markerPool().findByName("tool0")->prtPm(), param.tool_pe.data(), tool_pe_wrt_prt);
 			model()->partPool().findByName("L6")->markerPool().findByName(param.tool_name)->setPrtPe(tool_pe_wrt_prt);
 		}
 		catch (std::exception)
