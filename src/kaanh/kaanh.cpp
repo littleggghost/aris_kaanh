@@ -4505,7 +4505,7 @@ namespace kaanh
 			"		<Param name=\"pose\" default=\"{0,0,0,0,-0.6,-0.7}\"/>"
 			"		<Param name=\"zoffset\" default=\"0.061\"/>"
 			"		<Param name=\"rzoffset\" default=\"51.166\"/>"
-			"		<Param name=\"vel\" default=\"0.05\"/>"
+            "		<Param name=\"vel\" default=\"0.02\"/>"
 			"		<Param name=\"acc\" default=\"0.1\"/>"
 			"		<Param name=\"dec\" default=\"0.1\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
@@ -4891,10 +4891,12 @@ namespace kaanh
 		//获取力传感器数值
         auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
 		float data[6];
+        std::array<double, 6>temp_force=filterdata.load();
 		for (uint8_t i = 0; i < 6; i++)
 		{
-			slave7.readPdo(0x6030, i + 1, &data[i], 32);
-			imp_->force_target[i] = double(data[i]);
+            //slave7.readPdo(0x6030, i + 1, &data[i], 32);
+            //imp_->force_target[i] = double(data[i]);
+            imp_->force_target[i] = temp_force[i];
 		}
 
 		//滤波
@@ -4943,7 +4945,7 @@ namespace kaanh
 
 
         // 作用力的大小在max_move_force以内，默认为0；在max_move_force以外，数值减去max_move_force
-        const double max_move_force[6]{ 5.0,5.0,5.0,0.1,0.1,0.1 };
+        const double max_move_force[6]{ 3.0,3.0,3.0,0.07,0.07,0.03 };
         for (int i = 0; i < 6; ++i)
         {
             if (imp_->force_target[i] > max_move_force[i])
