@@ -101,26 +101,27 @@ namespace kaanh
             g_counter = 1.0;
 		}
 
-
-		//获取力传感器数据，并进行滤波
-        auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
-        static int fcinit=0;
-        if((motion_state[5]==1)&&fcinit<1)
-        {
-            std::uint8_t led1 = 0x01;
-            slave7->writePdo(0x7010, 1, &led1, 1);
-            fcinit++;
-        }
-        std::array<double, 6> outdata = {0,0,0,0,0,0};
-        for (int i = 0; i < 6; i++)
-        {
-            slave7->readPdo(0x6020, i+11, &rawdata[i], 32);
-            lp[i].get_filter_data(2, 10, 0.001, rawdata[i], outdata[i]);
-            outdata[i] *= 9.8;
-        }
-
-        filterdata.store(outdata);
-
+		//获取力传感器数据，并进行滤波--条件是力传感器存在
+		//这里只是简单通过从站数量超过6进行判断，第七个从站可以是io也可以是力传感器，用户需要通过FS_NUM来设定
+		if (cs.controller().slavePool().size() > 6)
+		{
+			auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
+			static int fcinit = 0;
+			if ((motion_state[5] == 1) && fcinit < 1)
+			{
+				std::uint8_t led1 = 0x01;
+				slave7->writePdo(0x7010, 1, &led1, 1);
+				fcinit++;
+			}
+			std::array<double, 6> outdata = { 0,0,0,0,0,0 };
+			for (int i = 0; i < 6; i++)
+			{
+				slave7->readPdo(0x6020, i + 11, &rawdata[i], 32);
+				lp[i].get_filter_data(2, 10, 0.001, rawdata[i], outdata[i]);
+				outdata[i] *= 9.8;
+			}
+			filterdata.store(outdata);
+		}
 	}
 
 	//获取状态字——100:去使能,200:手动,300:自动,400:程序运行中,410:程序暂停中,420:程序停止，500:错误//
@@ -600,8 +601,8 @@ namespace kaanh
 			model()->generalMotionPool().at(0).updMpm();
             for (aris::Size i(-1); ++i < cs.model().partPool().size();)
             {
-				//par.tool->getPq(*par.wobj, std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
-                cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
+				par.tool->getPq(*par.wobj, std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
+                //cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
             }
 
             for (aris::Size i(0); i < cs.model().generalMotionPool().size();i++)
@@ -627,7 +628,7 @@ namespace kaanh
             {
                 std::any_cast<GetParam &>(data).motion_pos.push_back(cs.controller().motionPool()[i].actualPos());
                 std::any_cast<GetParam &>(data).motion_vel.push_back(cs.controller().motionPool()[i].actualVel());
-                std::any_cast<GetParam &>(data).motion_acc.push_back(cs.model().motionPool()[i].ma());
+				if (i < cs.model().motionPool().size())std::any_cast<GetParam &>(data).motion_acc.push_back(cs.model().motionPool()[i].ma());
                 std::any_cast<GetParam &>(data).motion_toq.push_back(cs.controller().motionPool()[i].actualToq());
             }
 #endif // UNIX

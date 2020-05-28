@@ -9,7 +9,7 @@
 
 using namespace aris::dynamic;
 using namespace aris::plan;
-
+//
 namespace config
 {
 	//创建controller，具体参考手册
@@ -17,7 +17,7 @@ namespace config
     {
         std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);/*创建std::unique_ptr实例*/
  
-        for (aris::Size i = 0; i < 2; ++i)
+        for (aris::Size i = 0; i < 4; ++i)
         {
 #ifdef WIN32
 			//配置零位偏置
