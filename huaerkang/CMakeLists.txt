@@ -5,6 +5,8 @@ project(huaerkang)
 # aris use c++ 17 standard
 set(CMAKE_CXX_STANDARD 17)
 
+find_package(Qt5Widgets REQUIRED)
+
 # find aris
 if(UNIX)
 	add_definitions(-DUNIX)
@@ -27,9 +29,13 @@ include_directories(${kaanh_INCLUDE_DIRS})
 
 message(${aris_DIR} ${kaanh_DIR})
 add_executable(huaerkang src/main.cpp src/config.cpp src/config.h)
+
 if(UNIX)
     target_link_libraries(huaerkang ${kaanh_LIBRARIES} ${aris_LIBRARIES} atomic)
 endif(UNIX)
 IF(WIN32)
         target_link_libraries(huaerkang ${kaanh_LIBRARIES} ${aris_LIBRARIES})
 endif(WIN32)
+
+target_link_libraries(huaerkang  Qt5::Widgets )
+#set(CMAKE_BUILD_TYPE Debug)

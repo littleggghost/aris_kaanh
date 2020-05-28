@@ -6,20 +6,32 @@
 #include "kaanh.h"
 #include "kaanh/kaanhconfig.h"
 #include "config.h"
+#include <QFile>
+#include <QDebug>
 
 using namespace aris::dynamic;
 using namespace aris::plan;
-//
+
 namespace config
 {
+    static double pstion = 0.0;//暂停时轨迹规划的起始位置，需设置成暂停时的实际位置
+    static int Buffer_dis = 0.05;//暂停缓冲距离（按下暂停后，继续运行至停止的距离）
+    static bool stop = false;//急停标志
+    static bool pause = false;//暂停标志一
+    static bool pauseplan = false;//暂停标志二 (说明见暂停指令PS::prepareNrt()部分)
+    static double g_count = 0.0;//指令运行时计时变量，每个指令周期递增一次，用于轨迹规划判断是否已到运行时间
+    static std::atomic_int g_vel_percent = 100;//全局速度百分比
+    static double reduction_ratio = 31640625.0/130321;//减速比
+    static double rpm2radian = 1.0/60 / reduction_ratio * 2 * PI;//rpm转换成弧度/秒
+
 	//创建controller，具体参考手册
     auto createController()->std::unique_ptr<aris::control::Controller>	/*函数返回的是一个类指针，指针指向Controller,controller的类型是智能指针std::unique_ptr*/
     {
         std::unique_ptr<aris::control::Controller> controller(new aris::control::EthercatController);/*创建std::unique_ptr实例*/
- 
+
         for (aris::Size i = 0; i < 4; ++i)
         {
-#ifdef WIN32
+/*#ifdef WIN32
 			//配置零位偏置
             double pos_offset[4]
             {
@@ -33,46 +45,56 @@ namespace config
                 0.0,   0.0,   0.0,   0.0
             };
 #endif
-			//配置规划值与电机count数的比例系数=2的N次方*减速比/2Π，其中N为编码器位数
+            //配置规划值与电机count数的比例系数=2的N次方*减速比/2Π，其中N为编码器位数
+            //脉冲换算至弧度
             double pos_factor[4]
             {
-                243.0*2048/2/PI, -243.0*2048/2/PI, 243.0*2048/2/PI, 131072.0 * 101 / 2 / PI
+                reduction_ratio*2048/2/PI, 243.0*2048/2/PI, 243.0*2048/2/PI, 131072.0 * 101 / 2 / PI
             };
 			//关节最大位置，角度单位转换成弧度单位
             double max_pos[4]
             {
-                170000.0 / 360 * 2 * PI, 170000.0 / 360 * 2 * PI,	170000.0 / 360 * 2 * PI,  150.0 / 360 * 2 * PI
+                //170000.0 / 360 * 2 * PI, 170000.0 / 360 * 2 * PI,	170000.0 / 360 * 2 * PI,  150.0 / 360 * 2 * PI
+                1.2,1.3,1.4,1
             };
-//            double max_pos[4]
-//            {
-//                170000.0 / 360 * 2 * PI, 400000.0 / 360 * 2 * PI,	1500000.0 / 360 * 2 * PI,  150.0 / 360 * 2 * PI
-//            };
 			//关节最小位置，角度单位转换成弧度单位
             double min_pos[4]
             {
                 -170000.0 / 360 * 2 * PI, -170000.0 / 360 * 2 * PI, -170000.0 / 360 * 2 * PI, -125.0 / 360 * 2 * PI
             };
 			//关节最大速度，角度单位转换成弧度单位
-//            double max_vel[4]
-//            {
-//                230.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI
-//            };
             double max_vel[4]
             {
-                300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI
+                //8800.0 * rpm2radian, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI, 300.0 / 360 * 2 * PI
+                0.2,0.3,0.4,0.5
             };
 			//关节最大加速度，角度单位转换成弧度单位
-//            double max_acc[4]
-//            {
-//                1150.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI
-//            };
             double max_acc[4]
             {
-                1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI
-            };
+                8800.0 * rpm2radian, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI, 1500.0 / 360 * 2 * PI
+            };*/
 
+            //int num = controller->slavePool().size();
+
+            //QByteArray byte_head;
+            //byte_head.resize(4);
+            //memcpy(byte_head.data(),&num,sizeof(num));
+            //qDebug(byte_head);
+
+            //根据配置文件，设定从站电机参数
+            QFile file("./config"+QString::number(i)+".dat");
+            QByteArray t;
+            if(file.open(QIODevice::ReadOnly | QIODevice::Text))
+            {
+                t = file.readAll();
+                file.close();
+            }
+            std::string xml_str(t);
+
+            //qDebug(t);
             //根据从站的ESI文件，以及上述参数配置从站信息，格式是xml格式
-            std::string xml_str =
+
+            /*std::string xml_str =
                 "<EthercatMotor phy_id=\"" + std::to_string(i) + "\" product_code=\"0x60500000\""
                 " vendor_id=\"251\" revision_num=\"0x01500000\" dc_assign_activate=\"0x0300\" sync0_shift_ns=\"800000\""
                 " min_pos=\"" + std::to_string(min_pos[i]) + "\" max_pos=\"" + std::to_string(max_pos[i]) + "\" max_vel=\"" + std::to_string(max_vel[i]) + "\" min_vel=\"" + std::to_string(-max_vel[i]) + "\""
@@ -98,9 +120,11 @@ namespace config
                 "           </Pdo>"
                 "       </SyncManager>"
                 "	</SyncManagerPoolObject>"
-                "</EthercatMotor>";
+                "</EthercatMotor>";*/
 
             controller->slavePool().add<aris::control::EthercatMotor>().loadXmlStr(xml_str);//添加从站
+            //qDebug(xml_str.c_str());
+
         }
         return controller;
     }
@@ -116,13 +140,10 @@ namespace config
 		return std::move(model);
     }
 	
-    double g_count = 0.0;
-    std::atomic_int g_vel_percent = 100;
-
     template<typename MoveType>
-    auto updatecount(MoveType *plan)->void
+    auto updatecount(MoveType *plan)->void//更新g_count变量
     {
-        if (plan->count() == 1)
+        if (plan->count() == 1)//每条指令开始，gcount为0
         {
             g_count = 0.0;
         }
@@ -130,7 +151,7 @@ namespace config
         static double g_vel_percent_last = g_vel_percent.load();
         static double g_vel_percent_now = g_vel_percent.load();
         g_vel_percent_now = g_vel_percent.load();
-        if (g_vel_percent_now - g_vel_percent_last >= 0.5)
+        if (g_vel_percent_now - g_vel_percent_last >= 0.5)//全局速度百分比调整过大时，分两次进行调整
         {
             g_vel_percent_last = g_vel_percent_last + 0.5;
         }
@@ -142,8 +163,7 @@ namespace config
         {
             g_vel_percent_last = g_vel_percent_now;
         }
-
-        g_count = g_count + 2*g_vel_percent_last / 100.0;
+        g_count = g_count + interval*g_vel_percent_last / 100.0;//轨迹规划中按照100%速度来规划时间，所以g_count需要根据百分比速度来调整计时速度
     }
 
     //设置全局速度//
@@ -177,7 +197,6 @@ namespace config
             "</Command>");
     }
 
-
 	//MoveAbs的指令参数结构体，长度单位是m，角度单位是rad
 	//每条指令的执行顺序
 	//1、先执行prepareNrt，每条指令只执行一次
@@ -195,6 +214,8 @@ namespace config
 	};
 	auto MoveAbs::prepareNrt()->void
 	{
+        pause = false;
+        pauseplan = false;
 		std::cout << "mvaj:" << std::endl;
 		MoveAbsParam param;
 
@@ -205,22 +226,23 @@ namespace config
 		//解析指令参数
 		for (auto cmd_param : cmdParams())
 		{
-			if (cmd_param.first == "all")
+            if (cmd_param.first == "all")//选择控制所有电机
 			{
 				std::fill(param.active_motor.begin(), param.active_motor.end(), 1);
 			}
-			else if (cmd_param.first == "motion_id")
-			{
-				param.active_motor.at(int32Param(cmd_param.first)) = 1;
+            else if (cmd_param.first == "motion_id")//单独控制某个电机
+            {
+                param.active_motor.at(int32Param(cmd_param.first))=1;
+                //param.active_motor.at((unsigned long)(atol(std::string(cmd_param.first).c_str()))) = 1;
 			}
-			else if (cmd_param.first == "pos")
+            else if (cmd_param.first == "pos")//运行目标位置
 			{
 				auto p = matrixParam(cmd_param.first);
-				if (p.size() == 1)
+                if (p.size() == 1)//所有电机
 				{
 					param.axis_pos_vec.resize(controller()->motionPool().size(), p.toDouble());
 				}
-				else if (p.size() == controller()->motionPool().size())
+                else if (p.size() == controller()->motionPool().size())//多个电机
 				{
 					param.axis_pos_vec.assign(p.begin(), p.end());
 				}
@@ -228,13 +250,8 @@ namespace config
 				{
 					THROW_FILE_LINE("");
 				}
-				for (Size i = 0; i < controller()->motionPool().size(); ++i)
-				{
-					if (param.axis_pos_vec[i] > controller()->motionPool()[i].maxPos() || param.axis_pos_vec[i] < controller()->motionPool()[i].minPos())
-						THROW_FILE_LINE("input pos beyond range");
-				}
 			}
-			else if (cmd_param.first == "acc")
+            else if (cmd_param.first == "acc")//加速度
 			{
 				auto a = matrixParam(cmd_param.first);
 
@@ -250,14 +267,9 @@ namespace config
 				{
 					THROW_FILE_LINE("");
 				}
-				for (Size i = 0; i < controller()->motionPool().size(); ++i)
-				{
-					if (param.axis_acc_vec[i] > controller()->motionPool()[i].maxAcc() || param.axis_acc_vec[i] < controller()->motionPool()[i].minAcc())
-						THROW_FILE_LINE("input acc beyond range");
-				}
 
 			}
-			else if (cmd_param.first == "vel")
+            else if (cmd_param.first == "vel")//速度
 			{
 				auto v = matrixParam(cmd_param.first);
 
@@ -273,14 +285,9 @@ namespace config
 				{
 					THROW_FILE_LINE("");
 				}
-				for (Size i = 0; i < controller()->motionPool().size(); ++i)
-				{
-                    std::cout << "param.axis_vel_vec[i]:" << param.axis_vel_vec[i] << "maxvel:"<< controller()->motionPool()[i].maxVel() << std::endl;
-					if (param.axis_vel_vec[i] > controller()->motionPool()[i].maxVel() || param.axis_vel_vec[i] < controller()->motionPool()[i].minVel())
-						THROW_FILE_LINE("input vel beyond range");
-				}
+
 			}
-			else if (cmd_param.first == "dec")
+            else if (cmd_param.first == "dec")//减速度
 			{
 				auto d = matrixParam(cmd_param.first);
 
@@ -296,13 +303,9 @@ namespace config
 				{
 					THROW_FILE_LINE("");
 				}
-				for (Size i = 0; i < controller()->motionPool().size(); ++i)
-				{
-					if (param.axis_dec_vec[i] > controller()->motionPool()[i].maxAcc() || param.axis_dec_vec[i] < controller()->motionPool()[i].minAcc())
-						THROW_FILE_LINE("input dec beyond range");
-				}
+
 			}
-			else if (cmd_param.first == "jerk")
+            else if (cmd_param.first == "jerk")//加加速度
 			{
 				auto d = matrixParam(cmd_param.first);
 
@@ -318,86 +321,152 @@ namespace config
 				{
 					THROW_FILE_LINE("");
 				}
-				for (Size i = 0; i < controller()->motionPool().size(); ++i)
-				{
-					if (param.axis_jerk_vec[i] > controller()->motionPool()[i].maxAcc()*100.0 || param.axis_jerk_vec[i] < controller()->motionPool()[i].minAcc()*100.0)
-						THROW_FILE_LINE("input jerk beyond range");
-				}
-			}
-		
+            }
 		}
 
+        //check
+        for (Size i = 0; i < controller()->motionPool().size(); ++i)
+        {
+            if(param.active_motor[i])
+            {
+                std::cout << "i" << i<< std::endl;
+                //check pos
+                if (param.axis_pos_vec[i] > controller()->motionPool()[i].maxPos() || param.axis_pos_vec[i] < controller()->motionPool()[i].minPos())
+                    THROW_FILE_LINE("input pos beyond range");
+
+                //check vel
+                if (param.axis_acc_vec[i] > controller()->motionPool()[i].maxAcc() || param.axis_acc_vec[i] < controller()->motionPool()[i].minAcc())
+                    THROW_FILE_LINE("input acc beyond range");
+
+                //check acc
+                if (param.axis_vel_vec[i] > controller()->motionPool()[i].maxVel() || param.axis_vel_vec[i] < controller()->motionPool()[i].minVel())
+                        THROW_FILE_LINE("input vel beyond range");
+
+                //check dec
+                if (param.axis_dec_vec[i] > controller()->motionPool()[i].maxAcc() || param.axis_dec_vec[i] < controller()->motionPool()[i].minAcc())
+                    THROW_FILE_LINE("input dec beyond range");
+
+                //check jerk
+                if (param.axis_jerk_vec[i] > controller()->motionPool()[i].maxAcc()*100.0 || param.axis_jerk_vec[i] < controller()->motionPool()[i].minAcc()*100.0)
+                    THROW_FILE_LINE("input jerk beyond range");
+            }
+        }
+
 		this->param() = param;
+
+        //忽略轨迹不平滑，二阶不平滑报错,暂停运动无法做到平滑
+        std::fill(motorOptions().begin(),motorOptions().end(),Plan::NOT_CHECK_POS_CONTINUOUS|Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER);
+
 		std::vector<std::pair<std::string, std::any>> ret_value;
 		ret() = ret_value;
 	}
 	auto MoveAbs::executeRT()->int
 	{
 		auto param = std::any_cast<MoveAbsParam>(&this->param());
-		
+        //刚开始执行指令时，获取轨迹起始位置为当前实际位置
 		if (count() == 1)
 		{
-            controller()->logFileRawName("motion_replay");//log name
+            controller()->logFileRawName("motion_replay");//设置log日志名
 
             for (Size i = 0; i < param->active_motor.size(); ++i)
 			{
 				if (param->active_motor[i])
 				{
-					param->axis_begin_pos_vec[i] = controller()->motionPool()[i].targetPos();
-
-
+                    param->axis_begin_pos_vec[i] = controller()->motionPool()[i].targetPos();//刚开始actualpos和targetpos相同，这里用actualpos更好理解
 				}
 			}
 		}
 
-        updatecount(this);
+        updatecount(this);//更新g_count
 		aris::Size total_count{ 1 };
-        double p, v, a, j;
+        double p = 0.0, v = 0.0, a = 0.0, j = 0.0;
+        double t_count;
+        auto &cout = controller()->mout();
 		for (Size i = 0; i < param->active_motor.size(); ++i)
 		{
 			if (param->active_motor[i])
 			{
+                if(stop)
+                {
+                    stop = false;
+                    return 0;//直接返回,急停
+                }
+                //Size t_count;
+                //梯形轨迹规划
+                //aris::plan::moveAbsolute(g_count,
+                //    param->axis_begin_pos_vec[i], param->axis_pos_vec[i],
+                //    param->axis_vel_vec[i] / 1000, param->axis_acc_vec[i] / 1000 / 1000, param->axis_dec_vec[i] / 1000 / 1000,
+                //    p, v, a, t_count);
 
-//                Size t_count;
-//				//梯形轨迹规划
-//                aris::plan::moveAbsolute(g_count,
-//                    param->axis_begin_pos_vec[i], param->axis_pos_vec[i],
-//                    param->axis_vel_vec[i] / 1000, param->axis_acc_vec[i] / 1000 / 1000, param->axis_dec_vec[i] / 1000 / 1000,
-//                    p, v, a, t_count);
-
-                //s形规划//
-                double t_count;
+                //s形规划//正常运行
+                //double t_count;
                 traplan::sCurved(g_count, param->axis_begin_pos_vec[i], param->axis_pos_vec[i],
                     param->axis_vel_vec[i] / 1000.0, param->axis_acc_vec[i] / 1000.0 / 1000.0, param->axis_jerk_vec[i] / 1000.0 / 1000.0 / 1000.0,
                     p, v, a, j, t_count);
-                controller()->motionPool()[i].setTargetPos(p);
-                //controller()->motionPool()[i].setTargetVel(v*500);
+
+                if(pauseplan && pause)//暂停第一个指令周期
+                {
+                    g_count = 0.0;//将g_count清零，当作新指令的开始
+                    pauseplan = false;//复位暂停标志二，暂停期间不需要再次进入
+                    pstion = p;//获取当前实际位置，作为后续轨迹规划的起点。
+                }
+                if(pause)//暂停重新规划轨迹
+                {
+                    traplan::sCurved(g_count, pstion, pstion+Buffer_dis,
+                        param->axis_vel_vec[i] / 1000.0, param->axis_acc_vec[i] / 1000.0 / 1000.0, param->axis_jerk_vec[i] / 1000.0 / 1000.0 / 1000.0,
+                        p, v, a, j, t_count);
+                }
+                //cout << "actualpos:" << controller()->motionPool()[i].actualPos()<<"  ";
+                //cout << "beginpos:" << controller()->motionPool()[i].targetPos() <<"  ";//这里实际位置与目标位置已经很接近，下面发送下一目标位置，以使电机持续运行
+                controller()->motionPool()[i].setTargetPos(p);//根据规划，设定目标位置
+                //cout << "beginpos2:" << controller()->motionPool()[i].targetPos() <<"  ";
                 total_count = std::max(total_count, aris::Size(t_count));
 			}
 		}
 
-        auto &cout = controller()->mout();
-        if(count()%100 ==0)
-        {
-            for(int i=0; i<param->active_motor.size();i++)
-            {
-                cout << "targetpos:" << controller()->motionPool()[i].targetPos()<<"  ";
-                cout << "actualpos:" << controller()->motionPool()[i].actualPos()<<"  ";
-                cout << "targetvel:" << 1000.0*v <<"  ";
-                cout << "actualvel:" << controller()->motionPool()[i].actualVel()<<"  ";
 
+        //if(count()%100 ==0)
+        {
+            for(Size i=0; i<param->active_motor.size();i++)
+            {
+                cout << "beginpos:" << controller()->motionPool()[i].targetPos() <<"  ";
+                cout << "targetpos:" << controller()->motionPool()[i].targetPos()<<"  ";
+                //cout << "targetpulse:" << controller()->motionPool()[i].targetPos()*31640625.0/130321*2048/2/PI<<"  ";
+                //cout << "actualcur:" << controller()->motionPool()[i].actualCur()<<"  ";
+                //cout << "posFactor:" << controller()->motionPool()[i].posFactor()<<"  ";
+                //cout << "posOffset:" << controller()->motionPool()[i].posOffset()<<"  ";
+                //cout << "actualtop:" << controller()->motionPool()[i].actualToq()<<"  ";
+                cout << "actualpos:" << controller()->motionPool()[i].actualPos()<<"  ";
+                //cout << "actualpulse:" << controller()->motionPool()[i].actualPos()*31640625.0/130321*2048/2/PI<<"  ";
+                //cout << "targetvel:" << 1000.0*v <<"  ";
+                cout << "actualvel:" << controller()->motionPool()[i].actualVel()*2048/60<<"  ";
+                cout << std::endl;
             }
-            cout << std::endl;
+
         }
 
+        //写入log日志文件
+        controller()->lout() << controller()->motionPool()[0].actualPos() << " ";
+        controller()->lout() << controller()->motionPool()[0].targetPos() << " ";
+        controller()->lout() << controller()->motionPool()[0].actualVel()*2048/60 << " "; //实时循环内的log函数，不能非实时读写硬盘的函数
+        controller()->lout() << 1000.0*v << std::endl;
         //for(int i=0; i<param->active_motor.size();i++)
         //{
-        //   lout() <<std::setprecision(10) << controller()->motionPool()[i].targetPos()<<"  ";
+        //    lout() <<std::setprecision(10) << controller()->motionPool()[i].targetPos()<<"  ";
         //    lout() << controller()->motionPool()[i].actualPos()<<"  ";
         //}
         //controller()->lout() << std::endl;
-		//返回0表示正常结束，返回负数表示报错，返回正数表示正在执行
-        return (total_count%2==1)?(total_count+1 - int(g_count)):(total_count - int(g_count));
+
+        //return (total_count%2==1)?(total_count+1 - int(g_count)):(total_count - int(g_count));
+
+        //判断暂停运动结束时，设置标志位1为false
+        int count = int(total_count) - int(g_count);
+        if(count <= 0)
+        {
+            pause = false;
+        }
+        //返回0表示正常结束，返回负数表示报错，返回正数表示正在执行,total count不一定能被指令周期数整除，最后需调节使得返回值为0
+        return (total_count%interval==0)?(int(total_count) - int(g_count)):(int(total_count)+interval-int(total_count)%interval-int(g_count));
 	}
 	auto MoveAbs::collectNrt()->void {}
 	MoveAbs::~MoveAbs() = default;
@@ -408,9 +477,9 @@ namespace config
 			"	<GroupParam>"
 			"		<Param name=\"pos\" default=\"0.0\"/>"
             "		<Param name=\"vel\" default=\"0.5\"/>"
-            "		<Param name=\"acc\" default=\"10\"/>"
-            "		<Param name=\"dec\" default=\"10\"/>"
-            "		<Param name=\"jerk\" default=\"100.0\"/>"
+            "		<Param name=\"acc\" default=\"2.0\"/>"
+            "		<Param name=\"dec\" default=\"2.0\"/>"
+            "		<Param name=\"jerk\" default=\"2.0\"/>"
 			"		<UniqueParam default=\"all\">"\
 			"			<Param name=\"all\" abbreviation=\"a\"/>"\
 			"			<Param name=\"motion_id\" abbreviation=\"m\" default=\"0\"/>"
@@ -419,7 +488,6 @@ namespace config
 			"</Command>");
 	}
 	
-
 	//MoveLine的指令参数结构体，长度单位是m，角度单位是rad
 	//每条指令的执行顺序
 	//1、先执行prepareNrt，每条指令只执行一次
@@ -460,8 +528,8 @@ namespace config
 				param.ext_pos.assign(pe_mat.begin() + 3, pe_mat.end());
 			}
 			else if (cmd_param.first == "eul_type")
-			{
-				param.eul_type = std::string(cmd_param.second);
+            {
+                param.eul_type = std::string(cmd_param.second);
 				if (!kaanh::check_eul_validity(param.eul_type))THROW_FILE_LINE("Input eul_type error");
 			}
 			else if (cmd_param.first == "acc")
@@ -568,8 +636,11 @@ namespace config
 						THROW_FILE_LINE("input jerk beyond range");
 				}
 			}
-
 		}
+
+        //忽略轨迹不平滑，二阶不平滑报错,暂停运动无法做到平滑
+        std::fill(motorOptions().begin(),motorOptions().end(),Plan::NOT_CHECK_POS_CONTINUOUS|Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER);
+        //std::fill(motorOptions().begin(),motorOptions().end(),);
 
 		this->param() = param;
 		for (auto &option : motorOptions())	option |= Plan::USE_TARGET_POS;
@@ -579,40 +650,42 @@ namespace config
 	auto MoveLine::executeRT()->int
 	{
 		auto param = std::any_cast<MoveLineParam>(&this->param());
-		// 获得求解器，求反解 //
+        //定义反解求解器，后面得到四元数后再求反解axis_pos_vec
 		auto &solver = dynamic_cast<aris::dynamic::Serial3InverseKinematicSolver&>(model()->solverPool()[0]);
 		solver.setWhichRoot(4);	//设置解，一共4个，设为4时会选最优解
-		double pq_begin[7];
+        double pq_begin[7];//位姿
 		double pq_end[7];
-		static double q_begin[4];
+        static double q_begin[4];//姿态
 		static double q_end[4];
 		double q_target[4];
 
 		double p, v, a, j;
 		Size ext_max_count{ 1 }, ori_total_count{ 1 }, ext_total_count{ 1 };
-
-		if (count() == 1)
+        auto &cout = controller()->mout();
+        if (count() == 1)//第一次进入指令
 		{
             controller()->logFileRawName("motion_replay");//log name
-			//获取外部轴的起始位置
-			for (int i = 0; i < param->ext_pos_begin.size(); i++)
+
+            //根据各轴起始位置，求正解获取起始姿态
+            //获取外部轴的起始位置    外部轴：不影响位姿的轴
+            for (Size i = 0; i < param->ext_pos_begin.size(); i++)
 			{
 				param->ext_pos_begin[i] = controller()->motionPool().at(i + model()->motionPool().size()).targetPos();
 			}
-			//获取起始姿态
-			for (int i = 0; i < model()->motionPool().size(); i++)
+            //获取起始位置
+            for (Size i = 0; i < model()->motionPool().size(); i++)
 			{
 				model()->motionPool().at(i).setMp(controller()->motionPool().at(i).targetPos());
 			}
-			auto &forward = dynamic_cast<aris::dynamic::ForwardKinematicSolver&>(model()->solverPool()[1]);	// 获取正解求解器
+            auto &forward = dynamic_cast<aris::dynamic::ForwardKinematicSolver&>(model()->solverPool()[1]);	// 获取正解求解器
 			forward.kinPos();										//求正解
 			model()->generalMotionPool().at(0).updMpm();			//更新模型
 			model()->generalMotionPool().at(0).getMpq(pq_begin);	//获取起始时刻的末端位姿
-			std::copy(pq_begin + 3, pq_begin + 7, q_begin);			//提取起始时刻的末端姿态
+            std::copy(pq_begin + 3, pq_begin + 7, q_begin);			//pq_begin3-7表示姿态,提取起始时刻的末端姿态
 
 			//获取目标姿态
 			double pe[6]{0,0,0,param->ee[0],param->ee[1],param->ee[2]};//根据目标姿态构造位置为0的位姿矩阵
-			aris::dynamic::s_pe2pq(pe, pq_end, "321");						//获取目标姿态
+            aris::dynamic::s_pe2pq(pe, pq_end, param->eul_type.c_str());				//获取目标姿态  默认321
 			std::copy(pq_end + 3, pq_end + 7, q_end);				//提取目标姿态
 
 			//计算姿态规划角
@@ -622,7 +695,7 @@ namespace config
 			traplan::sCurve(count(), 0.0, 1.0, param->vel / 1000.0 / param->ori_theta / 2.0 , param->acc / 1000.0 / 1000.0 / param->ori_theta / 2.0,
 				param->jerk / 1000.0 / 1000.0 / 1000.0 / param->ori_theta / 2.0, p, v, a, j, ori_total_count);
 			//外部轴规划
-			for (int i = 0; i < param->ext_pos_begin.size(); i++)
+            for (Size i = 0; i < param->ext_pos_begin.size(); i++)
 			{
 				traplan::sCurve(count(), param->ext_pos_begin[i], param->ext_pos[i], param->ext_vel[i] / 1000.0, param->ext_acc[i] / 1000.0 / 1000.0,
 					param->ext_jerk[i] / 1000.0 / 1000.0 / 1000.0, p, v, a, j, ext_total_count);
@@ -636,13 +709,14 @@ namespace config
 			traplan::sCurve(count(), 0.0, 1.0, param->vel / 1000.0 / param->ori_theta / 2.0*param->ori_ratio, param->acc / 1000.0 / 1000.0 / param->ori_theta / 2.0*param->ori_ratio*param->ori_ratio,
 				param->jerk / 1000.0 / 1000.0 / 1000.0 / param->ori_theta / 2.0*param->ori_ratio*param->ori_ratio*param->ori_ratio, p, v, a, j, ori_total_count);
 			//外部轴带系数规划
-			for (int i = 0; i < param->ext_pos_begin.size(); i++)
+            for (Size i = 0; i < param->ext_pos_begin.size(); i++)
 			{
 				traplan::sCurve(count(), param->ext_pos_begin[i], param->ext_pos[i], param->ext_vel[i] / 1000.0*param->pos_ratio, param->ext_acc[i] / 1000.0 / 1000.0*param->pos_ratio*param->pos_ratio,
 					param->ext_jerk[i] / 1000.0 / 1000.0 / 1000.0*param->pos_ratio*param->pos_ratio*param->pos_ratio, p, v, a, j, ext_total_count);
 				ext_max_count = std::max(ext_total_count, ext_max_count);
 			}
 			param->max_total_count = std::max(ori_total_count, ext_max_count);
+            cout<< "max count:" << param->max_total_count <<std::endl;
 		}
 
         updatecount(this);
@@ -654,15 +728,23 @@ namespace config
 		if (solver.kinPos())return -1;//求反解，模型会相应的给电机发指令
 
 		//外部轴规划
-		for (int i = 0; i < param->ext_pos_begin.size(); i++)
+        for (Size i = 0; i < param->ext_pos_begin.size(); i++)
 		{
             traplan::sCurve(g_count, param->ext_pos_begin[i], param->ext_pos[i], param->ext_vel[i] / 1000.0*param->pos_ratio, param->ext_acc[i] / 1000.0 / 1000.0*param->pos_ratio*param->pos_ratio,
 				param->ext_jerk[i] / 1000.0 / 1000.0 / 1000.0*param->pos_ratio*param->pos_ratio*param->pos_ratio, p, v, a, j, ext_total_count);
 			controller()->motionPool().at(i + model()->motionPool().size()).setTargetPos(p);
+            if(count()%100==0)
+            {
+                cout << "v:" << v << std::endl;
+            }
 		}
 
+//        cout << "P0:" << controller()->motionPool().at(0).actualPos() << std::endl;
+//        cout << "P1:" << controller()->motionPool().at(1).actualPos() << std::endl;
+//        cout << "P2:" << controller()->motionPool().at(2).actualPos() << std::endl;
+//        cout << "P3:" << controller()->motionPool().at(3).actualPos() << std::endl;
 		//返回0表示正常结束，返回负数表示报错，返回正数表示正在执行
-        return (param->max_total_count%2==1)?(param->max_total_count+1 - int(g_count)):(param->max_total_count - int(g_count));
+        return (int(param->max_total_count)%2==1)?(int(param->max_total_count)+1 - int(g_count)):(int(param->max_total_count) - int(g_count));
 
 	}
 	auto MoveLine::collectNrt()->void {}
@@ -686,8 +768,7 @@ namespace config
 			"</Command>");
 	}
 
-
-	struct MoveJParam	//MoveJ指令的参数结构体
+    struct MoveJointParam	//MoveJ指令的参数结构体
 	{
 		std::vector<double> axis_vel_vec;		//关节速度
 		std::vector<double> axis_acc_vec;		//关节加速度
@@ -699,9 +780,12 @@ namespace config
 		std::vector<double> ee;					//目标姿态+外部轴角度
 		std::vector<Size> total_count;			//总规划count数
 	};
-	auto MoveJ::prepareNrt()->void
+    auto MoveJoint::prepareNrt()->void
 	{
-		MoveJParam param;
+        MoveJointParam param;
+
+        //auto &cout = controller()->mout();
+        //cout << "1" << std::endl;
 
 		param.ee.resize(controller()->motionPool().size(), 0.0);//前3维是姿态，后面的是外部轴
 		param.axis_begin_pos_vec.resize(controller()->motionPool().size(), 0.0);
@@ -815,22 +899,22 @@ namespace config
 		std::vector<std::pair<std::string, std::any>> ret_value;//定义每条指令的返回值，用户可以按照这种格式添加
 		ret() = ret_value;//将返回值添加到ret()函数，指令结束后，会将返回值传递给发送指令端(terminal或socket client或websocket端)
 	}
-	auto MoveJ::executeRT()->int
+    auto MoveJoint::executeRT()->int
 	{
-		auto mvj_param = std::any_cast<MoveJParam>(&this->param());
-
+        auto mvj_param = std::any_cast<MoveJointParam>(&this->param());
+        auto &cout = controller()->mout();
 		// 取得起始位置 //
 		double p, v, a, j;
-		static Size max_total_count;
+        static Size max_total_count;
 		//在第一个周期，获取3个关节的起始角度值，同时根据目标姿态ee求反解，得出3个关节的目标角度值
 		if (count() == 1)
 		{
             controller()->logFileRawName("motion_replay");//log name
 			// 获得求解器 //
 			auto &solver = dynamic_cast<aris::dynamic::Serial3InverseKinematicSolver&>(model()->solverPool()[0]);
-			solver.setEulaAngle(mvj_param->ee.data(), mvj_param->eul_type.c_str());
+            solver.setEulaAngle(mvj_param->ee.data(), mvj_param->eul_type.c_str());
 
-			// 求反解 //
+            // 求反解 //
 			solver.kinPos();
 
 			// 获取关节起始角度值，目标角度值 //
@@ -844,7 +928,23 @@ namespace config
 				else
 				{
 					mvj_param->axis_pos_vec[i] = mvj_param->ee[i];//获取外部轴的目标角度值
-				}			
+                }
+
+                /*double tmp=0.0;
+                switch(i)
+                {
+                case 0: tmp = 2.03054;//根据实际情况，调整参数，后期在posfactor中调整,数据由机械组提供
+                    break;
+                case 1: tmp = 1.626896;
+                    break;
+                case 2: tmp = 1.262247;
+                    break;
+                }
+                mvj_param->axis_pos_vec[i] = mvj_param->axis_pos_vec[i]*tmp/2.03541;*/
+
+
+                //cout << "begin pos:" << mvj_param->axis_begin_pos_vec[i] << std::endl;
+                //cout << "pos:" << mvj_param->axis_pos_vec[i] << std::endl;
 				
 				//S形轨迹规划//
                 traplan::sCurve(count(), mvj_param->axis_begin_pos_vec[i], mvj_param->axis_pos_vec[i],
@@ -859,6 +959,7 @@ namespace config
         updatecount(this);
 
 		//根据T型规划或者S型规划，控制每个关节运动
+        Size total_count = 1;
 		for (Size i = 0; i < controller()->motionPool().size(); ++i)
 		{
 			//S形轨迹规划//
@@ -868,46 +969,395 @@ namespace config
 				p, v, a, j, mvj_param->total_count[i]);
 
 			controller()->motionPool()[i].setTargetPos(p);
+            total_count = std::max(total_count, mvj_param->total_count[i]);
+            //if((count()%100==0)&&(i==3))
+            {
+            //    cout << "v:" << v << std::endl;
+            }
 		}
 
+        cout << "P0:" << controller()->motionPool().at(0).actualPos() << std::endl;
+        cout << "P1:" << controller()->motionPool().at(1).actualPos() << std::endl;
+        cout << "P2:" << controller()->motionPool().at(2).actualPos() << std::endl;
+        cout << "P3:" << controller()->motionPool().at(3).actualPos() << std::endl;
         if(max_total_count == 0)
         {
             return 0;
         }
         else
         {
-            return (max_total_count%2==1)?(max_total_count+1 - int(g_count)):(max_total_count - int(g_count));
+            return (int(total_count)%2==1)?(int(total_count)+1 - int(g_count)):(int(total_count) - int(g_count));
         }
 
 	}
-	auto MoveJ::collectNrt()->void{}
-	MoveJ::~MoveJ() = default;
-	MoveJ::MoveJ(const std::string &name) :Plan(name)
+    auto MoveJoint::collectNrt()->void{}
+    MoveJoint::~MoveJoint() = default;
+    MoveJoint::MoveJoint(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
             "<Command name=\"movejoint\">"
 			"	<GroupParam>"
 			"		<Param name=\"ee\" default=\"{0,0,0,0}\"/>"
 			"		<Param name=\"eul_type\" default=\"321\"/>"
-			"		<Param name=\"acc\" default=\"0.1\"/>"
-			"		<Param name=\"vel\" default=\"0.1\"/>"
-			"		<Param name=\"dec\" default=\"0.1\"/>"
+            "		<Param name=\"acc\" default=\"0.5\"/>"
+            "		<Param name=\"vel\" default=\"0.5\"/>"
+            "		<Param name=\"dec\" default=\"0.5\"/>"
 			"		<Param name=\"jerk\" default=\"10.0\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}
 
+    struct MoveStepParam	//MoveJ指令的参数结构体
+    {
+        std::vector<double> axis_begin_pos_vec;	//起始位置
+        std::vector<double> axis_pos_vec;		//目标位置
+        std::vector<double> step;       		//步进长度
+        std::vector<double> axis_vel_vec;		//目标速度
+        std::vector<double> axis_acc_vec;		//目标加速度
+        std::vector<double> axis_dec_vec;		//目标加速度
+        std::vector<double> axis_jerk_vec;		//目标跃度
+        std::vector<int> active_motor;			//目标电机
+    };
+    auto MoveStep::prepareNrt()->void
+    {
+        std::cout << "mvaj:" << std::endl;
+        MoveStepParam param;
+
+        param.active_motor.clear();
+        param.active_motor.resize(controller()->motionPool().size(), 0);
+        param.axis_begin_pos_vec.resize(controller()->motionPool().size(), 0.0);
+
+        //解析指令参数
+        for (auto cmd_param : cmdParams())
+        {
+            if (cmd_param.first == "all")//选择控制所有电机
+            {
+                std::fill(param.active_motor.begin(), param.active_motor.end(), 1);
+            }
+            else if (cmd_param.first == "motion_id")//单独控制某个电机
+            {
+                param.active_motor.at(int32Param(cmd_param.first))=1;
+                //param.active_motor.at((unsigned long)(atol(std::string(cmd_param.first).c_str()))) = 1;
+            }
+            else if (cmd_param.first == "pos")//运行目标位置
+            {
+                auto p = matrixParam(cmd_param.first);
+                if (p.size() == 1)//某个电机
+                {
+                    param.axis_pos_vec.resize(controller()->motionPool().size(), p.toDouble());
+                }
+                else if (p.size() == controller()->motionPool().size())//多个电机
+                {
+                    param.axis_pos_vec.assign(p.begin(), p.end());
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+                for (Size i = 0; i < controller()->motionPool().size(); ++i)
+                {
+                    if (param.axis_pos_vec[i] > controller()->motionPool()[i].maxPos() || param.axis_pos_vec[i] < controller()->motionPool()[i].minPos())
+                        THROW_FILE_LINE("input pos beyond range");
+                }
+            }
+            else if (cmd_param.first == "step")//运行目标位置
+            {
+                auto p = matrixParam(cmd_param.first);
+                if (p.size() == 1)//某个电机
+                {
+                    param.step.resize(controller()->motionPool().size(), p.toDouble());
+                }
+                else if (p.size() == controller()->motionPool().size())//多个电机
+                {
+                    param.step.assign(p.begin(), p.end());
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+            }
+            else if (cmd_param.first == "acc")//加速度
+            {
+                auto a = matrixParam(cmd_param.first);
+
+                if (a.size() == 1)
+                {
+                    param.axis_acc_vec.resize(controller()->motionPool().size(), a.toDouble());
+                }
+                else if (a.size() == controller()->motionPool().size())
+                {
+                    param.axis_acc_vec.assign(a.begin(), a.end());
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+                for (Size i = 0; i < controller()->motionPool().size(); ++i)
+                {
+                    if (param.axis_acc_vec[i] > controller()->motionPool()[i].maxAcc() || param.axis_acc_vec[i] < controller()->motionPool()[i].minAcc())
+                        THROW_FILE_LINE("input acc beyond range");
+                }
+
+            }
+            else if (cmd_param.first == "vel")//速度
+            {
+                auto v = matrixParam(cmd_param.first);
+
+                if (v.size() == 1)
+                {
+                    param.axis_vel_vec.resize(controller()->motionPool().size(), v.toDouble());
+                }
+                else if (v.size() == controller()->motionPool().size())
+                {
+                    param.axis_vel_vec.assign(v.begin(), v.end());
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+                for (Size i = 0; i < controller()->motionPool().size(); ++i)
+                {
+                    std::cout << "param.axis_vel_vec[i]:" << param.axis_vel_vec[i] << "maxvel:"<< controller()->motionPool()[i].maxVel() << std::endl;
+                    if (param.axis_vel_vec[i] > controller()->motionPool()[i].maxVel() || param.axis_vel_vec[i] < controller()->motionPool()[i].minVel())
+                        THROW_FILE_LINE("input vel beyond range");
+                }
+            }
+            else if (cmd_param.first == "dec")//减速度
+            {
+                auto d = matrixParam(cmd_param.first);
+
+                if (d.size() == 1)
+                {
+                    param.axis_dec_vec.resize(controller()->motionPool().size(), d.toDouble());
+                }
+                else if (d.size() == controller()->motionPool().size())
+                {
+                    param.axis_dec_vec.assign(d.begin(), d.end());
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+                for (Size i = 0; i < controller()->motionPool().size(); ++i)
+                {
+                    if (param.axis_dec_vec[i] > controller()->motionPool()[i].maxAcc() || param.axis_dec_vec[i] < controller()->motionPool()[i].minAcc())
+                        THROW_FILE_LINE("input dec beyond range");
+                }
+            }
+            else if (cmd_param.first == "jerk")//加加速度
+            {
+                auto d = matrixParam(cmd_param.first);
+
+                if (d.size() == 1)
+                {
+                    param.axis_jerk_vec.resize(controller()->motionPool().size(), d.toDouble());
+                }
+                else if (d.size() == controller()->motionPool().size())
+                {
+                    param.axis_jerk_vec.assign(d.begin(), d.end());
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+                for (Size i = 0; i < controller()->motionPool().size(); ++i)
+                {
+                    if (param.axis_jerk_vec[i] > controller()->motionPool()[i].maxAcc()*100.0 || param.axis_jerk_vec[i] < controller()->motionPool()[i].minAcc()*100.0)
+                        THROW_FILE_LINE("input jerk beyond range");
+                }
+            }
+        }
+
+        this->param() = param;
+
+        //忽略轨迹不平滑，二阶不平滑报错,暂停运动无法做到平滑
+        std::fill(motorOptions().begin(),motorOptions().end(),Plan::NOT_CHECK_POS_CONTINUOUS|Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER);
+
+        std::vector<std::pair<std::string, std::any>> ret_value;
+        ret() = ret_value;
+    }
+    auto MoveStep::executeRT()->int
+    {
+        auto param = std::any_cast<MoveStepParam>(&this->param());
+        //刚开始执行指令时，获取轨迹起始位置为当前实际位置
+        if (count() == 1)
+        {
+            controller()->logFileRawName("motion_replay");//设置log日志名
+
+            for (Size i = 0; i < param->active_motor.size(); ++i)
+            {
+                if (param->active_motor[i])
+                {
+                    param->axis_begin_pos_vec[i] = controller()->motionPool()[i].targetPos();//刚开始actualpos和targetpos相同，这里用actualpos更好理解
+                    param->axis_pos_vec[i] = param->axis_begin_pos_vec[i]+param->step[i];
+                    //param->axis_pos_vec[i] = param->axis_begin_pos_vec[i]+0.1;
+                }
+            }
+        }
+
+        updatecount(this);//更新g_count
+        aris::Size total_count{ 1 };
+        double p = 0.0, v = 0.0, a = 0.0, j = 0.0;
+        double t_count;
+        auto &cout = controller()->mout();
+        for (Size i = 0; i < param->active_motor.size(); ++i)
+        {
+            if (param->active_motor[i])
+            {
+                if(stop)
+                {
+                    stop = false;
+                    return 0;//直接返回,急停
+                }
+                //Size t_count;
+                //梯形轨迹规划
+                //aris::plan::moveAbsolute(g_count,
+                //    param->axis_begin_pos_vec[i], param->axis_pos_vec[i],
+                //    param->axis_vel_vec[i] / 1000, param->axis_acc_vec[i] / 1000 / 1000, param->axis_dec_vec[i] / 1000 / 1000,
+                //    p, v, a, t_count);
+
+                //s形规划//正常运行
+                //double t_count;
+                traplan::sCurved(g_count, param->axis_begin_pos_vec[i], param->axis_pos_vec[i],
+                    param->axis_vel_vec[i] / 1000.0, param->axis_acc_vec[i] / 1000.0 / 1000.0, param->axis_jerk_vec[i] / 1000.0 / 1000.0 / 1000.0,
+                    p, v, a, j, t_count);
+
+                if(pauseplan && pause)//暂停第一个指令周期
+                {
+                    g_count = 0.0;//将g_count清零，当作新指令的开始
+                    pauseplan = false;//复位暂停标志二，暂停期间不需要再次进入
+                    pstion = p;//获取当前实际位置，作为后续轨迹规划的起点。
+                }
+                if(pause)//暂停重新规划轨迹
+                {
+                    traplan::sCurved(g_count, pstion, pstion+Buffer_dis,
+                        param->axis_vel_vec[i] / 1000.0, param->axis_acc_vec[i] / 1000.0 / 1000.0, param->axis_jerk_vec[i] / 1000.0 / 1000.0 / 1000.0,
+                        p, v, a, j, t_count);
+                }
+                //cout << "actualpos:" << controller()->motionPool()[i].actualPos()<<"  ";
+                //cout << "beginpos:" << controller()->motionPool()[i].targetPos() <<"  ";//这里实际位置与目标位置已经很接近，下面发送下一目标位置，以使电机持续运行
+                controller()->motionPool()[i].setTargetPos(p);//根据规划，设定目标位置
+                //cout << "beginpos2:" << controller()->motionPool()[i].targetPos() <<"  ";
+                total_count = std::max(total_count, aris::Size(t_count));
+            }
+        }
+
+
+        //if(count()%100 ==0)
+        {
+            for(Size i=0; i<param->active_motor.size();i++)
+            {
+                cout << "targetpos:" << controller()->motionPool()[i].targetPos()<<"  ";
+                //cout << "targetpulse:" << controller()->motionPool()[i].targetPos()*31640625.0/130321*2048/2/PI<<"  ";
+                //cout << "actualcur:" << controller()->motionPool()[i].actualCur()<<"  ";
+                //cout << "posFactor:" << controller()->motionPool()[i].posFactor()<<"  ";
+                //cout << "posOffset:" << controller()->motionPool()[i].posOffset()<<"  ";
+                //cout << "actualtop:" << controller()->motionPool()[i].actualToq()<<"  ";
+                cout << "actualpos:" << controller()->motionPool()[i].actualPos()<<"  ";
+                //cout << "actualpulse:" << controller()->motionPool()[i].actualPos()*31640625.0/130321*2048/2/PI<<"  ";
+                //cout << "targetvel:" << 1000.0*v <<"  ";
+                cout << "actualvel:" << controller()->motionPool()[i].actualVel()*2048/60<<"  ";
+                cout << std::endl;
+            }
+
+        }
+
+        //写入log日志文件
+        controller()->lout() << controller()->motionPool()[0].actualPos() << " ";
+        controller()->lout() << controller()->motionPool()[0].targetPos() << " ";
+        controller()->lout() << controller()->motionPool()[0].actualVel()*2048/60 << " "; //实时循环内的log函数，不能非实时读写硬盘的函数
+        controller()->lout() << 1000.0*v << std::endl;
+        //for(int i=0; i<param->active_motor.size();i++)
+        //{
+        //    lout() <<std::setprecision(10) << controller()->motionPool()[i].targetPos()<<"  ";
+        //    lout() << controller()->motionPool()[i].actualPos()<<"  ";
+        //}
+        //controller()->lout() << std::endl;
+
+        //return (total_count%2==1)?(total_count+1 - int(g_count)):(total_count - int(g_count));
+
+        //判断暂停运动结束时，设置标志位1为false
+        int count = int(total_count) - int(g_count);
+        if(count <= 0)
+        {
+            pause = false;
+        }
+        //返回0表示正常结束，返回负数表示报错，返回正数表示正在执行,total count不一定能被指令周期数整除，最后需调节使得返回值为0
+        return (total_count%interval==0)?(int(total_count) - int(g_count)):(int(total_count)+interval-int(total_count)%interval-int(g_count));
+    }
+    auto MoveStep::collectNrt()->void{}
+    MoveStep::~MoveStep() = default;
+    MoveStep::MoveStep(const std::string &name) :Plan(name)
+    {
+        command().loadXmlStr(
+            "<Command name=\"movestep\">"
+            "	<GroupParam>"
+            "		<Param name=\"pos\" default=\"0.0\"/>"
+            "		<Param name=\"step\" default=\"0.1\"/>"
+            "		<Param name=\"vel\" default=\"0.5\"/>"
+            "		<Param name=\"acc\" default=\"2.0\"/>"
+            "		<Param name=\"dec\" default=\"2.0\"/>"
+            "		<Param name=\"jerk\" default=\"2.0\"/>"
+            "		<UniqueParam default=\"all\">"\
+            "			<Param name=\"all\" abbreviation=\"a\"/>"\
+            "			<Param name=\"motion_id\" abbreviation=\"m\" default=\"0\"/>"
+            "		</UniqueParam>"
+            "	</GroupParam>"
+            "</Command>");
+    }
+
+    //暂停指令
+    auto PS::prepareNrt()->void
+    {
+        pause = true;//实现逻辑：设置两个暂停标志位，都为true时，获取当前实际位置，作为后续轨迹规划的起点。然后设置标志2为false，
+        pauseplan = true;//当仅标志1为true时，进行暂停段轨迹规划，当到位时，设置标志1为false.可继续执行指令
+    }
+    PS::PS(const std::string &name) :Plan(name)
+    {
+        /*command().loadXmlStr(
+            "<Command name=\"PS\">"
+            "	<GroupParam>"
+            "	</GroupParam>"
+            "</Command>");*/
+        command().loadXmlStr(
+            "<Command name=\"PS\">"
+            "	<GroupParam>"
+            "	</GroupParam>"
+            "</Command>");
+    }
+
+    //急停指令
+    auto EStop::prepareNrt()->void
+    {
+        stop = true;//实现逻辑：设置急停标志，在各运动指令executeRT函数内直接return0，需要清除错误才能继续执行指令
+    }
+    EStop::EStop(const std::string &name) :Plan(name)
+    {
+        /*command().loadXmlStr(
+            "<Command name=\"EStop\">"
+            "	<GroupParam>"
+            "	</GroupParam>"
+            "</Command>");*/
+        command().loadXmlStr(
+            "<Command name=\"EStop\">"
+            "	<GroupParam>"
+            "	</GroupParam>"
+            "</Command>");
+    }
+
 
 	//每一条用户开发的指令都要添加到如下planPool()中，格式参考其他指令
 	auto createPlanRoot()->std::unique_ptr<aris::plan::PlanRoot>
 	{
-		std::unique_ptr<aris::plan::PlanRoot> plan_root(new aris::plan::PlanRoot);
+        std::unique_ptr<aris::plan::PlanRoot> plan_root(new aris::plan::PlanRoot);
 		//for 华尔康
 		plan_root->planPool().add<config::MoveAbs>();
 		plan_root->planPool().add<config::MoveLine>();
-		plan_root->planPool().add<config::MoveJ>();
+        plan_root->planPool().add<config::MoveJoint>();
+        plan_root->planPool().add<config::MoveStep>();
         plan_root->planPool().add<config::GVel>();
-
+        plan_root->planPool().add<config::PS>();
+        plan_root->planPool().add<config::EStop>();
 
 		plan_root->planPool().add<aris::plan::Enable>();
 		plan_root->planPool().add<aris::plan::Disable>();
@@ -916,6 +1366,7 @@ namespace config
 		plan_root->planPool().add<aris::plan::Mode>();
         plan_root->planPool().add<aris::plan::Show>();
 		plan_root->planPool().add<aris::plan::Clear>();
+        //plan_root->planPool().add<aris::plan::Recover>();
         plan_root->planPool().add<kaanh::Recover>();
         plan_root->planPool().add<kaanh::Reset>();
 

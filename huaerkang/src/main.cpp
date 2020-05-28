@@ -15,6 +15,7 @@ const std::string logfolder = "log";//指定log文件夹名
 
 int main(int argc, char *argv[])
 {
+    //创建 EtherCAT 主站对象
     xmlpath = xmlpath / xmlfile;	//配置文件kaanh.xml的保存路径
 	logpath = logpath / logfolder;	//log文件保存路径
     
@@ -35,7 +36,7 @@ int main(int argc, char *argv[])
     //cs.loadXmlFile(xmlpath.string().c_str());//加载已有的kaanh.xml配置
     cs.init();//注册controller、model、plan对象池
 
-    cs.controller().setSamplePeriodNs(2000000);
+    cs.controller().setSamplePeriodNs(config::interval*1000000);
 	//修改log路径
 	aris::core::logDirectory(logpath);
 
@@ -50,6 +51,9 @@ int main(int argc, char *argv[])
 
 	//实时回调函数，每个实时周期执行后调用一次， kaanh::update_state函数可以替换成用户的函数
     cs.setRtPlanPostCallback(kaanh::update_state);
+
+    //std::cout << cs.xmlString() <<std::endl;
+    //std::cout << cs.controller().motionPool().size() <<std::endl;
 
 	//设置虚拟轴，保证window不做ethercat连接检查
 #ifdef WIN32
