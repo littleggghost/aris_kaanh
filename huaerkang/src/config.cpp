@@ -768,6 +768,7 @@ namespace config
 			"</Command>");
 	}
 
+
     struct MoveJointParam	//MoveJ指令的参数结构体
 	{
 		std::vector<double> axis_vel_vec;		//关节速度
