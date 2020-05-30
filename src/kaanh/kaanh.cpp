@@ -580,7 +580,6 @@ namespace kaanh
         int vel_percent;
 		aris::dynamic::Marker *tool, *wobj;
 		bool is_dragging, teachingmode;
-		int vel_percent;
     };
     auto Get::prepareNrt()->void
     {
@@ -4812,6 +4811,7 @@ namespace kaanh
 
 
 	// 示教模式切换--mode=0表示点到点，1表示轨迹记录 //
+	std::atomic_bool enable_mvdj = true;
 	auto Teaching::prepareNrt()->void
 	{
 		int md = 0;
@@ -4871,7 +4871,6 @@ namespace kaanh
 	}
 
 
-	std::atomic_bool enable_mvdj = true;
 	struct MoveDJParam
 	{
 		aris::dynamic::Marker *tool, *wobj;
