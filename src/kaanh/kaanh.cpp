@@ -50,6 +50,11 @@ const int FS_NUM = 7;	//force sensor slave number
 std::atomic<std::array<bool, 16>>dig_in;//数字量di
 std::atomic<std::array<bool, 16>>dig_out;//数字量do
 
+std::atomic_bool g_teachingmode = true;//拖拽示教模式，0表示点到点，1表示轨迹记录
+std::atomic_bool g_is_dragging = true;//拖拽功能开启标记位，0表示关闭，1表示开启
+std::vector<std::array<double, 6>>points;//示教点保存数组
+std::atomic_int g_teaching_fun = 0;//0:初始值，1:开始示教；2:添加点；3:删除上一个点；4:结束确认
+
 
 namespace kaanh
 {
@@ -422,7 +427,7 @@ namespace kaanh
 		std::vector<double> axis_jerk_vec;
 	};
 #define SET_INPUT_MOVEMENT_STRING \
-		"		<Param name=\"pos\" default=\"{0.0,0.0,0.0,0.0,0.0,0.0}\"/>"\
+		"		<Param name=\"pos\" default=\"0.0\"/>"\
 		"		<Param name=\"acc\" default=\"0.1\"/>"\
         "		<Param name=\"vel\" default=\"{0.025, 0.025, 3.4, 0.0, 0.0}\"/>"\
         "		<Param name=\"dec\" default=\"0.1\"/>"\
@@ -574,6 +579,8 @@ namespace kaanh
         std::string currentplan;
         int vel_percent;
 		aris::dynamic::Marker *tool, *wobj;
+		bool is_dragging, teachingmode;
+		int vel_percent;
     };
     auto Get::prepareNrt()->void
     {
@@ -687,6 +694,10 @@ namespace kaanh
         //out_data.forcedata.assign(temp.begin(), temp.end());
         std::copy(temp.begin(), temp.end(), out_data.forcedata.begin());
 
+		out_data.is_dragging = g_is_dragging.load();
+		out_data.teachingmode = g_teachingmode.load();
+		out_data.vel_percent = g_vel_percent.load();
+
 		std::vector<std::pair<std::string, std::any>> out_param;
 		for (auto p : cmdParams())
 		{
@@ -715,7 +726,7 @@ namespace kaanh
 				out_param.push_back(std::make_pair(std::string("pro_err_msg"), std::make_any<std::string>(inter.lastError())));
 				out_param.push_back(std::make_pair(std::string("pro_err_line"), std::make_any<int>(inter.lastErrorLine())));
 				out_param.push_back(std::make_pair(std::string("line"), std::make_any<int>(inter.currentLine())));
-                out_param.push_back(std::make_pair(std::string("force_data"), out_data.forcedata));
+                out_param.push_back(std::make_pair<std::string, std::any>("force_data", out_data.forcedata));
 			}
 			else if (p.first == "pos")
 			{
@@ -724,6 +735,14 @@ namespace kaanh
 			else if (p.first == "vel")
 			{
 				out_param.push_back(std::make_pair<std::string, std::any>("motion_vel", out_data.motion_vel));
+			}
+			else if (p.first == "dragging")
+			{
+				out_param.push_back(std::make_pair<std::string, std::any>("is_dragging", out_data.is_dragging));
+				out_param.push_back(std::make_pair<std::string, std::any>("teachingmode", out_data.teachingmode));
+				out_param.push_back(std::make_pair<std::string, std::any>("vel_percent", out_data.vel_percent));
+				out_param.push_back(std::make_pair<std::string, std::any>("end_pe", out_data.end_pe));
+				out_param.push_back(std::make_pair<std::string, std::any>("force_data", out_data.forcedata));
 			}
 		}
         
@@ -740,6 +759,7 @@ namespace kaanh
 			"			<Param name=\"all\"/>"
 			"			<Param name=\"pos\"/>"
 			"			<Param name=\"vel\"/>"
+			"			<Param name=\"dragging\"/>"
 			"		</UniqueParam>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
@@ -4791,6 +4811,66 @@ namespace kaanh
 	}
 
 
+	// 示教模式切换--mode=0表示点到点，1表示轨迹记录 //
+	auto Teaching::prepareNrt()->void
+	{
+		int md = 0;
+		auto tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName("tool0");
+		auto wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName("wobj0");
+
+		for (auto p : cmdParams())
+		{
+			if (p.first == "fun")
+			{
+				md = int32Param(p.first);
+			}
+		}
+		g_teaching_fun.store(md);
+		if (!g_teachingmode.load())
+		{
+			if (md == 0) {}
+			else if (md == 1)
+			{
+				std::array<double, 6> temp;
+				points.clear();
+				tool->getPe(*wobj, temp.data(), "321");
+				points.push_back(temp);
+			}
+			else if (md == 2)
+			{
+				std::array<double, 6> temp;
+				tool->getPe(*wobj, temp.data(), "321");
+				points.push_back(temp);
+			}
+			else if (md == 3)
+			{
+				points.pop_back();
+			}
+			else if (md == 4)
+			{
+				enable_mvdj.store(0);
+				ofstream outfile("point.txt", ios::trunc);
+				for (int i = 0; i < points.size(); i++)
+				{
+					for (int j = 0; j < points[0].size(); j++)
+						outfile << points[i][j] << " ";
+					outfile << std::endl;
+				}
+			}
+		}
+		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+	}
+	Teaching::Teaching(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"teaching\">"
+			"	<GroupParam>"
+			"		<Param name=\"fun\" default=\"0\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
 	std::atomic_bool enable_mvdj = true;
 	struct MoveDJParam
 	{
@@ -4810,6 +4890,7 @@ namespace kaanh
 	struct MoveDJ::Imp :public MoveDJParam {};
 	auto MoveDJ::prepareNrt()->void
 	{
+		g_teaching_fun.store(0);//示教初始化
 		enable_mvdj.store(true);
 		imp_->tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		imp_->wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
@@ -4861,6 +4942,11 @@ namespace kaanh
 				{
 					THROW_FILE_LINE("");
 				}
+			}
+			else if (cmd_param.first == "mode")
+			{
+				auto temp = int32Param(cmd_param.first);
+				g_teachingmode.store(temp);
 			}
 		}
 
@@ -5036,14 +5122,14 @@ namespace kaanh
 		s_mm(6, 1, 6, pinv, v_tcp, v_joint);
 
 		// limit the value of v_joint
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < controller()->motionPool().size(); i++)
 		{
             v_joint[i] = std::min(std::max(v_joint[i], 0.2*controller()->motionPool().at(i).minVel()), 0.2*controller()->motionPool().at(i).maxVel());
 		}
 
 		// 根据关节速度v_joint规划每个关节的运动角度
 		double p_next[6];
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < controller()->motionPool().size(); i++)
 		{
 			p_next[i] = controller()->motionPool().at(i).targetPos();
 			p_next[i] += v_joint[i] * 1e-3;
@@ -5053,15 +5139,27 @@ namespace kaanh
 			model()->motionPool().at(i).setMp(p_next[i]);
 		}
 
-		// 运动学正解
+		// 运动学正解controller()->motionPool().size()
 		if (model()->solverPool().at(1).kinPos())return -1;
 
-		// log
-		for (int i = 0; i < 6; i++)
+		// g_teachingmode=0,点到点模式；1，轨迹模式
+		if(g_teachingmode.load())
 		{
-			lout << controller()->motionPool().at(i).actualPos() << "  ";
+			auto teaching_fun = g_teaching_fun.load();
+			if (teaching_fun == 0) {}
+			else if (teaching_fun == 1)
+			{
+				for (int i = 0; i < controller()->motionPool().size(); i++)
+				{
+					lout << controller()->motionPool().at(i).actualPos() << "  ";
+				}
+				lout << std::endl;
+			}
+			else if (teaching_fun == 4)
+			{
+				enable_mvdj.store(0);
+			}
 		}
-		lout << std::endl;
 
 		//延时1000ms停止力控
 		static aris::Size total_count = 1;
@@ -5091,10 +5189,10 @@ namespace kaanh
             "		<Param name=\"kd\" default=\"{0.2,0.2,0.2,10,10,10}\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
+			"		<Param name=\"mode\" default=\"0\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}
-
 
 
 	// 导纳控制 //

@@ -12,6 +12,7 @@
 #include <string>
 #include <bitset>
 #include"kaanh/ftc_ctrl.h"
+#include"kaanh/controlboard.h"
 
 //statemachine old//
 # define M_RUN 0	//手动单步执行
@@ -318,6 +319,14 @@ namespace kaanh
 		aris::core::ImpPtr<Imp> imp_;
 	};
 
+	class Teaching : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		explicit Teaching(const std::string &name = "Teaching");
+		ARIS_REGISTER_TYPE(Teaching);
+	};
+
 	class MoveDJ : public aris::plan::Plan
 	{
 	public:
@@ -604,7 +613,6 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(GetPdo);
 	};
 
-
 	class SetDO : public aris::plan::Plan
 	{
 	public:
@@ -624,7 +632,6 @@ namespace kaanh
 		explicit WaitDI(const std::string &name = "WaitDI_plan");
 		ARIS_REGISTER_TYPE(WaitDI);
 	};
-
 
 	class ScanSlave : public aris::plan::Plan
 	{
