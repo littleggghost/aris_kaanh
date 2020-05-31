@@ -43,7 +43,7 @@ auto controlboard::send_command(uint16_t *buffer, aris::server::ControlServer &c
     {
         cs.executeCmd(control_other[index+1].c_str());//ds
         cout << control_other[index+1].c_str() << endl;
-        sleep(1);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     else if(index == 8)//ds,md en,rc
     {
@@ -55,7 +55,7 @@ auto controlboard::send_command(uint16_t *buffer, aris::server::ControlServer &c
         cout << control_other[index+3].c_str() << endl;
         cs.executeCmd(control_other[index+4].c_str());//rc
         cout << control_other[index+4].c_str() << endl;
-        sleep(1);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
     }
     else if(index >= 9 && index <= 20)//move j1~j5
 	{
