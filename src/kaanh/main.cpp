@@ -179,7 +179,6 @@ int main(int argc, char *argv[])
        controlboard cbd;
 
        // 连接modbus slave，并且响应modbus slave的信息
-   start:
        for (;;)
        {
            try
@@ -197,8 +196,6 @@ int main(int argc, char *argv[])
        // 主要功能逻辑区
        try
        {
-           cs.executeCmd("setvel --vel_percent=1;");
-
    #if print_time
            struct timeb t1;
            double time_new, time_last, time_max = 0;
@@ -220,9 +217,9 @@ int main(int argc, char *argv[])
 
                /*************以上打印时间相关**************************/
                //read_input_regs[0]存地址为30001的寄存器,read_input_regs[1]存地址为30002的寄存器，读输入寄存器 功能码04
-               mb.modbus_read_input_registers(0, 2, read_input_regs);
-               if (read_input_regs[0] != 0 || read_input_regs[1] != 0)			//有按键按下
-                   cbd.send_command(read_input_regs, cs);					//发送指令
+//               mb.modbus_read_input_registers(0, 2, read_input_regs);
+//               if (read_input_regs[0] != 0 || read_input_regs[1] != 0)			//有按键按下
+//                   cbd.send_command(read_input_regs, cs);					//发送指令
                std::this_thread::sleep_for(std::chrono::milliseconds(50));	//100ms
            }
 
@@ -233,13 +230,11 @@ int main(int argc, char *argv[])
        }
 
        mb.modbus_close();	// close connection
-
-       goto start;	// 断连接后，尝试重新连接
-
        delete(&mb); // 释放空间
-
        return 0 ;
     });
+
+    t_modbus.detach();
 
 	//Receive Command//
 	cs.runCmdLine();

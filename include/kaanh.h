@@ -161,6 +161,16 @@ namespace kaanh
         aris::core::ImpPtr<Imp> imp_;
     };
 
+
+    class SaveHome : public aris::plan::Plan
+    {
+    public:
+        auto virtual prepareNrt()->void override;
+        explicit SaveHome(const std::string &name = "SaveHome_plan");
+        ARIS_REGISTER_TYPE(SaveHome);
+    };
+
+
 	class Reset : public aris::plan::Plan
 	{
 	public:
@@ -318,6 +328,14 @@ namespace kaanh
 		struct Imp;
 		aris::core::ImpPtr<Imp> imp_;
 	};
+
+    class TMode : public aris::plan::Plan
+    {
+    public:
+        auto virtual prepareNrt()->void;
+        explicit TMode(const std::string &name = "TMode");
+        ARIS_REGISTER_TYPE(TMode);
+    };
 
 	class Teaching : public aris::plan::Plan
 	{
@@ -632,6 +650,28 @@ namespace kaanh
 		explicit WaitDI(const std::string &name = "WaitDI_plan");
 		ARIS_REGISTER_TYPE(WaitDI);
 	};
+
+
+    class TrioDO : public aris::plan::Plan
+    {
+    public:
+        auto virtual prepareNrt()->void;
+        auto virtual executeRT()->int;
+        auto virtual collectNrt()->void;
+        explicit TrioDO(const std::string &name = "TrioDO_plan");
+        ARIS_REGISTER_TYPE(TrioDO);
+    };
+
+    class TrioDI : public aris::plan::Plan
+    {
+    public:
+        auto virtual prepareNrt()->void;
+        auto virtual executeRT()->int;
+        auto virtual collectNrt()->void;
+        explicit TrioDI(const std::string &name = "TrioDI_plan");
+        ARIS_REGISTER_TYPE(TrioDI);
+    };
+
 
 	class ScanSlave : public aris::plan::Plan
 	{

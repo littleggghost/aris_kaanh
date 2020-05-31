@@ -928,6 +928,7 @@ namespace kaanhconfig
 		plan_root->planPool().add<aris::plan::Mode>();
 		plan_root->planPool().add<aris::plan::Clear>();
 		plan_root->planPool().add<kaanh::Home>();
+        plan_root->planPool().add<kaanh::SaveHome>();
 		plan_root->planPool().add<kaanh::Sleep>();
 		plan_root->planPool().add<kaanh::Recover>();
 		plan_root->planPool().add<kaanh::Reset>();
@@ -966,6 +967,8 @@ namespace kaanhconfig
 		plan_root->planPool().add<kaanh::GetPdo>();
 		plan_root->planPool().add<kaanh::WaitDI>();
 		plan_root->planPool().add<kaanh::SetDO>();
+        plan_root->planPool().add<kaanh::TrioDI>();
+        plan_root->planPool().add<kaanh::TrioDO>();
 		plan_root->planPool().add<kaanh::SetDH>();
 		plan_root->planPool().add<kaanh::SetPG>();
 		plan_root->planPool().add<kaanh::SetPPath>();
@@ -986,6 +989,8 @@ namespace kaanhconfig
 		plan_root->planPool().add<kaanh::Kunwei>();
 		plan_root->planPool().add<kaanh::CalibFZero>();
 		plan_root->planPool().add<kaanh::MoveDT>();
+        plan_root->planPool().add<kaanh::TMode>();
+        plan_root->planPool().add<kaanh::Teaching>();
 		plan_root->planPool().add<kaanh::MoveDJ>();
         plan_root->planPool().add<kaanh::MoveJoint>();
         plan_root->planPool().add<kaanh::FCStop>();

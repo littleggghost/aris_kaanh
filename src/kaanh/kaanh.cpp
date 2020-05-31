@@ -112,7 +112,7 @@ namespace kaanh
 		{
 			auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
 			static int fcinit = 0;
-			if ((motion_state[5] == 1) && fcinit < 1)
+            if ((motion_state[4] == 1) && fcinit < 1)
 			{
 				std::uint8_t led1 = 0x01;
 				slave7->writePdo(0x7010, 1, &led1, 1);
@@ -427,7 +427,7 @@ namespace kaanh
 		std::vector<double> axis_jerk_vec;
 	};
 #define SET_INPUT_MOVEMENT_STRING \
-		"		<Param name=\"pos\" default=\"0.0\"/>"\
+        "		<Param name=\"pos\" default=\"{0.0}\"/>"\
 		"		<Param name=\"acc\" default=\"0.1\"/>"\
         "		<Param name=\"vel\" default=\"{0.025, 0.025, 3.4, 0.0, 0.0}\"/>"\
         "		<Param name=\"dec\" default=\"0.1\"/>"\
@@ -460,7 +460,11 @@ namespace kaanh
 				}
 				else
 				{
-					if (p.size() == plan.controller()->motionPool().size())
+                    if (p.size() == 1)
+                    {
+                        param.axis_pos_vec.resize(plan.controller()->motionPool().size(), p.toDouble());
+                    }
+                    else if (p.size() == plan.controller()->motionPool().size())
 					{
 						param.axis_pos_vec.assign(p.begin(), p.end());
 					}
@@ -865,6 +869,35 @@ namespace kaanh
 			"</Command>");
 	}
 	ARIS_DEFINE_BIG_FOUR_CPP(Home);
+
+
+    // 保存home点 //
+    auto SaveHome::prepareNrt()->void
+    {
+        std::vector<double>offset;
+        offset.resize(controller()->motionPool().size(), 0.0);
+        for(Size i=0; i< offset.size(); i++)
+        {
+            offset[i] = dynamic_cast<aris::control::EthercatMotor&>(controller()->slavePool()[i]).posOffset();
+            dynamic_cast<aris::control::EthercatMotor&>(controller()->slavePool()[i]).setPosOffset(controller()->motionPool()[i].actualPos() + offset[i]);
+        }
+
+        auto&cs = aris::server::ControlServer::instance();
+        auto xmlpath = std::filesystem::absolute(".");
+        const std::string xmlfile = "kaanh.xml";
+        xmlpath = xmlpath / xmlfile;
+        cs.saveXmlFile(xmlpath.string().c_str());
+
+        std::vector<std::pair<std::string, std::any>> ret_value;
+        ret() = ret_value;
+        option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION|NOT_RUN_COLLECT_FUNCTION;
+    }
+    SaveHome::SaveHome(const std::string &name) :Plan(name)
+    {
+        command().loadXmlStr(
+            "<Command name=\"savehome\">"
+            "</Command>");
+    }
 
 
     struct Reset::Imp :public SetActiveMotor, SetInputMovement { std::vector<Size> total_count_vec; };
@@ -4152,8 +4185,10 @@ namespace kaanh
 	//力传感器标定:零点、机械臂安装倾角、负载重量、重心数据//
 	struct CalibFZeroParam
 	{
-		double thelta_setup = 51.166;	//力传感器安装位置相对tcp偏移角
-		double pos_setup = 0.061;		//力传感器安装位置相对tcp偏移距离
+        double theta_setup = 51.166;	//力传感器安装位置相对tcp偏移角
+        double x_setup = 0.0;           //力传感器安装位置相对tcp偏移距离x
+        double y_setup = 0.0;           //力传感器安装位置相对tcp偏移距离y
+        double z_setup = 0.061;         //力传感器安装位置相对tcp偏移距离z
 		std::vector<double> Gravity_value;		//负载重力分量
 		std::vector<double> Gravity_center;		//重心数据:x,y,z
 		std::vector<double> Gravity_xyzindex;	//重力系数:Lx,Ly,Lz
@@ -4272,13 +4307,21 @@ namespace kaanh
 				}
 				for (int i = 0; i < controller()->motionPool().size(); ++i) param.dec[i] *= controller()->motionPool().at(i).maxAcc();
 			}
+            else if (cmd_param.first == "xoffset")
+            {
+                param.x_setup = doubleParam(cmd_param.first);
+            }
+            else if (cmd_param.first == "yoffset")
+            {
+                param.y_setup = doubleParam(cmd_param.first);
+            }
 			else if (cmd_param.first == "zoffset")
 			{
-				param.pos_setup = doubleParam(cmd_param.first);
+                param.z_setup = doubleParam(cmd_param.first);
 			}
 			else if (cmd_param.first == "rzoffset")
 			{
-				param.thelta_setup = doubleParam(cmd_param.first);
+                param.theta_setup = doubleParam(cmd_param.first);
 			}
 		}
 
@@ -4294,20 +4337,20 @@ namespace kaanh
 		aris::Size t_count;
 		static aris::Size total_count = 1;
 		aris::Size return_value = 0;
-		// 获取6个电机初始位置 //
+        // 获取电机初始位置 //
 		if (count() == 1)
 		{
 			//获取力传感器相对tcp的旋转矩阵//
-			auto thelta = (- param.thelta_setup)*PI / 180;
-			double pq_setup[7]{ 0.0,0.0,param.pos_setup,0.0,0.0,sin(thelta / 2.0),cos(thelta / 2.0) };
+            auto theta = (- param.theta_setup)*PI / 180;
+            double pq_setup[7]{ param.x_setup,param.y_setup,param.z_setup,0.0,0.0,sin(theta / 2.0),cos(theta / 2.0) };
 			s_pq2pm(pq_setup, param.fs2tpm);
 
-			for (int i = 0; i < 6; i++)
+            for (Size i = 0; i < controller()->motionPool().size(); i++)
 			{
 				param.axis_first_pos_vec[i] = controller()->motionPool().at(i).targetPos();
 			}
 
-			for (int i = 0; i < 6; i++)
+            for (Size i = 0; i < controller()->motionPool().size(); i++)
 			{
 				// 梯形规划p1,p2,p3 //
 				aris::plan::moveAbsolute(count(), param.axis_first_pos_vec[i], param.p1[i], param.vel[i] / 1000, param.acc[i] / 1000 / 1000, param.dec[i] / 1000 / 1000, p, v, a, t_count);
@@ -4325,7 +4368,7 @@ namespace kaanh
 		// 机械臂先后走到p1、p2、p3点 //
 		if (count() <= param.total_count_vec[0] + 1000)
 		{
-			for (int i = 0; i < 6; i++)
+            for (Size i = 0; i < controller()->motionPool().size(); i++)
 			{
 				// 在第一个周期走梯形规划复位
 				aris::plan::moveAbsolute(count(), param.axis_first_pos_vec[i], param.p1[i], param.vel[i] / 1000, param.acc[i] / 1000 / 1000, param.dec[i] / 1000 / 1000, p, v, a, t_count);
@@ -4335,7 +4378,7 @@ namespace kaanh
 		}
 		else if ((count() > param.total_count_vec[0] + 1000) && (count() <= param.total_count_vec[0] + param.total_count_vec[1] + 2000))
 		{
-			for (int i = 0; i < 6; i++)
+            for (Size i = 0; i < controller()->motionPool().size(); i++)
 			{
 				// 在第一个周期走梯形规划复位
                 aris::plan::moveAbsolute(count() - param.total_count_vec[0] - 1000, param.p1[i], param.p2[i], param.vel[i] / 1000, param.acc[i] / 1000 / 1000, param.dec[i] / 1000 / 1000, p, v, a, t_count);
@@ -4345,7 +4388,7 @@ namespace kaanh
 		}
 		else if ((count() > param.total_count_vec[0] + param.total_count_vec[1] + 2000) && (count() <= param.total_count_vec[0] + param.total_count_vec[1] + param.total_count_vec[2] + 3000))
 		{
-			for (int i = 0; i < 6; i++)
+            for (Size i = 0; i < controller()->motionPool().size(); i++)
 			{
 				// 在第一个周期走梯形规划复位
                 aris::plan::moveAbsolute(count() - param.total_count_vec[0] - param.total_count_vec[1] - 2000, param.p2[i], param.p3[i], param.vel[i] / 1000, param.acc[i] / 1000 / 1000, param.dec[i] / 1000 / 1000, p, v, a, t_count);
@@ -4512,6 +4555,17 @@ namespace kaanh
 		{
 			model()->variablePool().add<aris::dynamic::MatrixVariable>("Gravity_xyzindex", xyzindex);
 		}
+
+        aris::core::Matrix fs_setup = {param.x_setup, param.y_setup, param.z_setup, param.theta_setup};
+        if (model()->variablePool().findByName("fs_setup") != model()->variablePool().end())
+        {
+            dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("fs_setup"))->data() = fs_setup;
+        }
+        else
+        {
+            model()->variablePool().add<aris::dynamic::MatrixVariable>("fs_setup", fs_setup);
+        }
+
 		auto xmlpath = std::filesystem::absolute(".");
 		const std::string xmlfile = "kaanh.xml";
 		xmlpath = xmlpath / xmlfile;
@@ -4523,8 +4577,10 @@ namespace kaanh
 			"<Command name=\"CalibFZero\">"
 			"	<GroupParam>"
 			"		<Param name=\"pose\" default=\"{0,0,0,0,-0.6,-0.7}\"/>"
-			"		<Param name=\"zoffset\" default=\"0.061\"/>"
-			"		<Param name=\"rzoffset\" default=\"51.166\"/>"
+            "		<Param name=\"zoffset\" default=\"0.21\"/>"
+            "		<Param name=\"yoffset\" default=\"0.0\"/>"
+            "		<Param name=\"xoffset\" default=\"-0.175\"/>"
+            "		<Param name=\"rzoffset\" default=\"-90\"/>"
             "		<Param name=\"vel\" default=\"0.02\"/>"
 			"		<Param name=\"acc\" default=\"0.1\"/>"
 			"		<Param name=\"dec\" default=\"0.1\"/>"
@@ -4540,12 +4596,12 @@ namespace kaanh
 	struct MoveDTParam
 	{
 		aris::dynamic::Marker *tool, *wobj;
-		double thelta;
+        double theta;
 		double vel_limit[6], k[6], damping[6];
 		double fs2tpm[16], t2bpm[16], fs2bpm[16];
 		double force_offset[6], force_target[6];
 		double force_damp[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 };
-		double thelta_setup = 51.166;//力传感器安装位置相对tcp偏移角
+        double theta_setup = 51.166;//力传感器安装位置相对tcp偏移角
 		double pos_setup = 0.061;//力传感器安装位置相对tcp偏移距离
         double threshold = 1e-2;
 		std::vector<double> center;
@@ -4629,8 +4685,8 @@ namespace kaanh
 			controller()->logFileRawName("motion_replay");
 
 			//获取力传感器相对tcp的旋转矩阵//
-			imp_->thelta = (- imp_->thelta_setup)*PI / 180;
-			double pq_setup[7]{ 0.0,0.0,imp_->pos_setup,0.0,0.0,sin(imp_->thelta / 2.0),cos(imp_->thelta / 2.0) };
+            imp_->theta = (- imp_->theta_setup)*PI / 180;
+            double pq_setup[7]{ 0.0,0.0,imp_->pos_setup,0.0,0.0,sin(imp_->theta / 2.0),cos(imp_->theta / 2.0) };
 			s_pq2pm(pq_setup, imp_->fs2tpm);
 		}
 
@@ -4810,7 +4866,31 @@ namespace kaanh
 	}
 
 
-	// 示教模式切换--mode=0表示点到点，1表示轨迹记录 //
+    // 示教模式切换--mode=0表示点到点，1表示轨迹记录 //
+    auto TMode::prepareNrt()->void
+    {
+        for (auto p : cmdParams())
+        {
+            if (p.first == "mode")
+            {
+                auto md = int32Param(p.first);
+                g_teachingmode.store(md);
+            }
+        }
+        option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+    }
+    TMode::TMode(const std::string &name) :Plan(name)
+    {
+        command().loadXmlStr(
+            "<Command name=\"tmode\">"
+            "	<GroupParam>"
+            "		<Param name=\"mode\" default=\"0\"/>"
+            "	</GroupParam>"
+            "</Command>");
+    }
+
+
+    // Fun Choose
 	std::atomic_bool enable_mvdj = true;
 	auto Teaching::prepareNrt()->void
 	{
@@ -4826,7 +4906,7 @@ namespace kaanh
 			}
 		}
 		g_teaching_fun.store(md);
-		if (!g_teachingmode.load())
+        if (!g_teachingmode.load())
 		{
 			if (md == 0) {}
 			else if (md == 1)
@@ -4850,12 +4930,13 @@ namespace kaanh
 			{
 				enable_mvdj.store(0);
 				ofstream outfile("point.txt", ios::trunc);
-				for (int i = 0; i < points.size(); i++)
+                for (Size i = 0; i < points.size(); i++)
 				{
-					for (int j = 0; j < points[0].size(); j++)
+                    for (Size j = 0; j < points[0].size(); j++)
 						outfile << points[i][j] << " ";
 					outfile << std::endl;
 				}
+                outfile.close();
 			}
 		}
 		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
@@ -4874,17 +4955,16 @@ namespace kaanh
 	struct MoveDJParam
 	{
 		aris::dynamic::Marker *tool, *wobj;
-		double thelta;
-		double vel_limit[6], k[6], damping[6];
+        double theta;
+        double max_move_force[6], vel_limit[6], k[6], damping[6];
 		double fs2tpm[16], t2bpm[16], fs2bpm[16];
 		double force_offset[6], force_target[6];
 		double force_damp[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 };
-		double thelta_setup = 51.166;//力传感器安装位置相对tcp偏移角
-		double pos_setup = 0.061;//力传感器安装位置相对tcp偏移距离
 		double threshold = 1e-2;
 		std::vector<double> center;
 		std::vector<double> xyzindex;
-		std::vector<double> Zero_value;			//力传感器零点偏移量
+        std::vector<double> Zero_value;     //力传感器零点偏移量
+        std::vector<double> fs_setup;       //力传感器安装位置相对tcp偏移
 	};
 	struct MoveDJ::Imp :public MoveDJParam {};
 	auto MoveDJ::prepareNrt()->void
@@ -4896,9 +4976,11 @@ namespace kaanh
 		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
 		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
 		auto zero = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Zero_value"));
+        auto setup = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("fs_setup"));
 		imp_->center.assign(c->data().begin(), c->data().end());
 		imp_->xyzindex.assign(xyz->data().begin(), xyz->data().end());
 		imp_->Zero_value.assign(zero->data().begin(), zero->data().end());
+        imp_->fs_setup.assign(setup->data().begin(), setup->data().end());
 
 		for (auto cmd_param : cmdParams())
 		{
@@ -4914,6 +4996,18 @@ namespace kaanh
 					THROW_FILE_LINE("");
 				}
 			}
+            else if (cmd_param.first == "force")
+            {
+                auto temp = matrixParam(cmd_param.first);
+                if (temp.size() == 6)
+                {
+                    std::copy(temp.data(), temp.data() + 6, imp_->max_move_force);
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+            }
 			else if (cmd_param.first == "kd")
 			{
 				auto temp = matrixParam(cmd_param.first);
@@ -4942,11 +5036,6 @@ namespace kaanh
 					THROW_FILE_LINE("");
 				}
 			}
-			else if (cmd_param.first == "mode")
-			{
-				auto temp = int32Param(cmd_param.first);
-				g_teachingmode.store(temp);
-			}
 		}
 
 		for (auto &option : motorOptions()) option |= aris::plan::Plan::NOT_CHECK_POS_CONTINUOUS_SECOND_ORDER | NOT_CHECK_VEL_CONTINUOUS;
@@ -4965,12 +5054,12 @@ namespace kaanh
 		if (count() == 1)
 		{
 			//设置log文件名称//
-			controller()->logFileRawName("motion_replay");
+            controller()->logFileRawName("motion_replay");
 			std::fill_n(v_tcp, 6, 0.0);
 
 			//获取力传感器相对tcp的旋转矩阵//
-			imp_->thelta = (-imp_->thelta_setup)*PI / 180;
-			double pq_setup[7]{ 0.0,0.0,imp_->pos_setup,0.0,0.0,sin(imp_->thelta / 2.0),cos(imp_->thelta / 2.0) };
+            imp_->theta = (-imp_->fs_setup[3])*PI / 180;
+            double pq_setup[7]{ imp_->fs_setup[0],imp_->fs_setup[1],imp_->fs_setup[2],0.0,0.0,sin(imp_->theta / 2.0),cos(imp_->theta / 2.0) };
 			s_pq2pm(pq_setup, imp_->fs2tpm);
 		}
 
@@ -5031,17 +5120,15 @@ namespace kaanh
 
 
         // 作用力的大小在max_move_force以内，默认为0；在max_move_force以外，数值减去max_move_force
-        const double max_move_force[6]{ 3.0,3.0,3.0,0.07,0.07,0.03 };
         for (int i = 0; i < 6; ++i)
         {
-            if (imp_->force_target[i] > max_move_force[i])
-                imp_->force_target[i] -= max_move_force[i];
-            else if (imp_->force_target[i] < -max_move_force[i])
-                imp_->force_target[i] += max_move_force[i];
+            if (imp_->force_target[i] > imp_->max_move_force[i])
+                imp_->force_target[i] -= imp_->max_move_force[i];
+            else if (imp_->force_target[i] < -imp_->max_move_force[i])
+                imp_->force_target[i] += imp_->max_move_force[i];
             else
                 imp_->force_target[i] = 0;
         }
-
 
 		//求阻尼力
 		for (int i = 0; i < 6; i++)
@@ -5183,12 +5270,12 @@ namespace kaanh
 		command().loadXmlStr(
 			"<Command name=\"mvJoint\">"
 			"	<GroupParam>"
+            "		<Param name=\"force\" default=\"{5.0,5.0,5.0,1,1,1}\"/>"
             "		<Param name=\"vellimit\" default=\"{0.3,0.3,0.3,1,1,1}\"/>"
             "		<Param name=\"damping\" default=\"{20,20,20,4,5,5}\"/>"
-            "		<Param name=\"kd\" default=\"{0.2,0.2,0.2,10,10,10}\"/>"
+            "		<Param name=\"kd\" default=\"{0.01,0.01,0.01,1,1,1}\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
-			"		<Param name=\"mode\" default=\"0\"/>"
 			"	</GroupParam>"
 			"</Command>");
 	}
@@ -5205,12 +5292,12 @@ namespace kaanh
 	struct MoveJointParam
 	{
 		aris::dynamic::Marker *tool, *wobj;
-		double thelta;
+        double theta;
 		double vel_limit[6], k[6], damping[6];
 		double fs2tpm[16], t2bpm[16];
 		double force_offset[6], force_target[6];
 		double force_damp[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 };
-		double thelta_setup = 51.166;//力传感器安装位置相对tcp偏移角
+        double theta_setup = 51.166;//力传感器安装位置相对tcp偏移角
 		double pos_setup = 0.061;//力传感器安装位置相对tcp偏移距离
 		double threshold = 1e-6;
 	};
@@ -5286,8 +5373,8 @@ namespace kaanh
 			controller()->logFileRawName("motion_replay");
 
 			//获取力传感器相对tcp的旋转矩阵//
-			imp_->thelta = (- imp_->thelta_setup)*PI / 180;
-			double pq_setup[7]{ 0.0,0.0,imp_->pos_setup,0.0,0.0,sin(imp_->thelta / 2.0),cos(imp_->thelta / 2.0) };
+            imp_->theta = (- imp_->theta_setup)*PI / 180;
+            double pq_setup[7]{ 0.0,0.0,imp_->pos_setup,0.0,0.0,sin(imp_->theta / 2.0),cos(imp_->theta / 2.0) };
 			s_pq2pm(pq_setup, imp_->fs2tpm);
 
 #ifdef UNIX
@@ -8180,7 +8267,8 @@ namespace kaanh
 		ecController()->slavePool().at(param->slave_id).readPdo(param->index, param->subindex, &param->value, param->bit_size);
 		bool is_true = true;
 		std::array<bool, 16> di_temp = dig_in.load();
-		if (param->id > 7)
+        //chengshichuangxin
+        if (param->id > 7)
 		{
 			param->value = param->value >> param->id - 8;	//向低位平移id位
 			param->value &= 0x01;							//按位与
@@ -8220,7 +8308,7 @@ namespace kaanh
 	WaitDI::WaitDI(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
-			"<Command name=\"waitdi\">"
+            "<Command name=\"waitdi0\">"
 			"	<GroupParam>"
 			"		<Param name=\"id\" default=\"0\"/>"
 			"		<Param name=\"slave_id\" default=\"6\"/>"
@@ -8229,7 +8317,7 @@ namespace kaanh
 	}
 
 
-	// 等待di信号 //
+    // set do信号 //
 	struct SetDOParam
 	{
 		int id;			//di通道号
@@ -8320,7 +8408,7 @@ namespace kaanh
 	SetDO::SetDO(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
-			"<Command name=\"setdo\">"
+            "<Command name=\"setdo0\">"
 			"	<GroupParam>"
 			"		<Param name=\"id\" default=\"0\"/>"
 			"		<Param name=\"value\" default=\"0\"/>"
@@ -8328,6 +8416,159 @@ namespace kaanh
 			"	</GroupParam>"
 			"</Command>");
 	}
+
+
+    // 等待di信号 //
+    struct TrioDIParam
+    {
+        int id;			//di通道号
+        int slave_id;	//从站编号
+        std::uint16_t index;
+        std::uint8_t subindex;
+        std::uint16_t value;
+        aris::Size bit_size;
+    };
+    auto TrioDI::prepareNrt()->void
+    {
+        TrioDIParam param;
+        for (auto &p : cmdParams())
+        {
+            if (p.first == "id")
+            {
+                param.id = int32Param(p.first);
+                if (param.id > 15 || param.id < 0)THROW_FILE_LINE("input id out of range");
+            }
+            else if (p.first == "slave_id")
+            {
+                param.slave_id = int32Param(p.first);
+            }
+        }
+        param.index = 0x6100;
+        param.subindex = 0x01;
+        param.value = 0x0000;//di信号初始化，16路
+        param.bit_size = 16;
+
+        this->param() = param;
+        std::vector<std::pair<std::string, std::any>> ret_value;
+        ret() = ret_value;
+    }
+    auto TrioDI::executeRT()->int
+    {
+        auto param = std::any_cast<TrioDIParam>(&this->param());
+        ecController()->slavePool().at(param->slave_id).readPdo(param->index, param->subindex, &param->value, param->bit_size);
+        bool is_true = true;
+        std::array<bool, 16> di_temp = dig_in.load();
+        if(count()%1000==0)
+            controller()->mout()<<"di:"<<std::bitset<sizeof(uint16_t)*8>(param->value)<<std::endl;
+
+        //Trio
+        param->value = param->value >> param->id;	//向低位平移id位
+        param->value &= 0x0001;						//按位与
+        if (param->value)							//更新对应通道的di信号,高电平有效
+        {
+            di_temp[param->id] = true;
+            is_true = false;
+        }
+        else
+        {
+            di_temp[param->id] = false;
+            is_true = true;
+        }
+
+        //根据di信号刷新dig_in的数值
+        dig_in.store(di_temp);
+        if(g_is_stopped)return 0;
+        return is_true;
+    }
+    auto TrioDI::collectNrt()->void {}
+    TrioDI::TrioDI(const std::string &name) :Plan(name)
+    {
+        command().loadXmlStr(
+            "<Command name=\"waitdi\">"
+            "	<GroupParam>"
+            "		<Param name=\"id\" default=\"0\"/>"
+            "		<Param name=\"slave_id\" default=\"5\"/>"
+            "	</GroupParam>"
+            "</Command>");
+    }
+
+
+    // set do信号 //
+    struct TrioDOParam
+    {
+        int id;			//di通道号
+        int slave_id;	//从站编号
+        std::uint16_t index;
+        std::uint8_t subindex;
+        std::uint16_t value;
+        aris::Size bit_size;
+    };
+    auto TrioDO::prepareNrt()->void
+    {
+        TrioDOParam param;
+        for (auto &p : cmdParams())
+        {
+            if (p.first == "id")
+            {
+                param.id = int32Param(p.first);
+                if (param.id > 15 || param.id < 0)THROW_FILE_LINE("input id out of range");
+            }
+            else if (p.first == "slave_id")
+            {
+                param.slave_id = int32Param(p.first);
+            }
+            else if (p.first == "value")
+            {
+                param.value = int32Param(p.first);
+            }
+        }
+        //Trio
+        param.index = 0x7100;//do
+        param.subindex = 0x01;
+        param.bit_size = 16;
+
+        this->param() = param;
+        std::vector<std::pair<std::string, std::any>> ret_value;
+        ret() = ret_value;
+    }
+    auto TrioDO::executeRT()->int
+    {
+        auto param = std::any_cast<TrioDOParam>(&this->param());
+        std::array<bool, 16> do_temp = dig_out.load();
+        uint16_t value = 0x0000;
+
+        if (param->value)			//更新对应通道的di信号,高电平有效
+        {
+            do_temp[param->id] = true;
+        }
+        else
+        {
+            do_temp[param->id] = false;
+        }
+        for (int i = 0; i < 16; i++)
+        {
+            if (do_temp[i])value = (value | (0x0001 << i));
+        }
+
+        //根据do信号刷新dig_out的数值
+        dig_out.store(do_temp);
+
+        ecController()->slavePool().at(param->slave_id).writePdo(param->index, param->subindex, &value, param->bit_size);
+        controller()->mout() << "setvalue:" << param->value << std::endl;
+        return 0;
+    }
+    auto TrioDO::collectNrt()->void {}
+    TrioDO::TrioDO(const std::string &name) :Plan(name)
+    {
+        command().loadXmlStr(
+            "<Command name=\"setdo\">"
+            "	<GroupParam>"
+            "		<Param name=\"id\" default=\"0\"/>"
+            "		<Param name=\"value\" default=\"0\"/>"
+            "		<Param name=\"slave_id\" default=\"5\"/>"
+            "	</GroupParam>"
+            "</Command>");
+    }
 
 
 	auto GetXml::prepareNrt()->void
