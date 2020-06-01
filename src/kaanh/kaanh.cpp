@@ -4597,29 +4597,31 @@ namespace kaanh
 	{
 		aris::dynamic::Marker *tool, *wobj;
         double theta;
-		double vel_limit[6], k[6], damping[6];
+        double max_move_force[6], vel_limit[6], k[6], damping[6];
 		double fs2tpm[16], t2bpm[16], fs2bpm[16];
 		double force_offset[6], force_target[6];
 		double force_damp[6]{ 0.0,0.0,0.0,0.0,0.0,0.0 };
-        double theta_setup = 51.166;//力传感器安装位置相对tcp偏移角
-		double pos_setup = 0.061;//力传感器安装位置相对tcp偏移距离
         double threshold = 1e-2;
 		std::vector<double> center;
 		std::vector<double> xyzindex;
 		std::vector<double> Zero_value;			//力传感器零点偏移量
+        std::vector<double> fs_setup;       //力传感器安装位置相对tcp偏移
 	};
 	struct MoveDT::Imp :public MoveDTParam {};
 	auto MoveDT::prepareNrt()->void
 	{
+        g_teaching_fun.store(0);//示教初始化
 		enable_mvd.store(true);
 		imp_->tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		imp_->wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
 		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
         auto zero = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Zero_value"));
+        auto setup = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("fs_setup"));
 		imp_->center.assign(c->data().begin(), c->data().end());
 		imp_->xyzindex.assign(xyz->data().begin(), xyz->data().end());
         imp_->Zero_value.assign(zero->data().begin(), zero->data().end());
+        imp_->fs_setup.assign(setup->data().begin(), setup->data().end());
 
 		for (auto cmd_param : cmdParams())
 		{
@@ -4647,6 +4649,18 @@ namespace kaanh
 					THROW_FILE_LINE("");
 				}
 			}
+            else if (cmd_param.first == "force")
+            {
+                auto temp = matrixParam(cmd_param.first);
+                if (temp.size() == 6)
+                {
+                    std::copy(temp.data(), temp.data() + 6, imp_->max_move_force);
+                }
+                else
+                {
+                    THROW_FILE_LINE("");
+                }
+            }
 			else if (cmd_param.first == "damping")
 			{
 				auto temp = matrixParam(cmd_param.first);
@@ -4685,19 +4699,18 @@ namespace kaanh
 			controller()->logFileRawName("motion_replay");
 
 			//获取力传感器相对tcp的旋转矩阵//
-            imp_->theta = (- imp_->theta_setup)*PI / 180;
-            double pq_setup[7]{ 0.0,0.0,imp_->pos_setup,0.0,0.0,sin(imp_->theta / 2.0),cos(imp_->theta / 2.0) };
+            imp_->theta = (-imp_->fs_setup[3])*PI / 180;
+            double pq_setup[7]{ imp_->fs_setup[0],imp_->fs_setup[1],imp_->fs_setup[2],0.0,0.0,sin(imp_->theta / 2.0),cos(imp_->theta / 2.0) };
 			s_pq2pm(pq_setup, imp_->fs2tpm);
 		}
 
 		//获取力传感器数值
         auto slave7 = dynamic_cast<aris::control::EthercatSlave&>(controller()->slavePool().at(FS_NUM));
-        float data[6];
-		for (uint8_t i = 0; i < 6; i++)
-		{
-            slave7.readPdo(0x6030, i+1, &data[i], 32);
-            imp_->force_target[i] = double(data[i]);
-		}
+        std::array<double, 6>temp_force=filterdata.load();
+        for (uint8_t i = 0; i < 6; i++)
+        {
+            imp_->force_target[i] = temp_force[i];
+        }
 
         // 平均值滤波
         constexpr int filter_num = 10;
@@ -4739,19 +4752,18 @@ namespace kaanh
 		s_vs(6, G, imp_->force_target);
 		s_vs(6, imp_->Zero_value.data(), imp_->force_target);		
 
-        //根据力传感器受到的外力
+        //力传感器受到的外力
 		double xyz_temp[3]{ imp_->force_target[0], imp_->force_target[1], imp_->force_target[2] }, abc_temp[3]{ imp_->force_target[3], imp_->force_target[4], imp_->force_target[5] };
 		s_mm(3, 1, 3, imp_->fs2bpm, aris::dynamic::RowMajor{ 4 }, xyz_temp, 1, imp_->force_target, 1);
 		s_mm(3, 1, 3, imp_->fs2bpm, aris::dynamic::RowMajor{ 4 }, abc_temp, 1, imp_->force_target + 3, 1);
 
         // max move force
-        const double max_move_force[6]{1.2, 1.2, 1.2, 0.09, 0.09, 0.09};//adjust parameter
         for(int i=0;i<6;++i)
         {
-            if(imp_->force_target[i] > max_move_force[i])
-                imp_->force_target[i] -= max_move_force[i];
-            else if(imp_->force_target[i] < -max_move_force[i])
-                imp_->force_target[i] += max_move_force[i];
+            if(imp_->force_target[i] > imp_->max_move_force[i])
+                imp_->force_target[i] -= imp_->max_move_force[i];
+            else if(imp_->force_target[i] < -imp_->max_move_force[i])
+                imp_->force_target[i] += imp_->max_move_force[i];
             else
                 imp_->force_target[i] = 0;
         }
@@ -4793,7 +4805,7 @@ namespace kaanh
             cout << std::endl;
         }
 
-        for (int i = 0; i < 6; i++)
+        for (Size i = 0; i < controller()->motionPool().size(); i++)
         {
             v_joint[i] += imp_->k[i] * f_joint[i] * 1e-3;//1e-3:1ms
             v_joint[i] = std::min(std::max(v_joint[i], imp_->vel_limit[i]*controller()->motionPool().at(i).minVel()), imp_->vel_limit[i]*controller()->motionPool().at(i).maxVel());
@@ -4813,7 +4825,7 @@ namespace kaanh
 
         // 根据关节速度v_joint规划每个关节的运动角度
         double p_next[6];
-		for (int i = 0; i < 6; i++)
+        for (Size i = 0; i < controller()->motionPool().size(); i++)
 		{
 			p_next[i] = controller()->motionPool().at(i).targetPos();
 			p_next[i] += v_joint[i] * 1e-3;
@@ -4826,12 +4838,29 @@ namespace kaanh
 		// 运动学正解
 		if (model()->solverPool().at(1).kinPos())return -1;
 
-		// log
-		for (int i = 0; i < 6; i++)
-		{
-			lout << controller()->motionPool().at(i).actualPos() << "  ";
-		}
-		lout << std::endl;
+        // g_teachingmode=0,点到点模式；1，轨迹模式
+        if(g_teachingmode.load())
+        {
+            auto teaching_fun = g_teaching_fun.load();
+            if (teaching_fun == 0) {}
+            else if (teaching_fun == 1)
+            {
+                for (Size i = 0; i < controller()->motionPool().size(); i++)
+                {
+                    lout << controller()->motionPool().at(i).actualPos() << "  ";
+                }
+                lout << std::endl;
+            }
+            else if (teaching_fun == 4)
+            {
+                enable_mvd.store(0);
+            }
+        }
+        for (Size i = 0; i < controller()->motionPool().size(); i++)
+        {
+            lout << controller()->motionPool().at(i).actualPos() << "  ";
+        }
+        lout << std::endl;
 
 		//延时1000ms停止力控
         static aris::Size total_count = 1;
@@ -4856,8 +4885,9 @@ namespace kaanh
 		command().loadXmlStr(
             "<Command name=\"mvd\">"
 			"	<GroupParam>"
+            "		<Param name=\"force\" default=\"{5.0,5.0,5.0,0.07,0.07,0.07}\"/>"
             "		<Param name=\"vellimit\" default=\"{0.1,0.1,0.1,0.2,0.2,0.2}\"/>"
-            "		<Param name=\"damping\" default=\"{6,6,6,3,3,3}\"/>"
+            "		<Param name=\"damping\" default=\"{60,60,60,30,30,30}\"/>"
             "		<Param name=\"kd\" default=\"{0.8,0.8,0.8,1.0,1.0,1.0}\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
@@ -5246,6 +5276,11 @@ namespace kaanh
 				enable_mvdj.store(0);
 			}
 		}
+        for (int i = 0; i < controller()->motionPool().size(); i++)
+        {
+            lout << controller()->motionPool().at(i).actualPos() << "  ";
+        }
+        lout << std::endl;
 
 		//延时1000ms停止力控
 		static aris::Size total_count = 1;
@@ -5268,12 +5303,12 @@ namespace kaanh
 	MoveDJ::MoveDJ(const std::string &name) :Plan(name), imp_(new Imp)
 	{
 		command().loadXmlStr(
-			"<Command name=\"mvJoint\">"
+            "<Command name=\"mvJoint\">"
 			"	<GroupParam>"
-            "		<Param name=\"force\" default=\"{5.0,5.0,5.0,1,1,1}\"/>"
+            "		<Param name=\"force\" default=\"{5.0,5.0,5.0,0.07,0.07,0.07}\"/>"
             "		<Param name=\"vellimit\" default=\"{0.3,0.3,0.3,1,1,1}\"/>"
-            "		<Param name=\"damping\" default=\"{20,20,20,4,5,5}\"/>"
-            "		<Param name=\"kd\" default=\"{0.01,0.01,0.01,1,1,1}\"/>"
+            "		<Param name=\"damping\" default=\"{500,500,500,40,40,40}\"/>"
+            "		<Param name=\"kd\" default=\"{0.05,0.05,0.05,2,2,2}\"/>"
 			"		<Param name=\"tool\" default=\"tool0\"/>"
 			"		<Param name=\"wobj\" default=\"wobj0\"/>"
 			"	</GroupParam>"
@@ -5651,11 +5686,11 @@ namespace kaanh
 		param.path = cmdParams().at("path");
 
         std::cout<<param.path;
-		param.total_count_vec.resize(6, 0);
-		param.axis_begin_pos_vec.resize(6, 0.0);
-		param.axis_first_pos_vec.resize(6, 0.0);
+        param.total_count_vec.resize(controller()->motionPool().size(), 0);
+        param.axis_begin_pos_vec.resize(controller()->motionPool().size(), 0.0);
+        param.axis_first_pos_vec.resize(controller()->motionPool().size(), 0.0);
 
-		param.pos_vec.resize(6, std::vector<double>(1, 0.0));
+        param.pos_vec.resize(controller()->motionPool().size(), std::vector<double>(1, 0.0));
 		//std::cout << "size:" << param.pos_vec.size() << std::endl;
 		//初始化pos_vec//
 		for (int j = 0; j < param.pos_vec.size(); j++)
@@ -5703,18 +5738,19 @@ namespace kaanh
 		
 		double p, v, a;
 		aris::Size t_count;
-		static aris::Size first_total_count = 1;
+        static aris::Size first_total_count = 1;
 		aris::Size total_count = 1;
 		aris::Size return_value = 0;
 
 		// 获取6个电机初始位置 //
 		if (count() == 1)
 		{
-			for (int i = 0; i < 6; i++)
+            first_total_count = 1;
+            for (int i = 0; i < controller()->motionPool().size(); i++)
 			{
-				param.axis_begin_pos_vec[i] = model()->motionPool().at(i).mp();
+                param.axis_begin_pos_vec[i] = controller()->motionPool().at(i).targetPos();
 			}
-			for (int i = 0; i < 6; i++)
+            for (int i = 0; i < controller()->motionPool().size(); i++)
 			{
 				// 梯形规划到log开始点 //
 				aris::plan::moveAbsolute(count(), param.axis_begin_pos_vec[i], param.axis_first_pos_vec[i], param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
@@ -5725,7 +5761,7 @@ namespace kaanh
 		// 机械臂走到log开始点 //
 		if (count() <= first_total_count)
 		{
-			for (int i = 0; i < 6; i++)
+            for (int i = 0; i < controller()->motionPool().size(); i++)
 			{
 				// 在第一个周期走梯形规划复位
 				aris::plan::moveAbsolute(count(), param.axis_begin_pos_vec[i], param.axis_first_pos_vec[i], param.vel / 1000, param.acc / 1000 / 1000, param.dec / 1000 / 1000, p, v, a, t_count);
@@ -5737,7 +5773,7 @@ namespace kaanh
 		// 机械臂开始从头到尾复现log中点 //
 		if (count() > first_total_count)
 		{
-			for (int i = 0; i < 6; i++)
+            for (int i = 0; i < controller()->motionPool().size(); i++)
 			{
 				controller()->motionAtAbs(i).setTargetPos(param.pos_vec[i][count() - first_total_count]);
 				model()->motionPool().at(i).setMp(param.pos_vec[i][count() - first_total_count]);
@@ -5747,7 +5783,7 @@ namespace kaanh
 
 		//输出6个轴的实时位置log文件//
 		auto &lout = controller()->lout();
-		for (int i = 0; i < 6; i++)
+        for (int i = 0; i < controller()->motionPool().size(); i++)
 		{
 			lout << controller()->motionAtAbs(i).actualPos() << " ";//第一列数字必须是位置
 		}
@@ -5762,7 +5798,7 @@ namespace kaanh
 		command().loadXmlStr(
 			"<Command name=\"mvf\">"
 			"	<GroupParam>"
-            "		<Param name=\"path\" default=\"/home/kaanh/Desktop/UI_DarkColor_0427/robot/log/motion_replay.txt\"/>"
+            "		<Param name=\"path\" default=\"/home/kaanh/Desktop/UI_DarkColor_0527/robot/log/motion_replay.txt\"/>"
             "		<Param name=\"vel\" default=\"0.5\" abbreviation=\"v\"/>"
             "		<Param name=\"acc\" default=\"0.6\" abbreviation=\"a\"/>"
             "		<Param name=\"dec\" default=\"0.6\" abbreviation=\"d\"/>"
