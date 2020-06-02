@@ -8320,7 +8320,7 @@ namespace kaanh
 	}
 
 
-	// 等待di信号 //
+	// 等待di信号--蓝思 //
 	struct WaitDIParam
 	{
 		int id;			//di通道号
@@ -8364,6 +8364,16 @@ namespace kaanh
 	}
 	auto WaitDI::executeRT()->int
 	{
+		auto &pwinter = dynamic_cast<aris::server::ProgramWebInterface&>(controlServer()->interfacePool().at(0));
+		if (pwinter.isAutoPaused())//暂停，退出本次循环
+		{
+			return 1;
+		}
+		if (pwinter.isAutoStopped())//停止
+		{
+			return 0;
+		}
+
 		auto param = std::any_cast<WaitDIParam>(&this->param());
 		ecController()->slavePool().at(param->slave_id).readPdo(param->index, param->subindex, &param->value, param->bit_size);
 		bool is_true = true;
@@ -8409,7 +8419,7 @@ namespace kaanh
 	WaitDI::WaitDI(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
-            "<Command name=\"waitdi0\">"
+            "<Command name=\"waitdi\">"
 			"	<GroupParam>"
 			"		<Param name=\"id\" default=\"0\"/>"
 			"		<Param name=\"slave_id\" default=\"6\"/>"
@@ -8418,7 +8428,7 @@ namespace kaanh
 	}
 
 
-    // set do信号 //
+    // set do信号--蓝思 //
 	struct SetDOParam
 	{
 		int id;			//di通道号
@@ -8465,6 +8475,16 @@ namespace kaanh
 	}
 	auto SetDO::executeRT()->int
 	{
+		auto &pwinter = dynamic_cast<aris::server::ProgramWebInterface&>(controlServer()->interfacePool().at(0));
+		if (pwinter.isAutoPaused())//暂停，退出本次循环
+		{
+			return 1;
+		}
+		if (pwinter.isAutoStopped())//停止
+		{
+			return 0;
+		}
+
 		auto param = std::any_cast<SetDOParam>(&this->param());
 		std::array<bool, 16> do_temp = dig_out.load();
 		uint8_t value = 0x00;
@@ -8509,7 +8529,7 @@ namespace kaanh
 	SetDO::SetDO(const std::string &name) :Plan(name)
 	{
 		command().loadXmlStr(
-            "<Command name=\"setdo0\">"
+            "<Command name=\"setdo\">"
 			"	<GroupParam>"
 			"		<Param name=\"id\" default=\"0\"/>"
 			"		<Param name=\"value\" default=\"0\"/>"
@@ -8519,7 +8539,7 @@ namespace kaanh
 	}
 
 
-    // 等待di信号 //
+    // 等待di信号--戴屹 //
     struct TrioDIParam
     {
         int id;			//di通道号
@@ -8555,6 +8575,16 @@ namespace kaanh
     }
     auto TrioDI::executeRT()->int
     {
+		auto &pwinter = dynamic_cast<aris::server::ProgramWebInterface&>(controlServer()->interfacePool().at(0));
+		if (pwinter.isAutoPaused())//暂停，退出本次循环
+		{
+			return 1;
+		}
+		if (pwinter.isAutoStopped())//停止
+		{
+			return 0;
+		}
+
         auto param = std::any_cast<TrioDIParam>(&this->param());
         ecController()->slavePool().at(param->slave_id).readPdo(param->index, param->subindex, &param->value, param->bit_size);
         bool is_true = true;
@@ -8585,7 +8615,7 @@ namespace kaanh
     TrioDI::TrioDI(const std::string &name) :Plan(name)
     {
         command().loadXmlStr(
-            "<Command name=\"waitdi\">"
+            "<Command name=\"waitdi0\">"
             "	<GroupParam>"
             "		<Param name=\"id\" default=\"0\"/>"
             "		<Param name=\"slave_id\" default=\"5\"/>"
@@ -8594,7 +8624,7 @@ namespace kaanh
     }
 
 
-    // set do信号 //
+    // set do信号--戴屹 //
     struct TrioDOParam
     {
         int id;			//di通道号
@@ -8634,6 +8664,16 @@ namespace kaanh
     }
     auto TrioDO::executeRT()->int
     {
+		auto &pwinter = dynamic_cast<aris::server::ProgramWebInterface&>(controlServer()->interfacePool().at(0));
+		if (pwinter.isAutoPaused())//暂停，退出本次循环
+		{
+			return 1;
+		}
+		if (pwinter.isAutoStopped())//停止
+		{
+			return 0;
+		}
+
         auto param = std::any_cast<TrioDOParam>(&this->param());
         std::array<bool, 16> do_temp = dig_out.load();
         uint16_t value = 0x0000;
@@ -8662,7 +8702,7 @@ namespace kaanh
     TrioDO::TrioDO(const std::string &name) :Plan(name)
     {
         command().loadXmlStr(
-            "<Command name=\"setdo\">"
+            "<Command name=\"setdo0\">"
             "	<GroupParam>"
             "		<Param name=\"id\" default=\"0\"/>"
             "		<Param name=\"value\" default=\"0\"/>"
