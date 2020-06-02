@@ -110,16 +110,16 @@ namespace kaanh
 
 		//获取力传感器数据，并进行滤波--条件是力传感器存在
 		//这里只是简单通过从站数量超过6进行判断，第七个从站可以是io也可以是力传感器，用户需要通过FS_NUM来设定
-		if (cs.controller().slavePool().size() > 8)
+        if (cs.controller().slavePool().size() > 6)
 		{
 			auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
-			static int fcinit = 0;
-            if ((motion_state[4] == 1) && fcinit < 1)
-			{
-				std::uint8_t led1 = 0x01;
-				slave7->writePdo(0x7010, 1, &led1, 1);
-				fcinit++;
-			}
+//			static int fcinit = 0;
+//            if ((motion_state[4] == 1) && fcinit < 1)
+//			{
+//				std::uint8_t led1 = 0x01;
+//				slave7->writePdo(0x7010, 1, &led1, 1);
+//				fcinit++;
+//			}
 			std::array<double, 6> outdata = { 0,0,0,0,0,0 };
 			for (int i = 0; i < 6; i++)
 			{
