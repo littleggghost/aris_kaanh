@@ -3559,7 +3559,7 @@ namespace kaanh
 		if(!cal_circle_par(mvc_param))throw std::runtime_error(__FILE__ + std::to_string(__LINE__) + "three point in line,movec trajectory planning failed");
 
 		//计算转弯区对应的count数//
-		double p, v, a, j;
+		double p, q, v, a, j;
 		double pos_total_count, ori_total_count;
 		traplan::sCurved(1, 0.0, mvc_param.theta, mvc_param.vel / 1000 / mvc_param.R, mvc_param.acc / 1000 / 1000 / mvc_param.R, mvc_param.jerk / 1000 / 1000 / 1000 / mvc_param.R, p, v, a, j, pos_total_count);
 		traplan::sCurved(1, 0.0, 1.0, mvc_param.angular_vel / 1000 / mvc_param.ori_theta / 2.0, mvc_param.angular_acc / 1000 / 1000 / mvc_param.ori_theta / 2.0, mvc_param.angular_jerk / 1000 / 1000 / 1000 / mvc_param.ori_theta / 2.0, p, v, a, j, ori_total_count);
@@ -3570,18 +3570,20 @@ namespace kaanh
 		traplan::sCurved(1, 0.0, mvc_param.theta, mvc_param.vel / 1000 / mvc_param.R * mvc_param.pos_ratio, mvc_param.acc / 1000 / 1000 / mvc_param.R * mvc_param.pos_ratio * mvc_param.pos_ratio, 
 			mvc_param.jerk / 1000 / 1000 / 1000 / mvc_param.R * mvc_param.pos_ratio * mvc_param.pos_ratio * mvc_param.pos_ratio, p, v, a, j, pos_total_count);
 		traplan::sCurved(1, 0.0, 1.0, mvc_param.angular_vel / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio, mvc_param.angular_acc / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio, 
-			mvc_param.angular_jerk / 1000 / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio * mvc_param.ori_ratio, p, v, a, j, ori_total_count);
+			mvc_param.angular_jerk / 1000 / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio * mvc_param.ori_ratio, q, v, a, j, ori_total_count);
 
 		mvc_param.max_total_count = std::max(pos_total_count, ori_total_count);
 
 		//二分法//
 		auto pos_zone = mvc_param.theta - mvc_param.theta*mvc_param.zone.per;
+		auto ori_zone = 1.0 - 1.0*mvc_param.zone.per;
         double begin_count = 1, target_count = 0, end_count;
-		end_count = mvc_param.max_total_count;
+		
 		if (mvc_param.zone_enabled)
 		{
             if (std::abs(mvc_param.theta) >= 2e-3)//转弯半径大于0.001rad,角度至少为0.002rad
-			{			
+			{	
+				end_count = pos_total_count;
 				while (std::abs(p - pos_zone) > 1e-9)
 				{
 					if (p < pos_zone)
@@ -3609,6 +3611,38 @@ namespace kaanh
 				else
 					target_count = 0.0;
 
+			}
+			else if ((std::abs(mvc_param.theta) < 2e-3) && (std::abs(mvc_param.ori_theta / 2.0) >= 2e-3))
+			{
+				end_count = ori_total_count;
+				while (std::abs(q - ori_zone) > 1e-9)
+				{
+					if (q < ori_zone)
+					{
+						begin_count = target_count;
+						target_count = (begin_count + end_count) / 2;
+						traplan::sCurved(target_count, 0.0, 1.0, mvc_param.angular_vel / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio, mvc_param.angular_acc / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio,
+							mvc_param.angular_jerk / 1000 / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio * mvc_param.ori_ratio, q, v, a, j, ori_total_count);
+
+					}
+					else
+					{
+						end_count = target_count;
+						target_count = (begin_count + end_count) / 2;
+						traplan::sCurved(target_count, 0.0, 1.0, mvc_param.angular_vel / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio, mvc_param.angular_acc / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio,
+							mvc_param.angular_jerk / 1000 / 1000 / 1000 / mvc_param.ori_theta / 2.0 * mvc_param.ori_ratio * mvc_param.ori_ratio * mvc_param.ori_ratio, q, v, a, j, ori_total_count);
+
+					}
+					if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
+					{
+						break;
+					}
+				}
+				//转弯区不能超过本条指令count数/2
+				if (std::abs(target_count) > 1e-6)
+					target_count = mvc_param.ampli * std::min(mvc_param.max_total_count - target_count, mvc_param.max_total_count / 2);
+				else
+					target_count = 0.0;
 			}
 			else
 			{
