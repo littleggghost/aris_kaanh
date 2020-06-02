@@ -110,7 +110,7 @@ namespace kaanh
 
 		//获取力传感器数据，并进行滤波--条件是力传感器存在
 		//这里只是简单通过从站数量超过6进行判断，第七个从站可以是io也可以是力传感器，用户需要通过FS_NUM来设定
-		if (cs.controller().slavePool().size() > 6)
+		if (cs.controller().slavePool().size() > 8)
 		{
 			auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
 			static int fcinit = 0;
@@ -2691,13 +2691,13 @@ namespace kaanh
 					{
 						begin_count = target_count;
 						target_count = (begin_count + end_count) / 2;
-						traplan::sCurved(1, 0.0, mvl_param.norm_ori, mvl_param.angular_vel / 1000 * mvl_param.ori_ratio, mvl_param.angular_acc / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio, mvl_param.angular_jerk / 1000 / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio* mvl_param.ori_ratio, p, v, a, j, ori_total_count);
+						traplan::sCurved(target_count, 0.0, mvl_param.norm_ori, mvl_param.angular_vel / 1000 * mvl_param.ori_ratio, mvl_param.angular_acc / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio, mvl_param.angular_jerk / 1000 / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio* mvl_param.ori_ratio, p, v, a, j, ori_total_count);
 					}
 					else
 					{
 						end_count = target_count;
 						target_count = (begin_count + end_count) / 2;
-						traplan::sCurved(1, 0.0, mvl_param.norm_ori, mvl_param.angular_vel / 1000 * mvl_param.ori_ratio, mvl_param.angular_acc / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio, mvl_param.angular_jerk / 1000 / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio* mvl_param.ori_ratio, p, v, a, j, ori_total_count);
+						traplan::sCurved(target_count, 0.0, mvl_param.norm_ori, mvl_param.angular_vel / 1000 * mvl_param.ori_ratio, mvl_param.angular_acc / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio, mvl_param.angular_jerk / 1000 / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio* mvl_param.ori_ratio, p, v, a, j, ori_total_count);
 					}
 					if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 					{
