@@ -12,7 +12,7 @@
 #include <string>
 #include <bitset>
 #include"kaanh/ftc_ctrl.h"
-#include"kaanh/controlboard.h"
+
 
 //statemachine old//
 # define M_RUN 0	//手动单步执行

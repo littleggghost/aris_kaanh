@@ -4,10 +4,12 @@
 #include <stdlib.h>
 #include <string>
 #include <bitset>
+#include <fstream>
 
 
 using namespace aris::dynamic;
 using namespace aris::plan;
+
 
 //global vel//
 kaanh::Speed g_vel = { 0.1, 0.1, 3.4, 0.0, 0.0 };
@@ -41,19 +43,19 @@ struct CmdListParam
 	int current_plan_id = -1;
 }cmdparam;
 std::shared_ptr<kaanh::MoveBase> g_plan;
-static float rawdata[6];	//力传感器数据
+static float rawdata[6];								//力传感器数据
 static std::atomic<std::array<double, 6>>filterdata;	//力传感器滤波后数据
 cpt_ftc::Admit admit;
-cpt_ftc::LowPass lp[6]; //滤波器
+cpt_ftc::LowPass lp[6];									//滤波器
 //extern cpt_ftc::Admit admit;//力控
-const int FS_NUM = 7;	//force sensor slave number
-std::atomic<std::array<bool, 16>>dig_in;//数字量di
-std::atomic<std::array<bool, 16>>dig_out;//数字量do
+const int FS_NUM = 6;	//force sensor slave number
+std::atomic<std::array<bool, 16>>dig_in;				//数字量di
+std::atomic<std::array<bool, 16>>dig_out;				//数字量do
 
-std::atomic_bool g_teachingmode = true;//拖拽示教模式，0表示点到点，1表示轨迹记录
-std::atomic_bool g_is_dragging = true;//拖拽功能开启标记位，0表示关闭，1表示开启
-std::vector<std::array<double, 6>>points;//示教点保存数组
-std::atomic_int g_teaching_fun = 0;//0:初始值，1:开始示教；2:添加点；3:删除上一个点；4:结束确认
+std::atomic_bool g_teachingmode = true;					//拖拽示教模式，0表示点到点，1表示轨迹记录
+std::atomic_bool g_is_dragging = true;					//拖拽功能开启标记位，0表示关闭，1表示开启
+std::vector<std::array<double, 6>>points;				//示教点保存数组
+std::atomic_int g_teaching_fun = 0;						//0:初始值，1:开始示教；2:添加点；3:删除上一个点；4:结束确认
 
 
 namespace kaanh
@@ -611,8 +613,8 @@ namespace kaanh
 			model()->generalMotionPool().at(0).updMpm();
             for (aris::Size i(-1); ++i < cs.model().partPool().size();)
             {
-				par.tool->getPq(*par.wobj, std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
-                //cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
+				//par.tool->getPq(*par.wobj, std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
+                cs.model().partPool().at(i).getPq(std::any_cast<GetParam &>(data).part_pq.data() + i * 7);
             }
 
             for (aris::Size i(0); i < cs.model().generalMotionPool().size();i++)
@@ -1412,11 +1414,16 @@ namespace kaanh
 								param.axis_vel_vec[max_i] / 1000 * param.pos_ratio[max_i], param.axis_acc_vec[max_i] / 1000 / 1000 * param.pos_ratio[max_i] * param.pos_ratio[max_i], param.axis_jerk_vec[max_i] / 1000 / 1000 / 1000 * param.pos_ratio[max_i] * param.pos_ratio[max_i] * param.pos_ratio[max_i],
 								p, v, a, j, param.total_count[max_i]);
 						}
-						if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+						if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 						{
 							break;
 						}
 					}
+					//转弯区不能超过本条指令count数/2
+					if(std::abs(target_count)>=1e-6)
+						target_count = param.ampli * std::min(param.max_total_count - target_count, param.max_total_count / 2);
+					else
+						target_count = 0.0;
 				}
 				else//目标角度小于起始角度
 				{
@@ -1438,17 +1445,27 @@ namespace kaanh
 								param.axis_vel_vec[max_i] / 1000 * param.pos_ratio[max_i], param.axis_acc_vec[max_i] / 1000 / 1000 * param.pos_ratio[max_i] * param.pos_ratio[max_i], param.axis_jerk_vec[max_i] / 1000 / 1000 / 1000 * param.pos_ratio[max_i] * param.pos_ratio[max_i] * param.pos_ratio[max_i],
 								p, v, a, j, param.total_count[max_i]);
 						}
-						if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+						if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 						{
 							break;
 						}
 					}
+					//转弯区不能超过本条指令count数/2
+					if (std::abs(target_count) >= 1e-6)
+						target_count = param.ampli * std::min(param.max_total_count - target_count, param.max_total_count / 2);
+					else 
+						target_count = 0.0;
 				}
 			}
+			else
+			{
+				target_count = 0.0;
+			}
 		}
-
-		//转弯区不能超过本条指令count数/2
-		target_count = param.ampli * std::min(target_count, param.max_total_count / 2);
+		else
+		{
+			target_count = 0.0;
+		}
 
 		//更新转弯区//
 		if (param.pre_plan == nullptr)//转弯第一条指令
@@ -2086,11 +2103,17 @@ namespace kaanh
 								p, v, a, j, mvj_param.total_count[max_i]);
 						}
 						//满足以下条件，即可退出二分法
-						if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+						if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 						{
 							break;
 						}
 					}
+				
+					//转弯区不能超过本条指令count数/2
+					if (target_count > 1e-6)
+						target_count = mvj_param.ampli * std::min(mvj_param.max_total_count - target_count, mvj_param.max_total_count / 2);
+					else
+						target_count = 0.0;
 				}
 				else//目标角度小于起始角度
 				{
@@ -2113,17 +2136,28 @@ namespace kaanh
 								p, v, a, j, mvj_param.total_count[max_i]);
 						}
 						//满足以下条件，即可退出二分法
-						if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+						if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 						{
 							break;
 						}
 					}
+				
+					//转弯区不能超过本条指令count数/2
+					if (target_count > 1e-6)
+						target_count = mvj_param.ampli * std::min(mvj_param.max_total_count - target_count, mvj_param.max_total_count / 2);
+					else
+						target_count = 0.0;
 				}
 			}
+			else
+			{
+				target_count = 0.0;
+			}
 		}
-		
-		//转弯区不能超过本条指令count数/2
-		target_count = mvj_param.ampli * std::min(target_count, mvj_param.max_total_count / 2);
+		else
+		{
+			target_count = 0.0;
+		}
 
 		//更新转弯区//
 		if (mvj_param.pre_plan == nullptr)//转弯第一条指令
@@ -2637,11 +2671,16 @@ namespace kaanh
 						target_count = (begin_count + end_count) / 2;
 						traplan::sCurved(target_count, 0.0, mvl_param.norm_pos, mvl_param.vel / 1000 * mvl_param.pos_ratio, mvl_param.acc / 1000 / 1000 * mvl_param.pos_ratio* mvl_param.pos_ratio, mvl_param.jerk / 1000 / 1000 / 1000 * mvl_param.pos_ratio* mvl_param.pos_ratio * mvl_param.pos_ratio, p, v, a, j, pos_total_count);
 					}
-					if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+					if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 					{
 						break;
 					}
 				}
+				//转弯区不能超过本条指令count数/2
+				if (std::abs(target_count) > 1e-6)
+					target_count = mvl_param.ampli * std::min(pos_total_count - target_count, mvl_param.max_total_count / 2);
+				else
+					target_count = 0.0;
 			}
 			else if ((std::abs(mvl_param.norm_pos) < 2e-3) && (std::abs(mvl_param.norm_ori) >= 2e-3))//转弯半径小于1mm,转动半径大于0.001rad
 			{
@@ -2660,17 +2699,26 @@ namespace kaanh
 						target_count = (begin_count + end_count) / 2;
 						traplan::sCurved(1, 0.0, mvl_param.norm_ori, mvl_param.angular_vel / 1000 * mvl_param.ori_ratio, mvl_param.angular_acc / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio, mvl_param.angular_jerk / 1000 / 1000 / 1000 * mvl_param.ori_ratio* mvl_param.ori_ratio* mvl_param.ori_ratio, p, v, a, j, ori_total_count);
 					}
-					if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+					if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 					{
 						break;
 					}
 				}
+				//转弯区不能超过本条指令count数/2
+				if (std::abs(target_count) > 1e-6)
+					target_count = mvl_param.ampli * std::min(ori_total_count - target_count, mvl_param.max_total_count / 2);
+				else
+					target_count = 0.0;
 			}
-			else{}
+			else
+			{
+				target_count = 0.0;
+			}
 		}
-		
-		//转弯区不能超过本条指令count数/2
-		target_count = mvl_param.ampli * std::min(target_count, mvl_param.max_total_count / 2);
+		else
+		{
+			target_count = 0.0;
+		}
 
 		//更新转弯区//
 		if (mvl_param.pre_plan == nullptr)//转弯第一条指令
@@ -2990,10 +3038,16 @@ namespace kaanh
 
         //输出6个轴的实时位置log文件//
         auto &lout = controller()->lout();
+		double temp[6];
+		mvl_param->tool->getPe(*mvl_param->wobj, temp);
         for (int i = 0; i < 6; i++)
-        {
-            lout << controller()->motionAtAbs(i).actualPos() << " ";
+        {	
+            lout << controller()->motionPool().at(i).targetPos() << " ";
         }
+		for (int i = 0; i < 6; i++)
+		{
+			lout << temp[i] << " ";
+		}
         lout << std::endl;
 
 		//打印
@@ -3544,16 +3598,27 @@ namespace kaanh
 						traplan::sCurved(target_count, 0.0, mvc_param.theta, mvc_param.vel / 1000 / mvc_param.R * mvc_param.pos_ratio, mvc_param.acc / 1000 / 1000 / mvc_param.R * mvc_param.pos_ratio * mvc_param.pos_ratio,
 							mvc_param.jerk / 1000 / 1000 / 1000 / mvc_param.R * mvc_param.pos_ratio * mvc_param.pos_ratio * mvc_param.pos_ratio, p, v, a, j, pos_total_count);
 					}
-					if ((std::abs(begin_count - end_count) <= 1e-9) || (std::abs(begin_count + 1 - end_count) <= 1e-9) || (end_count <= 1e-9))
+					if ((std::abs(begin_count - end_count) <= 1e-9) || (end_count <= 1e-9))
 					{
 						break;
 					}
+				
+					//转弯区不能超过本条指令count数/2
+					if (std::abs(target_count) > 1e-6)
+						target_count = mvc_param.ampli * std::min(mvc_param.max_total_count - target_count, mvc_param.max_total_count / 2);
+					else
+						target_count = 0.0;
 				}
 			}
+			else
+			{
+				target_count = 0.0;
+			}
 		}
-
-		//转弯区不能超过本条指令count数/2
-		target_count = mvc_param.ampli * std::min(target_count, mvc_param.max_total_count / 2);
+		else
+		{
+			target_count = 0.0;
+		}
 
 		//更新转弯区//
 		if (mvc_param.pre_plan == nullptr)//转弯第一条指令
@@ -4959,7 +5024,7 @@ namespace kaanh
 			else if (md == 4)
 			{
 				enable_mvdj.store(0);
-				ofstream outfile("point.txt", ios::trunc);
+				std::ofstream outfile("point.txt", std::ios::trunc);
                 for (Size i = 0; i < points.size(); i++)
 				{
                     for (Size j = 0; j < points[0].size(); j++)
@@ -9476,4 +9541,5 @@ namespace kaanh
 			"	</GroupParam>"
 			"</Command>");
 	}
+
 }

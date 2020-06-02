@@ -16,7 +16,6 @@ const std::string xmlfile = "kaanh.xml";
 const std::string uixmlfile = "interface_kaanh.xml";
 const std::string modelxmlfile = "model_rokae.xml";
 const std::string logfolder = "log";
-std::thread t_modbus;
 
 
 int main(int argc, char *argv[])
@@ -169,72 +168,6 @@ int main(int argc, char *argv[])
 
 	//Start Web Socket//
     cs.open();
-
-    //示教器线程;
-    t_modbus = std::thread([&]()->bool
-    {
-       // 创建modbus master
-       modbus mb = modbus("192.168.0.21", 502);	//从站的ip地址和端口号
-       mb.modbus_set_slave_id(1);					// set slave id
-       controlboard cbd;
-
-       // 连接modbus slave，并且响应modbus slave的信息
-       for (;;)
-       {
-           try
-           {
-               mb.modbus_connect();				// connect with the server
-               break;
-           }
-           catch (std::exception &e)
-           {
-               std::cout << "failed to connect server, will retry in 1 second" << std::endl;
-               std::this_thread::sleep_for(std::chrono::seconds(1));
-           }
-       }
-
-       // 主要功能逻辑区
-       try
-       {
-   #if print_time
-           struct timeb t1;
-           double time_new, time_last, time_max = 0;
-           ftime(&t1);
-           time_new = time_last = t1.time + 0.001* t1.millitm;
-   #endif
-
-           uint16_t read_input_regs[2];
-           while (1)
-           {
-   #if print_time
-               ftime(&t1);
-               time_last = time_new;
-               time_new = t1.time + 0.001* t1.millitm;
-               if (time_new - time_last > time_max)
-                   time_max = time_new - time_last;
-               printf("[%.3f %.3f %.3f]\n", time_new, time_new - time_last, time_max);
-   #endif
-
-               /*************以上打印时间相关**************************/
-               //read_input_regs[0]存地址为30001的寄存器,read_input_regs[1]存地址为30002的寄存器，读输入寄存器 功能码04
-//               mb.modbus_read_input_registers(0, 2, read_input_regs);
-//               if (read_input_regs[0] != 0 || read_input_regs[1] != 0)			//有按键按下
-//                   cbd.send_command(read_input_regs, cs);					//发送指令
-               std::this_thread::sleep_for(std::chrono::milliseconds(50));	//100ms
-           }
-
-       }
-       catch (std::exception &e)
-       {
-           std::cout << e.what() << std::endl;
-       }
-
-       mb.modbus_close();	// close connection
-       delete(&mb); // 释放空间
-       return 0 ;
-    });
-
-    t_modbus.detach();
 
 	//Receive Command//
 	cs.runCmdLine();
