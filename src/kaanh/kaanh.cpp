@@ -110,7 +110,7 @@ namespace kaanh
 
 		//获取力传感器数据，并进行滤波--条件是力传感器存在
 		//这里只是简单通过从站数量超过6进行判断，第七个从站可以是io也可以是力传感器，用户需要通过FS_NUM来设定
-        if (cs.controller().slavePool().size() > 6)
+        if (cs.controller().slavePool().size() > 8)
 		{
 			auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
 //			static int fcinit = 0;
@@ -3602,13 +3602,13 @@ namespace kaanh
 					{
 						break;
 					}
-				
-					//转弯区不能超过本条指令count数/2
-					if (std::abs(target_count) > 1e-6)
-						target_count = mvc_param.ampli * std::min(mvc_param.max_total_count - target_count, mvc_param.max_total_count / 2);
-					else
-						target_count = 0.0;
 				}
+				//转弯区不能超过本条指令count数/2
+				if (std::abs(target_count) > 1e-6)
+					target_count = mvc_param.ampli * std::min(mvc_param.max_total_count - target_count, mvc_param.max_total_count / 2);
+				else
+					target_count = 0.0;
+
 			}
 			else
 			{
@@ -3644,7 +3644,7 @@ namespace kaanh
 		else if (mvc_param.pre_plan->name() == "MoveL")
 		{
 			auto param = std::any_cast<MoveLParam&>(mvc_param.pre_plan->param());
-			if (std::abs(param.norm_pos) < 2e-3)//上一条movel直线部分小于2mm即转弯区小于1mm，取消转弯
+			if ((std::abs(param.norm_pos) < 2e-3) && (std::abs(param.norm_ori) < 2e-3))//上一条movel直线部分小于2mm且旋转部分小于0.002rad即转弯区小于1mm，取消转弯
 			{
 				//更新本plan的planzone//
 				this->planzone.store(target_count);
