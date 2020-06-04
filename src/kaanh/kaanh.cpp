@@ -81,7 +81,6 @@ namespace kaanh
 			{
 				motion_state[i] = 1;
 			}
-			//motion_state[i] = 1;
 		}
 
 		//获取ret_code的值，判断是否报错，if条件可以初始化变量，并且取变量进行条件判断//
@@ -579,7 +578,7 @@ namespace kaanh
         std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai, forcedata;
         std::vector<bool> digtal_in, digtal_out;
         std::int32_t state_code;
-        aris::control::EthercatController::SlaveLinkState sls[6];
+        aris::control::EthercatController::SlaveLinkState sls[7];
         aris::control::EthercatController::MasterLinkState mls{};
         std::vector<int> motion_state;
         std::string currentplan;
@@ -600,7 +599,7 @@ namespace kaanh
         par.ai.resize(16, 1.0);
 		par.digtal_in.resize(16, false);
 		par.digtal_out.resize(16, false);
-        par.motion_state.resize(6, 0);
+        par.motion_state.resize(controller()->motionPool().size(), 0);
         par.forcedata.resize(6, 0.0);
         std::any param = par;
         //std::any param = std::make_any<GetParam>();

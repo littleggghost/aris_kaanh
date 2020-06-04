@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
 
 
     cs.loadXmlFile(path.string().c_str());
-    //cs.resetPlanRoot(kaanhconfig::createPlanRoot().release());
-    //cs.saveXmlFile(xmlpath.string().c_str());
+    cs.resetPlanRoot(kaanhconfig::createPlanRoot().release());
+    cs.saveXmlFile(xmlpath.string().c_str());
 	cs.init();
 
 	/*test*/
@@ -155,10 +155,12 @@ int main(int argc, char *argv[])
 	kaanhconfig::createPauseTimeSpeed();
     cs.start();
 
-	for (int i = 0; i < cs.controller().motionPool().size(); i++)
-	{
-		cs.controller().motionPool().at(i).setTargetPos(cs.controller().motionPool().at(i).actualPos());
-	}
+    std::cout << "ctr" << cs.controller().motionPool().size() << std::endl;
+    std::cout << "mod" << cs.model().motionPool().size() << std::endl;
+//	for (int i = 0; i < cs.controller().motionPool().size(); i++)
+//	{
+//		cs.controller().motionPool().at(i).setTargetPos(cs.controller().motionPool().at(i).actualPos());
+//	}
 
 	//实时回调函数，每个实时周期调用一次//
 	cs.setRtPlanPostCallback(kaanh::update_state);
