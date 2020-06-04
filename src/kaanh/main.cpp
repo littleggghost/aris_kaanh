@@ -153,7 +153,12 @@ int main(int argc, char *argv[])
     auto &cal = cs.model().calculator();
     kaanhconfig::createUserDataType(cal);
 	kaanhconfig::createPauseTimeSpeed();
-    //cs.start();
+    cs.start();
+
+	for (int i = 0; i < cs.controller().motionPool().size(); i++)
+	{
+		cs.controller().motionPool().at(i).setTargetPos(cs.controller().motionPool().at(i).actualPos());
+	}
 
 	//实时回调函数，每个实时周期调用一次//
 	cs.setRtPlanPostCallback(kaanh::update_state);
