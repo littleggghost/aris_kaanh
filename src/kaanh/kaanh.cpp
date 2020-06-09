@@ -48,7 +48,7 @@ static std::atomic<std::array<double, 6>>filterdata;	//力传感器滤波后数�
 cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp[6];									//滤波器
 //extern cpt_ftc::Admit admit;//力控
-const int FS_NUM = 6;	//force sensor slave number
+const int FS_NUM = 6;									//force sensor slave number
 std::atomic<std::array<bool, 16>>dig_in;				//数字量di
 std::atomic<std::array<bool, 16>>dig_out;				//数字量do
 
@@ -56,6 +56,11 @@ std::atomic_bool g_teachingmode = true;					//拖拽示教模式，0表示点到
 std::atomic_bool g_is_dragging = true;					//拖拽功能开启标记位，0表示关闭，1表示开启
 std::vector<std::array<double, 6>>points;				//示教点保存数组
 std::atomic_int g_teaching_fun = 0;						//0:初始值，1:开始示教；2:添加点；3:删除上一个点；4:结束确认
+double offset[10][6] = { 0.0 };							//补偿值,程序关闭时，掉电保存；下次上电时，自动加载
+double fave[6] = { 0.0 };								//力传感器滤波后平均值
+std::atomic_bool g_fcmonitor = false;					//true--false
+std::atomic_int64_t g_fc_counter = 1;					//叠加器，用于求平均值
+std::atomic_int16_t g_fc_flag = 0;						//offset使用标记
 
 
 namespace kaanh
@@ -1072,9 +1077,63 @@ namespace kaanh
 			"</Command>");
 	}
 	ARIS_DEFINE_BIG_FOUR_CPP(Sleep);
+
+
+	// fcmonitor //
+	auto FCMonitor::prepareNrt()->void
+	{	
+		bool md = false;
+		aris::core::Matrix off;
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "mode")
+			{
+				auto md = int32Param(p.first);
+				g_fc_counter.store(1);
+				g_fcmonitor.store(md);
+			}
+			else if (p.first == "offset")
+			{
+				off = matrixParam(p.first);
+				if (off.size() == 1)
+				{
+					g_fc_flag.store(int32Param(p.first));
+				}
+				else if (off.size() == 6)//主动输入力位偏置
+				{
+					std::copy(off.begin(), off.end(), offset[0]);
+					g_fc_flag.store(0);
+				}
+				else
+				{
+					THROW_FILE_LINE("out of range!");
+				}
+			}
+		}
+		
+		if (!md && off.size()==1)//求力位关系
+		{
+
+		}
+
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
+	}
+	FCMonitor::FCMonitor(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"FCMonitor\">"
+			"	<GroupParam>"
+			"		<Param name=\"mode\" default=\"0\"/>"
+			"		<Param name=\"offset\" default=\"{0,0,0,0,0,0}\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
 	MoveBase::MoveBase(const MoveBase &other) :Plan(other),
 		realzone(0), planzone(0), cmd_finished(false), cmd_executing(false){};
-
 	struct MoveAbsJParam :public SetActiveMotor, SetInputMovement
 	{
 		std::vector<double> pos_ratio;
@@ -1761,6 +1820,9 @@ namespace kaanh
 			{
 				auto pq_mat = std::any_cast<aris::core::Matrix>(cal.calculateExpression("robtarget(" + std::string(cmd_param.second) + ")").second);
 				if (pq_mat.size() != 7)THROW_FILE_LINE("");
+				auto fc_flag = g_fc_flag.load();
+				for (int i = 0; i < 3; i++)
+					pq_mat.data()[i] += offset[fc_flag][i];
 				aris::dynamic::s_vc(7, pq_mat.data(), pq_out);
 				aris::dynamic::s_nv(3, pos_unit, pq_out);
 				return true;
@@ -2991,36 +3053,50 @@ namespace kaanh
 	
 		}
 
+		//求重力分量
+		double G[6] = { 0.0 };
+		double center[3], xyzindex[3];
+		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
+		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
+		auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
+		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
+		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
+		std::copy(temp, temp + 16, fs2tpm);
+		model()->generalMotionPool().at(0).updMpm();
+		mvl_param->tool->getPm(*mvl_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+
+		std::copy(c->data().begin(), c->data().end(), center);
+		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
+		s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
+		G[3] = G[2] * center[1] - G[1] * center[2];
+		G[4] = G[0] * center[2] - G[2] * center[0];
+		G[5] = G[1] * center[0] - G[0] * center[1];
+		std::copy(G, G + 6, admit.G);
+
+		double fspm[16];
+        std::array<double, 6> fdata = filterdata.load();
+		auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
+		aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
+
 		// 力传感器补偿启用
 		if (mvl_param->fc)
 		{
-			//求重力分量
-			double G[6];
-			double center[3], xyzindex[3];
-			auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
-			auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
-			auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
-			//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
-			double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
-			std::copy(temp, temp + 16, fs2tpm);
-			model()->generalMotionPool().at(0).updMpm();
-			mvl_param->tool->getPm(*mvl_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
-			s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
-
-			std::copy(c->data().begin(), c->data().end(), center);
-			std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
-			s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
-			G[3] = G[2] * center[1] - G[1] * center[2];
-			G[4] = G[0] * center[2] - G[2] * center[0];
-			G[5] = G[1] * center[0] - G[0] * center[1];
-			std::copy(G, G + 6, admit.G);
-
-			double fspm[16];
-            std::array<double, 6> fdata = filterdata.load();
-			auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
-			aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
-
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);
+		}
+
+		// 每10ms求力传感器平均值
+		if (g_fcmonitor.load())
+		{
+			if (count() % 10 == 0)
+			{
+				for (int j = 0; j < 6; j++)
+				{
+					fave[j] += admit.ft_ext_target[j];
+					fave[j] /= g_fc_counter;
+				}
+				g_fc_counter++;
+			}
 		}
 
 		mvl_param->tool->setPm(*mvl_param->wobj, target_pm);
@@ -3037,15 +3113,15 @@ namespace kaanh
 
         //输出6个轴的实时位置log文件//
         auto &lout = controller()->lout();
-		double temp[6];
-		mvl_param->tool->getPe(*mvl_param->wobj, temp);
+		double temp_pe[6];
+		mvl_param->tool->getPe(*mvl_param->wobj, temp_pe);
         for (int i = 0; i < 6; i++)
         {	
             lout << controller()->motionPool().at(i).targetPos() << " ";
         }
 		for (int i = 0; i < 6; i++)
 		{
-			lout << temp[i] << " ";
+			lout << temp_pe[i] << " ";
 		}
         lout << std::endl;
 
@@ -3161,7 +3237,9 @@ namespace kaanh
 			{
 				auto pq_mat = std::any_cast<aris::core::Matrix>(cal.calculateExpression("robtarget(" + std::string(cmd_param.second) + ")").second);
 				if (pq_mat.size() != 7)THROW_FILE_LINE("");
-
+				auto fc_flag = g_fc_flag.load();
+				for (int i = 0; i < 3; i++)
+					pq_mat.data()[i] += offset[fc_flag][i];
 				aris::dynamic::s_vc(7, pq_mat.data(), mid_pq_out);
 				aris::dynamic::s_nv(3, pos_unit, mid_pq_out);
 				return true;
@@ -3219,6 +3297,9 @@ namespace kaanh
 			{
 				auto pq_mat = std::any_cast<aris::core::Matrix>(cal.calculateExpression("robtarget(" + std::string(cmd_param.second) + ")").second);
 				if (pq_mat.size() != 7)THROW_FILE_LINE("");
+				auto fc_flag = g_fc_flag.load();
+				for (int i = 0; i < 3; i++)
+					pq_mat.data()[i] += offset[fc_flag][i];
 				aris::dynamic::s_vc(7, pq_mat.data(), end_pq_out);
 				aris::dynamic::s_nv(3, pos_unit, end_pq_out);
 				return true;
@@ -4006,38 +4087,53 @@ namespace kaanh
 		// 更新目标点 //
 		aris::dynamic::s_pq2pm(pqt, target_pm);
 
+		//求重力分量
+		double G[6];
+		double center[3], xyzindex[3];
+		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
+		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
+		auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
+		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
+		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
+		std::copy(temp, temp + 16, fs2tpm);
+		model()->generalMotionPool().at(0).updMpm();
+		mvc_param->tool->getPm(*mvc_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+
+		std::copy(c->data().begin(), c->data().end(), center);
+		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
+		s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
+		G[3] = G[2] * center[1] - G[1] * center[2];
+		G[4] = G[0] * center[2] - G[2] * center[0];
+		G[5] = G[1] * center[0] - G[0] * center[1];
+		std::copy(G, G + 6, admit.G);
+
+		double fspm[16];
+        std::array<double, 6> fdata = filterdata.load();
+        auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
+		aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
+
 		// 力传感器补偿
 		if (mvc_param->fc)
 		{
-			//求重力分量
-			double G[6];
-			double center[3], xyzindex[3];
-			auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
-			auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
-			auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
-			//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
-			double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
-			std::copy(temp, temp + 16, fs2tpm);
-			model()->generalMotionPool().at(0).updMpm();
-			mvc_param->tool->getPm(*mvc_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
-			s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
-
-			std::copy(c->data().begin(), c->data().end(), center);
-			std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
-			s_mm(3, 1, 3, fs2bpm, aris::dynamic::ColMajor{ 4 }, xyzindex, 1, G, 1);
-			G[3] = G[2] * center[1] - G[1] * center[2];
-			G[4] = G[0] * center[2] - G[2] * center[0];
-			G[5] = G[1] * center[0] - G[0] * center[1];
-			std::copy(G, G + 6, admit.G);
-
-			double fspm[16];
-            std::array<double, 6> fdata = filterdata.load();
-            auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
-			aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
 			aris::dynamic::s_pm_dot_pm(fspm, target_pm, target_pm);	
 		}
 		mvc_param->tool->setPm(*mvc_param->wobj, target_pm);
 		model()->generalMotionPool().at(0).updMpm();
+
+		// 每10ms求力传感器平均值
+		if (g_fcmonitor.load())
+		{
+			if (count() % 10 == 0)
+			{
+				for (int j = 0; j < 6; j++)
+				{
+					fave[j] += admit.ft_ext_target[j];
+					fave[j] /= g_fc_counter;
+				}
+				g_fc_counter++;
+			}
+		}
 
 		//过奇异点判断
 		if (IsSingular(*this))return -1002;
@@ -4710,6 +4806,7 @@ namespace kaanh
 	{
         g_teaching_fun.store(0);//示教初始化
 		enable_mvd.store(true);
+		recalib_zero.store(true);
 		imp_->tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		imp_->wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));
@@ -5099,6 +5196,7 @@ namespace kaanh
 	{
 		g_teaching_fun.store(0);//示教初始化
 		enable_mvdj.store(true);
+		recalib_zero.store(true);
 		imp_->tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		imp_->wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 		auto c = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_center"));

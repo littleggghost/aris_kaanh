@@ -74,7 +74,7 @@ namespace cpt_ftc
 		{
 			ft_ext_sensor[i] = ft[i] - G[i] - ft_offset[i];
 		}
-		double ft_ext_target[6];//external force in target coordinate
+		
 		s_fs2fs(pm_fce2target, ft_ext_sensor, ft_ext_target);
 		double ft_err[6];
 		for (int i = 0; i < 6; i++)

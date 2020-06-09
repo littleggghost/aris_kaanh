@@ -161,7 +161,6 @@ namespace kaanh
         aris::core::ImpPtr<Imp> imp_;
     };
 
-
     class SaveHome : public aris::plan::Plan
     {
     public:
@@ -170,6 +169,13 @@ namespace kaanh
         ARIS_REGISTER_TYPE(SaveHome);
     };
 
+	class FCMonitor : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void override;
+		explicit FCMonitor(const std::string &name = "FCMonitor_plan");
+		ARIS_REGISTER_TYPE(FCMonitor);
+	};
 
 	class Reset : public aris::plan::Plan
 	{
@@ -651,7 +657,6 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(WaitDI);
 	};
 
-
     class TrioDO : public aris::plan::Plan
     {
     public:
@@ -671,7 +676,6 @@ namespace kaanh
         explicit TrioDI(const std::string &name = "TrioDI_plan");
         ARIS_REGISTER_TYPE(TrioDI);
     };
-
 
 	class ScanSlave : public aris::plan::Plan
 	{

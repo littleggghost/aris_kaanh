@@ -32,6 +32,7 @@ namespace cpt_ftc
 		double dead_zone[6];
 		double vel_limit[6];
 		double cor_pos_limit[6];
+		double ft_ext_target[6];//external force in target coordinate
 		double G[6];
 		//LowPass low_pass;
 		auto admit_init(double ft[6], double g[6])->void;
