@@ -44,7 +44,8 @@ struct CmdListParam
 }cmdparam;
 std::shared_ptr<kaanh::MoveBase> g_plan;
 static float rawdata[6];								//力传感器数据
-static std::atomic<std::array<double, 6>>filterdata;	//力传感器滤波后数据
+static std::atomic<std::array<double, 6>> filterdata;	//力传感器滤波后数据
+std::atomic<std::array<double, 6>> ft_ext_data;			//力传感器转换后的数值
 cpt_ftc::Admit admit;
 cpt_ftc::LowPass lp[6];									//滤波器
 //extern cpt_ftc::Admit admit;//力控
@@ -114,7 +115,7 @@ namespace kaanh
 
 		//获取力传感器数据，并进行滤波--条件是力传感器存在
 		//这里只是简单通过从站数量超过6进行判断，第七个从站可以是io也可以是力传感器，用户需要通过FS_NUM来设定
-        if (cs.controller().slavePool().size() > 8)
+        if (cs.controller().slavePool().size() > 6)
 		{
 			auto slave7 = dynamic_cast<aris::control::EthercatSlave*>(&cs.controller().slavePool().at(FS_NUM));
 //			static int fcinit = 0;
@@ -699,7 +700,7 @@ namespace kaanh
 		auto &cs = *controlServer();
 		auto &inter = dynamic_cast<aris::server::ProgramWebInterface&>(cs.interfacePool().at(0));
 
-        std::array<double, 6> temp = filterdata.load();
+        std::array<double, 6> temp = ft_ext_data.load();
         //out_data.forcedata.assign(temp.begin(), temp.end());
         std::copy(temp.begin(), temp.end(), out_data.forcedata.begin());
 

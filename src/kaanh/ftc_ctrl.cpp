@@ -76,6 +76,9 @@ namespace cpt_ftc
 		}
 		
 		s_fs2fs(pm_fce2target, ft_ext_sensor, ft_ext_target);
+		std::array<double, 6> f_temp = { ft_ext_target[0], ft_ext_target[1], ft_ext_target[2], ft_ext_target[3], ft_ext_target[4], ft_ext_target[5]};
+		ft_ext_data.store(f_temp);
+
 		double ft_err[6];
 		for (int i = 0; i < 6; i++)
 		{
