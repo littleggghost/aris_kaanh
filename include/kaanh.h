@@ -609,6 +609,22 @@ namespace kaanh
 		ARIS_REGISTER_TYPE(SetDriver);
 	};
 
+	class SaveProXml : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		explicit SaveProXml(const std::string &name = "SaveProXml_plan");
+		ARIS_REGISTER_TYPE(SaveProXml);
+	};
+
+	class LoadProXml : public aris::plan::Plan
+	{
+	public:
+		auto virtual prepareNrt()->void;
+		explicit LoadProXml(const std::string &name = "LoadProXml_plan");
+		ARIS_REGISTER_TYPE(LoadProXml);
+	};
+
 	class SaveXml : public aris::plan::Plan
 	{
 	public:

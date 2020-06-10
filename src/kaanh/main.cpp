@@ -153,10 +153,8 @@ int main(int argc, char *argv[])
     auto &cal = cs.model().calculator();
     kaanhconfig::createUserDataType(cal);
 	kaanhconfig::createPauseTimeSpeed();
-    cs.start();
+    //cs.start();
 
-    std::cout << "ctr" << cs.controller().motionPool().size() << std::endl;
-    std::cout << "mod" << cs.model().motionPool().size() << std::endl;
 //	for (int i = 0; i < cs.controller().motionPool().size(); i++)
 //	{
 //		cs.controller().motionPool().at(i).setTargetPos(cs.controller().motionPool().at(i).actualPos());

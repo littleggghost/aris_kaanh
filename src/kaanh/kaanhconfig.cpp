@@ -975,6 +975,8 @@ namespace kaanhconfig
 		plan_root->planPool().add<kaanh::SetUI>();
 		plan_root->planPool().add<kaanh::SetDriver>();
 		plan_root->planPool().add<kaanh::SaveXml>();
+		plan_root->planPool().add<kaanh::SaveProXml>();
+		plan_root->planPool().add<kaanh::LoadProXml>();
 		plan_root->planPool().add<kaanh::ScanSlave>();
 		plan_root->planPool().add<kaanh::GetEsiPdoList>();
 		plan_root->planPool().add<kaanh::SetEsiPath>();
@@ -996,6 +998,7 @@ namespace kaanhconfig
         plan_root->planPool().add<kaanh::FCStop>();
 		plan_root->planPool().add<kaanh::SetFS>();
 		plan_root->planPool().add<kaanh::AdmitInit>();
+		plan_root->planPool().add<kaanh::FCMonitor>();
 	
 		plan_root->planPool().add<CalibW3P>();
 		plan_root->planPool().add<CalibT4P>();

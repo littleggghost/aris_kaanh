@@ -8320,6 +8320,121 @@ namespace kaanh
 	}
 
 
+	struct SaveProXmlParam
+	{
+		std::string path;
+		std::string filename;
+	};
+	auto SaveProXml::prepareNrt()->void
+	{
+		SaveProXmlParam param;
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "name")
+			{
+				param.filename = std::string(p.second);
+			}
+		}
+		param.path = std::filesystem::absolute(".").string();
+		param.path = param.path + '/' + param.filename + ".xml";
+
+		tinyxml2::XMLDocument doc;
+		if (3 != doc.LoadFile(param.path.c_str()))
+		{
+			std::cout << "file has been existed !" << std::endl;
+			return;
+		}
+		doc.Clear();
+
+		tinyxml2::XMLDeclaration* declaration = doc.NewDeclaration();
+		doc.InsertFirstChild(declaration);
+		tinyxml2::XMLElement* root = doc.NewElement("OffsetData");
+		doc.InsertEndChild(root);
+		for (int i = 0; i < 10; i++)
+		{
+			tinyxml2::XMLElement* userNode = doc.NewElement("Offset");
+			std::stringstream i_string;
+			i_string << i;
+			userNode->SetAttribute("No", i_string.str().c_str());
+			aris::core::Matrix data = { offset[i][0], offset[i][1],offset[i][2], offset[i][3],offset[i][4], offset[i][5] };
+			userNode->SetAttribute("Value ", data.toString().c_str());
+			root->InsertEndChild(userNode);
+		}
+		doc.SaveFile(param.path.c_str());
+
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+	}
+	SaveProXml::SaveProXml(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"saveproxml\">"
+			"	<GroupParam>"
+			"		<Param name=\"name\" default=\"\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
+	struct LoadProXmlParam
+	{
+		std::string path;
+		std::string filename;
+	};
+	auto LoadProXml::prepareNrt()->void
+	{
+		LoadProXmlParam param;
+		for (auto &p : cmdParams())
+		{
+			if (p.first == "name")
+			{
+				param.filename = std::string(p.second);
+			}
+		}
+		param.path = std::filesystem::absolute(".").string();
+		param.path = param.path + '/' + param.filename + ".xml";
+
+		tinyxml2::XMLDocument doc;
+		if (doc.LoadFile(param.path.c_str()) != 0)
+		{
+			std::cout << "load xml file failed" << std::endl;
+			return;
+		}
+
+		tinyxml2::XMLElement* root = doc.RootElement();
+		tinyxml2::XMLElement* userNode = root->FirstChildElement("Offset");
+		int i = 0;
+		while (userNode != NULL)
+		{
+			if (std::stoi(userNode->Attribute("No")) >= 0 && std::stoi(userNode->Attribute("No")) <= 9)
+			{
+				std::string val_string = userNode->Attribute("Value");
+				auto val = std::any_cast<aris::core::Matrix>(model()->calculator().calculateExpression("Matrix(" + val_string + ")").second);
+				std::copy(val.begin(), val.end(), offset[i++]);
+				userNode = userNode->NextSiblingElement();
+			}
+			else
+			{
+				userNode = userNode->NextSiblingElement();
+			}
+		}
+
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
+	}
+	LoadProXml::LoadProXml(const std::string &name) :Plan(name)
+	{
+		command().loadXmlStr(
+			"<Command name=\"loadproxml\">"
+			"	<GroupParam>"
+			"		<Param name=\"name\" default=\"\"/>"
+			"	</GroupParam>"
+			"</Command>");
+	}
+
+
 	// 写pdo //
 	struct SetPdoParam
 	{
