@@ -581,7 +581,7 @@ namespace kaanh
     std::atomic_bool having_model=false;
     struct GetParam
     {
-        std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai, forcedata;
+        std::vector<double> part_pq, end_pq, end_pe, motion_pos, motion_vel, motion_acc, motion_toq, ai, forcedata, forceoffset;
         std::vector<bool> digtal_in, digtal_out;
         std::int32_t state_code;
         aris::control::EthercatController::SlaveLinkState sls[7];
@@ -607,6 +607,7 @@ namespace kaanh
 		par.digtal_out.resize(16, false);
         par.motion_state.resize(controller()->motionPool().size(), 0);
         par.forcedata.resize(6, 0.0);
+		par.forceoffset.resize(6, 0.0);
         std::any param = par;
         //std::any param = std::make_any<GetParam>();
 		par.tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
@@ -703,6 +704,8 @@ namespace kaanh
         std::array<double, 6> temp = ft_ext_data.load();
         //out_data.forcedata.assign(temp.begin(), temp.end());
         std::copy(temp.begin(), temp.end(), out_data.forcedata.begin());
+		int i_offset = g_fc_flag.load();
+		std::copy(offset[i_offset], offset[i_offset] + 6, out_data.forceoffset.begin());
 
 		out_data.is_dragging = g_is_dragging.load();
 		out_data.teachingmode = g_teachingmode.load();
@@ -737,6 +740,7 @@ namespace kaanh
 				out_param.push_back(std::make_pair(std::string("pro_err_line"), std::make_any<int>(inter.lastErrorLine())));
 				out_param.push_back(std::make_pair(std::string("line"), std::make_any<int>(inter.currentLine())));
                 out_param.push_back(std::make_pair<std::string, std::any>("force_data", out_data.forcedata));
+				out_param.push_back(std::make_pair<std::string, std::any>("force_offset", out_data.forceoffset));
 			}
 			else if (p.first == "pos")
 			{
