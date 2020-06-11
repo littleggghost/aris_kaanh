@@ -3105,7 +3105,7 @@ namespace kaanh
 		std::copy(temp, temp + 16, fs2tpm);
 		model()->generalMotionPool().at(0).updMpm();
 		mvl_param->tool0->getPm(*mvl_param->wobj0, t2bpm);	//获取法兰盘相对base的位姿矩阵
-		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);					//力传感器器相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);					//力传感器器相对base的位姿矩阵
 
 		std::copy(c->data().begin(), c->data().end(), center);
 		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
@@ -3114,6 +3114,9 @@ namespace kaanh
 		G[4] = G[0] * center[2] - G[2] * center[0];
 		G[5] = G[1] * center[0] - G[0] * center[1];
 		std::copy(G, G + 6, admit.G);
+
+		mvl_param->tool->getPm(*mvl_param->wobj, t2bpm);	//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);					//力传感器器相对工件坐标系的位姿矩阵
 
 		double fspm[16];
         std::array<double, 6> fdata = filterdata.load();
@@ -4144,7 +4147,7 @@ namespace kaanh
 		std::copy(temp, temp + 16, fs2tpm);
 		model()->generalMotionPool().at(0).updMpm();
 		mvc_param->tool0->getPm(*mvc_param->wobj0, t2bpm);			//获取法兰盘相对基坐标系的位姿矩阵
-		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对基坐标系的位姿矩阵
 
 		std::copy(c->data().begin(), c->data().end(), center);
 		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
@@ -4153,6 +4156,9 @@ namespace kaanh
 		G[4] = G[0] * center[2] - G[2] * center[0];
 		G[5] = G[1] * center[0] - G[0] * center[1];
 		std::copy(G, G + 6, admit.G);
+
+		mvc_param->tool->getPm(*mvc_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
 
 		double fspm[16];
         std::array<double, 6> fdata = filterdata.load();
