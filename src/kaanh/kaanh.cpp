@@ -1100,12 +1100,12 @@ namespace kaanh
 				param.md = int32Param(p.first);
 				if (param.md)
 				{
+					g_fc_counter.store(1);
+					g_fcmonitor.store(param.md);
 					for (int i = 0; i < 10; i++)
 						for(int j=0; j<6; j++)
 							fave[i][j] = 0.0;
 				}
-				g_fc_counter.store(1);
-				g_fcmonitor.store(param.md);
 			}
 			else if (p.first == "offset")
 			{
@@ -1141,6 +1141,8 @@ namespace kaanh
 		auto param = std::any_cast<FCMonitorParam>(&this->param());
 		if (!param->md && param->inputdata.size() == 1)//求力位关系
 		{
+			g_fc_counter.store(1);
+			g_fcmonitor.store(param->md);
 			std::cout << "fave:" << std::endl;
 			int i_flag = g_fc_flag.load();
 			for (int i = 0; i < 6; i++)
@@ -3112,7 +3114,6 @@ namespace kaanh
         std::array<double, 6> fdata = filterdata.load();
 		auto pe321 = admit.get_cor_pos(fdata.data(), fs2bpm, 0.001);
 		aris::dynamic::s_pe2pm(pe321.data(), fspm, "321");
-
 		// 力传感器补偿启用
 		if (mvl_param->fc)
 		{
