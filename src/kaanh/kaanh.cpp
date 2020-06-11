@@ -1094,6 +1094,11 @@ namespace kaanh
 			if (p.first == "mode")
 			{
 				auto md = int32Param(p.first);
+				if (md)
+				{
+					for (int i = 0; i < 6; i++)
+						fave[0] = 0.0;
+				}
 				g_fc_counter.store(1);
 				g_fcmonitor.store(md);
 			}
@@ -1114,11 +1119,16 @@ namespace kaanh
 					THROW_FILE_LINE("out of range!");
 				}
 			}
-		}
-		
+		}	
+
 		if (!md && off.size()==1)//求力位关系
 		{
-
+			std::cout << "fave:" << std::endl;
+			for (int i = 0; i < 6; i++)
+			{
+				std::cout << fave[i] << "  ";
+			}
+			std::cout << std::endl;
 		}
 
 		std::vector<std::pair<std::string, std::any>> ret_value;
