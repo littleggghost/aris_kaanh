@@ -160,30 +160,6 @@
                     </SyncManager>
                 </SyncManagerPoolObject>
             </EthercatMotor>
-            <EthercatSlave name="ethercat_slave" phy_id="6" vendor_id="0x00000009" product_code="0x00013d6e" revision_num="0x00000001" dc_assign_activate="0x00000000" sync0_shift_ns="650000">
-                <SyncManagerPoolObject name="sm_pool">
-                    <SyncManager name="sm" is_tx="false"/>
-                    <SyncManager name="sm" is_tx="true"/>
-                    <SyncManager name="sm" is_tx="false">
-                        <Pdo name="pdo" index="0x1601">
-                            <PdoEntry name="entry" index="0x7010" subindex="0x01" size="16"/>
-                            <PdoEntry name="entry" index="0x7010" subindex="0x02" size="16"/>
-                            <PdoEntry name="entry" index="0x7010" subindex="0x03" size="16"/>
-                        </Pdo>
-                    </SyncManager>
-                    <SyncManager name="sm" is_tx="true">
-                        <Pdo name="pdo" index="0x1a03">
-                            <PdoEntry name="entry" index="0x6030" subindex="0x00" size="16"/>
-                            <PdoEntry name="entry" index="0x6030" subindex="0x01" size="32"/>
-                            <PdoEntry name="entry" index="0x6030" subindex="0x02" size="32"/>
-                            <PdoEntry name="entry" index="0x6030" subindex="0x03" size="32"/>
-                            <PdoEntry name="entry" index="0x6030" subindex="0x04" size="32"/>
-                            <PdoEntry name="entry" index="0x6030" subindex="0x05" size="32"/>
-                            <PdoEntry name="entry" index="0x6030" subindex="0x06" size="32"/>
-                        </Pdo>
-                    </SyncManager>
-                </SyncManagerPoolObject>
-            </EthercatSlave>
         </SlavePoolObject>
         <Pipe name="mout_pipe"/>
         <Pipe name="lout_pipe"/>

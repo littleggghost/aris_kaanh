@@ -1141,15 +1141,22 @@ namespace kaanh
 		auto param = std::any_cast<FCMonitorParam>(&this->param());
 		if (!param->md && param->inputdata.size() == 1)//求力位关系
 		{
-			g_fc_counter.store(1);
-			g_fcmonitor.store(param->md);
-			std::cout << "fave:" << std::endl;
 			int i_flag = g_fc_flag.load();
+			int counter = g_fc_counter.load();
+			for (int j = 0; j < 6; j++)
+			{
+				fave[i_flag][j] = fave[i_flag][j] / counter;
+			}
+
+			std::cout << "fave:" << std::endl;
 			for (int i = 0; i < 6; i++)
 			{
 				std::cout << fave[i_flag][i] << "  ";
 			}
 			std::cout << std::endl;
+
+			g_fc_counter.store(1);
+			g_fcmonitor.store(param->md);
 		}
 	}
 	FCMonitor::FCMonitor(const std::string &name) :Plan(name)
@@ -3137,7 +3144,6 @@ namespace kaanh
 				for (int j = 0; j < 6; j++)
 				{
 					fave[i_flag][j] += admit.ft_ext_target[j];
-					fave[i_flag][j] /= g_fc_counter;
 				}
 				g_fc_counter++;
 			}
@@ -4182,7 +4188,6 @@ namespace kaanh
 				for (int j = 0; j < 6; j++)
 				{
 					fave[i_flag][j] += admit.ft_ext_target[j];
-					fave[i_flag][j] /= g_fc_counter;
 				}
 				g_fc_counter++;
 			}
