@@ -58,7 +58,7 @@ std::atomic_bool g_is_dragging = true;					//拖拽功能开启标记位，0表�
 std::vector<std::array<double, 6>>points;				//示教点保存数组
 std::atomic_int g_teaching_fun = 0;						//0:初始值，1:开始示教；2:添加点；3:删除上一个点；4:结束确认
 double offset[10][6] = { 0.0 };							//补偿值,程序关闭时，掉电保存；下次上电时，自动加载
-double fave[6] = { 0.0 };								//力传感器滤波后平均值
+double fave[10][6] = { 0.0 };							//力传感器滤波后平均值
 std::atomic_bool g_fcmonitor = false;					//true--false
 std::atomic_int64_t g_fc_counter = 1;					//叠加器，用于求平均值
 std::atomic_int16_t g_fc_flag = 0;						//offset使用标记
@@ -1085,33 +1085,38 @@ namespace kaanh
 
 
 	// fcmonitor //
+	struct FCMonitorParam
+	{
+		bool md = false;
+		aris::core::Matrix inputdata;
+	};
 	auto FCMonitor::prepareNrt()->void
 	{	
-		bool md = false;
-		aris::core::Matrix off;
+		FCMonitorParam param;
 		for (auto &p : cmdParams())
 		{
 			if (p.first == "mode")
 			{
-				auto md = int32Param(p.first);
-				if (md)
+				param.md = int32Param(p.first);
+				if (param.md)
 				{
-					for (int i = 0; i < 6; i++)
-						fave[0] = 0.0;
+					for (int i = 0; i < 10; i++)
+						for(int j=0; j<6; j++)
+							fave[i][j] = 0.0;
 				}
 				g_fc_counter.store(1);
-				g_fcmonitor.store(md);
+				g_fcmonitor.store(param.md);
 			}
 			else if (p.first == "offset")
 			{
-				off = matrixParam(p.first);
-				if (off.size() == 1)
+				param.inputdata = matrixParam(p.first);
+				if (param.inputdata.size() == 1)
 				{
 					g_fc_flag.store(int32Param(p.first));
 				}
-				else if (off.size() == 6)//主动输入力位偏置
+				else if (param.inputdata.size() == 6)//主动输入力位偏置
 				{
-					std::copy(off.begin(), off.end(), offset[0]);
+					std::copy(param.inputdata.begin(), param.inputdata.end(), offset[0]);
 					g_fc_flag.store(0);
 				}
 				else
@@ -1121,19 +1126,29 @@ namespace kaanh
 			}
 		}	
 
-		if (!md && off.size()==1)//求力位关系
+		if (!param.md && param.inputdata.size()==1)//求力位关系
+		{
+
+		}
+
+		this->param() = param;
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+		option() = aris::plan::Plan::NOT_CHECK_ENABLE;
+	}
+	auto FCMonitor::collectNrt()->void
+	{
+		auto param = std::any_cast<FCMonitorParam>(&this->param());
+		if (!param->md && param->inputdata.size() == 1)//求力位关系
 		{
 			std::cout << "fave:" << std::endl;
+			int i_flag = g_fc_flag.load();
 			for (int i = 0; i < 6; i++)
 			{
-				std::cout << fave[i] << "  ";
+				std::cout << fave[i_flag][i] << "  ";
 			}
 			std::cout << std::endl;
 		}
-
-		std::vector<std::pair<std::string, std::any>> ret_value;
-		ret() = ret_value;
-		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION | NOT_RUN_COLLECT_FUNCTION;
 	}
 	FCMonitor::FCMonitor(const std::string &name) :Plan(name)
 	{
@@ -1735,6 +1750,7 @@ namespace kaanh
 		PauseContinueE(param, pwinter, rzcount);
 
 		//打印
+		/*
 		if (count() == 1)
 		{
 			cout << "first count pos:" << std::endl;
@@ -1753,13 +1769,14 @@ namespace kaanh
 			}
 			cout << std::endl;
 		}
+		*/
 
         if ((param->max_total_count - rzcount - g_count) < 0.0)
 		{
 			//realzone为0时，返回值为0时，本条指令执行完毕
 			if(rzcount == 0)this->cmd_finished.store(true);
 			param->last_count = g_count;
-			controller()->mout() << "param->max_total_count:" << param->max_total_count << "this->realzone.load():" << rzcount << std::endl;
+			//controller()->mout() << "param->max_total_count:" << param->max_total_count << "this->realzone.load():" << rzcount << std::endl;
 		}
         if (pwinter.isAutoStopped() && (g_counter == 0))
 		{
@@ -2393,6 +2410,7 @@ namespace kaanh
 		PauseContinueE(mvj_param, pwinter, rzcount);
 
 		//打印
+		/*
 		if (count() == 1)
 		{
 			auto &cout = controller()->mout();
@@ -2413,13 +2431,14 @@ namespace kaanh
 			}
 			cout << std::endl;
 		}
-
-        if (mvj_param->max_total_count - rzcount - g_count < 0.0)
+		*/
+        
+		if (mvj_param->max_total_count - rzcount - g_count < 0.0)
 		{
 			//realzone为0时，返回值为0时，本条指令执行完毕
 			if (rzcount == 0)this->cmd_finished.store(true);
 			mvj_param->last_count = g_count;
-			controller()->mout() << "mvj_param->max_total_count:" << mvj_param->max_total_count <<"this->realzone.load():" << rzcount << std::endl;
+			//controller()->mout() << "mvj_param->max_total_count:" << mvj_param->max_total_count <<"this->realzone.load():" << rzcount << std::endl;
 		}
         if (pwinter.isAutoStopped() && (g_counter == 0))
 		{
@@ -3103,12 +3122,13 @@ namespace kaanh
 		// 每10ms求力传感器平均值
 		if (g_fcmonitor.load())
 		{
+			int i_flag = g_fc_flag.load();
 			if (count() % 10 == 0)
 			{
 				for (int j = 0; j < 6; j++)
 				{
-					fave[j] += admit.ft_ext_target[j];
-					fave[j] /= g_fc_counter;
+					fave[i_flag][j] += admit.ft_ext_target[j];
+					fave[i_flag][j] /= g_fc_counter;
 				}
 				g_fc_counter++;
 			}
@@ -3141,6 +3161,7 @@ namespace kaanh
         lout << std::endl;
 
 		//打印
+		/*
 		if (count() == 1)
 		{
 			auto &cout = controller()->mout();
@@ -3161,14 +3182,15 @@ namespace kaanh
 			}
 			cout << std::endl;
 		}
-
-        if ((mvl_param->max_total_count - rzcount - g_count) < 0.0)
+		*/
+        
+		if ((mvl_param->max_total_count - rzcount - g_count) < 0.0)
 		{
 			//realzone为0时，返回值为0时，本条指令执行完毕
 			if (rzcount == 0)this->cmd_finished.store(true);
 			mvl_param->last_count = g_count;
 			auto &cout = controller()->mout();
-			cout << "mvl_param->max_total_count:" << mvl_param->max_total_count << "this->realzone.load():" << rzcount << std::endl;
+			//cout << "mvl_param->max_total_count:" << mvl_param->max_total_count << "this->realzone.load():" << rzcount << std::endl;
 		}	
         if (pwinter.isAutoStopped() && (g_counter == 0))
 		{
@@ -4139,12 +4161,13 @@ namespace kaanh
 		// 每10ms求力传感器平均值
 		if (g_fcmonitor.load())
 		{
+			int i_flag = g_fc_flag.load();
 			if (count() % 10 == 0)
 			{
 				for (int j = 0; j < 6; j++)
 				{
-					fave[j] += admit.ft_ext_target[j];
-					fave[j] /= g_fc_counter;
+					fave[i_flag][j] += admit.ft_ext_target[j];
+					fave[i_flag][j] /= g_fc_counter;
 				}
 				g_fc_counter++;
 			}
@@ -4161,6 +4184,7 @@ namespace kaanh
 		PauseContinueE(mvc_param, pwinter, rzcount);
 
 		//打印
+		/*
 		if (count() == 1)
 		{
 			auto &cout = controller()->mout();
@@ -4181,14 +4205,15 @@ namespace kaanh
 			}
 			cout << std::endl;
 		}
-
-        if (mvc_param->max_total_count - rzcount - g_count < 0.0)
+		*/
+        
+		if (mvc_param->max_total_count - rzcount - g_count < 0.0)
 		{
 			//realzone为0时，返回值为0时，本条指令执行完毕
 			if (rzcount == 0)this->cmd_finished.store(true);
 			mvc_param->last_count = g_count;
 			auto &cout = controller()->mout();
-			controller()->mout() << "mvc_param->max_total_count:" << mvc_param->max_total_count << "this->realzone.load():" << rzcount << std::endl;
+			//controller()->mout() << "mvc_param->max_total_count:" << mvc_param->max_total_count << "this->realzone.load():" << rzcount << std::endl;
 		}
         if (pwinter.isAutoStopped() && (g_counter == 0))
 		{
@@ -8350,14 +8375,22 @@ namespace kaanh
 				param.filename = std::string(p.second);
 			}
 		}
+		
 		param.path = std::filesystem::absolute(".").string();
 		param.path = param.path + '/' + param.filename + ".xml";
 
+		this->param() = param;
+		std::vector<std::pair<std::string, std::any>> ret_value;
+		ret() = ret_value;
+		option() = aris::plan::Plan::NOT_CHECK_ENABLE;
+	}
+	auto SaveProXml::collectNrt()->void
+	{
+		auto &param = std::any_cast<SaveProXmlParam&>(this->param());
 		tinyxml2::XMLDocument doc;
 		if (3 != doc.LoadFile(param.path.c_str()))
 		{
 			std::cout << "file has been existed !" << std::endl;
-			return;
 		}
 		doc.Clear();
 
@@ -8373,13 +8406,11 @@ namespace kaanh
 			userNode->SetAttribute("No", i_string.str().c_str());
 			aris::core::Matrix data = { offset[i][0], offset[i][1],offset[i][2], offset[i][3],offset[i][4], offset[i][5] };
 			userNode->SetAttribute("Value ", data.toString().c_str());
+			aris::core::Matrix favedata = { fave[i][0], fave[i][1],fave[i][2], fave[i][3],fave[i][4], fave[i][5] };
+			userNode->SetAttribute("Fave ", favedata.toString().c_str());
 			root->InsertEndChild(userNode);
 		}
 		doc.SaveFile(param.path.c_str());
-
-		std::vector<std::pair<std::string, std::any>> ret_value;
-		ret() = ret_value;
-		option() = aris::plan::Plan::NOT_RUN_EXECUTE_FUNCTION;
 	}
 	SaveProXml::SaveProXml(const std::string &name) :Plan(name)
 	{

@@ -173,6 +173,7 @@ namespace kaanh
 	{
 	public:
 		auto virtual prepareNrt()->void override;
+		auto virtual collectNrt()->void override;
 		explicit FCMonitor(const std::string &name = "FCMonitor_plan");
 		ARIS_REGISTER_TYPE(FCMonitor);
 	};
@@ -612,7 +613,8 @@ namespace kaanh
 	class SaveProXml : public aris::plan::Plan
 	{
 	public:
-		auto virtual prepareNrt()->void;
+		auto virtual prepareNrt()->void override;
+		auto virtual collectNrt()->void override;
 		explicit SaveProXml(const std::string &name = "SaveProXml_plan");
 		ARIS_REGISTER_TYPE(SaveProXml);
 	};
@@ -620,7 +622,7 @@ namespace kaanh
 	class LoadProXml : public aris::plan::Plan
 	{
 	public:
-		auto virtual prepareNrt()->void;
+		auto virtual prepareNrt()->void override;
 		explicit LoadProXml(const std::string &name = "LoadProXml_plan");
 		ARIS_REGISTER_TYPE(LoadProXml);
 	};
