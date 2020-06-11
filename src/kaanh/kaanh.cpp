@@ -1205,6 +1205,7 @@ namespace kaanh
 		double angular_acc, angular_vel, angular_dec, angular_jerk;
 		double pos_total_count, ori_total_count;
 		aris::dynamic::Marker *tool, *wobj;
+		aris::dynamic::Marker *tool0, *wobj0;
 
 		std::shared_ptr<kaanh::MoveBase> pre_plan;
 		double max_total_count = 0.0;
@@ -1224,6 +1225,7 @@ namespace kaanh
 		double pos_total_count, ori_total_count;
 		double angular_acc, angular_vel, angular_dec, angular_jerk;
 		aris::dynamic::Marker *tool, *wobj;
+		aris::dynamic::Marker *tool0, *wobj0;
 		double A[9], C[3], R, theta, ori_theta, pos_ratio, ori_ratio;
 
 		std::shared_ptr<kaanh::MoveBase> pre_plan;
@@ -2515,6 +2517,9 @@ namespace kaanh
 
 		mvl_param.tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		mvl_param.wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
+		mvl_param.tool0 = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName("tool0");
+		mvl_param.wobj0 = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName("wobj0");
+
 		g_tool = &*g_model.generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		g_wobj = &*g_model.generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 
@@ -3099,8 +3104,8 @@ namespace kaanh
 		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
 		std::copy(temp, temp + 16, fs2tpm);
 		model()->generalMotionPool().at(0).updMpm();
-		mvl_param->tool->getPm(*mvl_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
-		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
+		mvl_param->tool0->getPm(*mvl_param->wobj0, t2bpm);	//获取法兰盘相对base的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);					//力传感器器相对工件坐标系的位姿矩阵
 
 		std::copy(c->data().begin(), c->data().end(), center);
 		std::copy(xyz->data().begin(), xyz->data().end(), xyzindex);
@@ -3526,6 +3531,9 @@ namespace kaanh
 
 		mvc_param.tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		mvc_param.wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
+
+		mvc_param.tool0 = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName("tool0");
+		mvc_param.wobj0 = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName("wobj0");
 		g_tool = &*g_model.generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		g_wobj = &*g_model.generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
 
@@ -4135,7 +4143,7 @@ namespace kaanh
 		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
 		std::copy(temp, temp + 16, fs2tpm);
 		model()->generalMotionPool().at(0).updMpm();
-		mvc_param->tool->getPm(*mvc_param->wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		mvc_param->tool0->getPm(*mvc_param->wobj0, t2bpm);			//获取法兰盘相对基坐标系的位姿矩阵
 		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
 
 		std::copy(c->data().begin(), c->data().end(), center);
