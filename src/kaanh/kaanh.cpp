@@ -9823,13 +9823,17 @@ namespace kaanh
 		auto xyz = dynamic_cast<aris::dynamic::MatrixVariable*>(&*model()->variablePool().findByName("Gravity_xyzindex"));
 		auto temp = *model()->partPool().findByName("L6")->markerPool().findByName("toolfs")->prtPm();
 		aris::dynamic::Marker *tool, *wobj;
+		aris::dynamic::Marker *tool0, *wobj0;
 		tool = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName(std::string(cmdParams().at("tool")));
 		wobj = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName(std::string(cmdParams().at("wobj")));
+		tool0 = &*model()->generalMotionPool()[0].makI().fatherPart().markerPool().findByName("tool0");
+		wobj0 = &*model()->generalMotionPool()[0].makJ().fatherPart().markerPool().findByName("wobj0");
+
 		//获取每个周期力传感器坐标系相对与基座坐标系的位姿矩阵
 		double t2bpm[16], fs2tpm[16], fs2bpm[16]; //t:法兰盘，fs:李传感器,b:工件坐标系
 		std::copy(temp, temp + 16, fs2tpm);
 		model()->generalMotionPool().at(0).updMpm();
-		tool->getPm(*wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		tool0->getPm(*wobj0, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
 		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
 
 		std::copy(c->data().begin(), c->data().end(), center);
@@ -9838,6 +9842,9 @@ namespace kaanh
 		G[3] = G[2] * center[1] - G[1] * center[2];
 		G[4] = G[0] * center[2] - G[2] * center[0];
 		G[5] = G[1] * center[0] - G[0] * center[1];
+
+		tool->getPm(*wobj, t2bpm);			//获取法兰盘相对工件坐标系的位姿矩阵
+		s_pm_dot_pm(t2bpm, fs2tpm, fs2bpm);	//力传感器器相对工件坐标系的位姿矩阵
 
         admit.admit_init(filterdata.load().data(), G);
 
